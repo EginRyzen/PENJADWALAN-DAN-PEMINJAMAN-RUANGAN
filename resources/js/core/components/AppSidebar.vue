@@ -1,6 +1,6 @@
 <template>
   <aside
-    class="fixed inset-y-0 z-10 flex flex-shrink-0 overflow-hidden bg-white lg:static dark:bg-darker focus:outline-none"
+    class="relative inset-y-0 z-10 flex-shrink-0 bg-white lg:static dark:bg-darker focus:outline-none hidden md:flex flex-col"
   >
     <div
       class="flex flex-col flex-shrink-0 h-full px-2 py-4"
@@ -11,7 +11,7 @@
           class="inline-block text-xl font-bold tracking-wider text-teal-500 uppercase dark:text-light"
         >
           <img
-            src="https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600"
+            src="../assets/logo.png"
             alt="Your Company"
             class="mx-auto h-20 w-auto"
           />
@@ -49,7 +49,7 @@
         </button>
       </div>
 
-      <div class="relative flex items-center justify-center flex-shrink-0">
+      <div class="relative flex items-center justify-center flex-shrink-0 z-50">
         <div class="" v-click-outside="() => (isUserMenuOpen = false)">
           <button
             @click="isUserMenuOpen = !isUserMenuOpen"
@@ -76,23 +76,23 @@
           >
             <div
               v-show="isUserMenuOpen"
-              class="absolute w-56 py-1 mb-4 bg-white rounded-md shadow-lg min-w-max left-5 bottom-full ring-1 ring-black ring-opacity-5 dark:bg-dark focus:outline-none"
+              class="absolute w-56 z-50 py-1 mb-4 bg-white rounded-md shadow-lg min-w-max left-5 bottom-full ring-1 ring-black ring-opacity-5 dark:bg-dark focus:outline-none"
               role="menu"
             >
               <a
                 href="#"
-                class="block px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-light dark:hover:bg-indigo-600"
+                class="block px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:text-white hover:bg-teal-400"
                 >Your Profile</a
               >
               <a
                 href="#"
-                class="block px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-light dark:hover:bg-indigo-600"
+                class="block px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:text-white hover:bg-teal-400"
                 >Settings</a
               >
               <a
                 @click.prevent="logout"
                 href="#"
-                class="block px-4 py-2 text-sm text-gray-700 transition-colors hover:bg-gray-100 dark:text-light dark:hover:bg-indigo-600"
+                class="block px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:text-white hover:bg-teal-400"
                 >Logout</a
               >
             </div>
@@ -110,7 +110,6 @@ import { useRouter } from "vue-router";
 const router = useRouter();
 const isUserMenuOpen = ref(false);
 
-// Navigasi
 const goToNotifications = () => {
   router.push("/notifications");
 };
@@ -124,7 +123,6 @@ const logout = () => {
   router.push("/");
 };
 
-// Directive Click Outside lokal untuk dropdown user
 const vClickOutside = {
   mounted(el, binding) {
     el.clickOutsideEvent = function (event) {
