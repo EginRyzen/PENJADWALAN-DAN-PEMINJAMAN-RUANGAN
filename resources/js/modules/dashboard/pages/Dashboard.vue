@@ -1,7 +1,7 @@
 <template>
   <div class="h-full">
     <breadcrumb :items="breadcrumbs"></breadcrumb>
-    <div class="mt-5">
+    <div class="mt-10">
       <h1 class="text-3xl font-bold mb-6">Dashboard Admin</h1>
 
       <div
