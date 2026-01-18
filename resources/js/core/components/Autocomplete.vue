@@ -1,138 +1,74 @@
 <template>
-  <div
-    class="flex flex-col relative"
-    id="autocompleteWrapper"
-    :title="selectedValueText"
-  >
-    <label class="text-sm text-black-primary mb-1"
-      ><span
-        v-if="label && required && !markRequiredRight && !disabled"
-        class="text-error"
-        >*</span
-      >
-      {{ label
-      }}<span
-        v-if="label && required && markRequiredRight && !disabled"
-        class="text-error"
-        >*</span
-      ></label
-    >
+  <div class="flex flex-col relative" id="autocompleteWrapper" :title="selectedValueText">
+    <label class="text-sm font-semibold text-gray-700 mb-1">
+      <span v-if="label && required && !markRequiredRight && !disabled" class="text-red-500">*</span>
+      {{ label }}
+      <span v-if="label && required && markRequiredRight && !disabled" class="text-red-500">*</span>
+    </label>
+
     <div
-      class="flex rounded-md border"
+      class="flex rounded-md border-2 transition-all duration-200 bg-white"
       :class="{
-        'border-error': error,
-        'border-primary': !error,
-        'border-white-100': disabled,
+        'border-red-500': error,
+        'border-teal-500 ring-1 ring-teal-100': isFocus && !error,
+        'border-gray-200': !isFocus && !error,
+        'bg-gray-50 opacity-75': disabled,
       }"
     >
       <input
         v-show="!isFocus"
         readonly
         type="text"
-        :value="parseMiddleText ? formattedSelectedText : selectedValueText"
+        :value="selectedValueText"
         @click="onDisplayTextClick"
         :id="id"
         :placeholder="placeholder"
-        class="text-sm h-11 z-0 w-full border-0 rounded-md py-3 focus:border-0 focus:ring-0 focus:shadow-none"
-        :class="{
-          'bg-white-100 text-black-50': disabled,
-        }"
+        class="text-sm h-10 px-3 z-0 w-full border-0 rounded-md focus:outline-none focus:ring-0 cursor-pointer text-gray-700 bg-transparent truncate"
         :disabled="disabled"
-        :name="name"
-        ref="myInput"
       />
+      
       <input
         v-show="isFocus"
         v-model="search"
         type="text"
-        :name="name"
         ref="autocompleteRef"
         @blur="onAutocompleteBlur"
-        id="autocompleteEl"
-        :disabled="disabled"
-        class="text-sm h-11 focus:border-0 focus:ring-0 focus:shadow-none focus:outline-0 z-0 w-full border-0 rounded-md"
+        class="text-sm h-10 px-3 z-0 w-full border-0 rounded-md focus:outline-none focus:ring-0 text-gray-700 bg-transparent"
         @input="onInput"
+        placeholder="Ketik untuk mencari..."
       />
-      <div
-        class="text-sm text-black flex items-center justify-end"
-        v-if="this.$slots['icon-right']"
-      >
-        <slot name="icon-right"></slot>
-      </div>
-      <div
-        class="flex items-center rounded-md w-fit h-11 py-3 pr-4 border-0 focus:ring-0 text-sm text-black focus:border-0 focus:shadow-none focus:outline-0"
-        :class="disabled ? 'bg-white-100' : ''"
-        @click="onClickArrow"
-      >
-        <svg
-          fill="none"
-          width="16"
-          height="8"
-          viewBox="0 0 16 8"
-          stroke="currentColor"
-          class="h-3 w-3 transform transition-transform duration-200 ease-in-out"
-          :class="!disabled && isOptionsExpanded ? 'rotate-180' : 'rotate-0'"
-        >
-          <path
-            d="M0.5 0.95L1.01625 0.25H15.0088L15.5 0.925L8.46625 7.75H7.4325L0.5 0.95Z"
-            fill="currentColor"
-          />
+      <div class="flex items-center pr-3 cursor-pointer text-gray-400" @click="onClickArrow">
+        <svg fill="none" width="12" height="12" viewBox="0 0 16 8" stroke="currentColor"
+          class="transform transition-transform duration-200"
+          :class="isFocus ? 'rotate-180 text-teal-500' : 'rotate-0'">
+          <path d="M0.5 0.95L1.01625 0.25H15.0088L15.5 0.925L8.46625 7.75H7.4325L0.5 0.95Z" fill="currentColor" />
         </svg>
       </div>
     </div>
-    <div v-if="itemDescription" class="text-xs text-white-300 mt-1">
-      <slot name="item-description">{{ selectedDescription }}</slot>
-    </div>
-    <div class="text-xs text-error mt-1">
-      <slot name="error-message"></slot>
-    </div>
-    <ul
-      class="absolute bg-white w-full top-16 rounded-b-md shadow-primary-md border border-primary-lightest z-30 overflow-y-scroll max-h-48"
-      :class="{
-        invisible: !isFocus,
-        visible: isFocus,
-      }"
-    >
+
+    <ul v-show="isFocus" class="absolute bg-white w-full top-[72px] rounded-lg shadow-xl border border-gray-100 z-[100] overflow-y-auto max-h-60 p-1">
       <li
-        v-if="multiple && showSelectAll && computedOptions.length > 0"
-        @click="toggleSelectAll"
-        class="px-3 py-2 text-sm cursor-pointer hover:bg-primary-light flex items-center"
+        v-if="multiple && showSelectAll && options.length > 0"
+        @mousedown.prevent="toggleSelectAll"
+        class="px-3 py-2 text-sm cursor-pointer hover:bg-teal-50 rounded-md flex items-center mb-1 border-b border-gray-50"
       >
-        <input
-          type="checkbox"
-          class="w-4 h-4 rounded-sm mr-2 bg-white border border-primary"
-          :checked="isAllSelected"
-        />
-        All
+        <div class="custom-checkbox mr-3" :class="{ 'checked': isAllSelected }">
+           <div v-if="isAllSelected" class="checkmark"></div>
+        </div>
+        <span class="font-bold text-teal-700">ALL</span>
       </li>
+
       <li
         v-for="(option, i) in computedOptions"
         :key="`option-${i}`"
-        @click="setValue(option)"
-        :class="getClass(option)"
+        @mousedown.prevent="setValue(option)"
+        class="px-3 py-2 text-sm cursor-pointer flex items-center rounded-md transition-colors mb-0.5"
+        :class="option.selected ? 'bg-teal-50 text-teal-700 font-medium' : 'hover:bg-gray-50 text-gray-600'"
       >
-        <input
-          v-if="multiple"
-          class="w-4 h-4 rounded-sm mr-2 bg-white border border-primary"
-          type="checkbox"
-          :checked="option.selected"
-        />
-        {{
-          optionType === "string"
-            ? option
-            : dropdownText
-            ? option[dropdownText]
-            : option[itemText]
-        }}
-      </li>
-      <li
-        v-if="computedOptions.length === 0 && !loading"
-        class="text-center px-3 py-2 text-sm"
-      >
-        <slot name="empty-result"><span>No Data Available</span></slot>
-      </li>
-      <li class="text-center px-3 py-2 text-sm" v-if="loading">
-        <slot name="loading-text">Loading...</slot>
+        <div class="custom-checkbox mr-3" :class="{ 'checked': option.selected }">
+           <div v-if="option.selected" class="checkmark"></div>
+        </div>
+        <span class="flex-1">{{ optionType === 'string' ? option : option[itemText] }}</span>
       </li>
     </ul>
   </div>
@@ -140,380 +76,130 @@
 
 <script>
 export default {
-  name: "NewAutocompleteApp",
+  name: "Autocomplete",
   props: {
-    value: {
-      type: Array,
-      required: true,
-      default: () => [],
-    },
-    markRequiredRight: {
-      type: Boolean,
-      default: false,
-      required: false,
-    },
-    label: {
-      default: "",
-    },
-    placeholder: {
-      default: "",
-    },
-    id: {
-      default: "",
-    },
-    description: {
-      default: "",
-    },
-    message: {
-      default: "",
-    },
-    type: {
-      default: "text",
-    },
-    options: {
-      type: Array,
-      default: () => [],
-    },
-    required: {
-      default: false,
-    },
-    itemDescription: {
-      required: false,
-    },
-    dropdownText: {
-      required: false,
-    },
-    itemSearch: {
-      required: false,
-    },
-    itemText: {
-      default: "text",
-    },
-    itemValue: {
-      default: "value",
-    },
-    multiple: {
-      default: false,
-    },
-    name: {
-      default: "input",
-    },
-    error: {
-      type: Boolean,
-      default: false,
-    },
-    disabled: {
-      type: Boolean,
-      default: false,
-    },
-    loading: {
-      type: Boolean,
-      default: false,
-    },
-    excludeSelected: {
-      type: Boolean,
-      default: false,
-    },
-    clearSearchAfterClick: {
-      type: Boolean,
-      default: true,
-    },
-    searchMultipleFields: {
-      type: Array,
-      default: () => [],
-    },
-    parseMiddleText: {
-      type: Boolean,
-      default: false,
-    },
-    showSelectAll: {
-      type: Boolean,
-      default: false,
-    },
+    // Di Vue 3, gunakan modelValue
+    modelValue: { type: Array, required: true, default: () => [] },
+    label: { type: String, default: "" },
+    placeholder: { type: String, default: "Pilih..." },
+    options: { type: Array, default: () => [] },
+    itemText: { type: String, default: "name" },
+    itemValue: { type: String, default: "id" },
+    multiple: { type: Boolean, default: false },
+    showSelectAll: { type: Boolean, default: false },
+    required: { type: Boolean, default: false },
+    markRequiredRight: { type: Boolean, default: false },
+    error: { type: Boolean, default: false },
+    disabled: { type: Boolean, default: false },
+    loading: { type: Boolean, default: false },
+    id: { type: String, default: "" }
   },
-  data: function () {
+  emits: ['update:modelValue', 'search'], // Deklarasikan emits
+  data() {
     return {
       isFocus: false,
       search: "",
-      selected: [],
-      isOptionsExpanded: false,
-      arrowDown: false,
     };
   },
+  computed: {
+    optionType() {
+      return this.options.length > 0 ? typeof this.options[0] : "string";
+    },
+    isAllSelected() {
+      if (this.options.length === 0 || !this.modelValue) return false;
+      return this.options.every(opt => {
+        const optVal = this.optionType === 'string' ? opt : opt[this.itemValue];
+        return this.modelValue.some(v => (this.optionType === 'string' ? v : v[this.itemValue]) === optVal);
+      });
+    },
+    computedOptions() {
+      const searchTerm = this.search.toLowerCase();
+      return this.options
+        .filter(opt => {
+          const text = (this.optionType === 'string' ? opt : opt[this.itemText]).toString().toLowerCase();
+          return text.includes(searchTerm);
+        })
+        .map(opt => {
+          const optVal = this.optionType === 'string' ? opt : opt[this.itemValue];
+          const isSelected = this.modelValue.some(v => (this.optionType === 'string' ? v : v[this.itemValue]) === optVal);
+          return { ...opt, selected: isSelected };
+        });
+    },
+    selectedValueText() {
+      if (!this.modelValue || this.modelValue.length === 0) return "";
+      return this.modelValue.map(v => (this.optionType === 'string' ? v : v[this.itemText])).join(", ");
+    }
+  },
   methods: {
-    getClass(option) {
-      if (Object.prototype.hasOwnProperty.call(option, "is_available")) {
-        return {
-          "bg-primary-lightest text-primary-darkest px-3 py-2 text-sm cursor-pointer hover:bg-primary-light hover:text-primary-dark flex no-wrap break-words":
-            option.selected && option.is_available,
-          "bg-white-200 text-white-300 px-3 py-2 text-sm cursor-not-allowed pointer-events-none hover:bg-primary-light hover:text-primary-dark flex no-wrap break-words":
-            (!option.selected || option.selected) && !option.is_available,
-          "px-3 py-2 text-sm cursor-pointer hover:bg-primary-light hover:text-primary-dark flex no-wrap break-words":
-            !option.selected && option.is_available,
-        };
+    onDisplayTextClick() {
+      if (this.disabled) return;
+      this.isFocus = true;
+      this.$nextTick(() => this.$refs.autocompleteRef.focus());
+    },
+    onAutocompleteBlur() {
+      setTimeout(() => {
+        this.isFocus = false;
+        this.search = "";
+      }, 200);
+    },
+    onClickArrow() {
+      this.isFocus ? (this.isFocus = false) : this.onDisplayTextClick();
+    },
+    setValue(option) {
+      let newValue = [...this.modelValue];
+      const optVal = this.optionType === 'string' ? option : option[this.itemValue];
+
+      if (this.multiple) {
+        const index = newValue.findIndex(v => (this.optionType === 'string' ? v : v[this.itemValue]) === optVal);
+        index > -1 ? newValue.splice(index, 1) : newValue.push(option);
+        this.$nextTick(() => this.$refs.autocompleteRef.focus());
       } else {
-        return {
-          "bg-primary-lightest text-primary-darkest px-3 py-2 text-sm cursor-pointer hover:bg-primary-light hover:text-primary-dark flex no-wrap break-words":
-            option.selected,
-          "px-3 py-2 text-sm cursor-pointer hover:bg-primary-light hover:text-primary-dark flex no-wrap break-words":
-            !option.selected,
-        };
+        newValue = [option];
+        this.isFocus = false;
       }
+      this.$emit("update:modelValue", newValue);
     },
     toggleSelectAll() {
-      if (this.isAllSelected) {
-        this.selected = [];
-      } else {
-        this.selected = [...this.computedOptions];
-      }
-      this.$emit("input", this.selected);
-      this.$emit("change", this.selected);
+      const newValue = this.isAllSelected ? [] : [...this.options];
+      this.$emit("update:modelValue", newValue);
+      this.$nextTick(() => this.$refs.autocompleteRef.focus());
     },
     onInput(e) {
       this.$emit("search", e.target.value);
-    },
-    onClickArrow() {
-      if (!this.disabled) {
-        if (this.arrowDown) {
-          this.onAutocompleteBlur();
-          this.isFocus = false;
-        } else {
-          this.$refs.myInput.click();
-        }
-        this.arrowDown = !this.arrowDown;
-      }
-    },
-    setValue(value) {
-      if (this.multiple) {
-        const _isExist = this.selected.findIndex(
-          (v) => v[this.itemValue] === value[this.itemValue]
-        );
-        if (_isExist > -1) {
-          this.selected.splice(_isExist, 1);
-        } else {
-          this.selected.push(value);
-        }
-        this.$refs.autocompleteRef.focus();
-      } else {
-        this.selected = [value];
-        this.isFocus = false;
-        this.isOptionsExpanded = false;
-        if (!this.clearSearchAfterClick) {
-          this.handleNotClearAfterSelectDropdown(value);
-        }
-      }
-      this.$emit("input", this.selected);
-      this.$emit("change", this.selected);
-    },
-    onDisplayTextClick() {
-      this.isFocus = true;
-      this.isOptionsExpanded = true;
-      if (this.clearSearchAfterClick) {
-        this.search = "";
-      }
-      this.$nextTick(() => {
-        this.$refs.autocompleteRef.focus();
-      });
-      this.$emit("click");
-    },
-    onAutocompleteBlur() {
-      this.$emit("blur");
-      this.isOptionsExpanded = false;
-    },
-    onCheckboxChange(payload) {
-      this.$emit("change", payload);
-    },
-    onRadioChange(payload) {
-      this.$emit("change", payload);
-    },
-    onOptionClick(payload) {
-      if (this.multiple) this.onCheckboxChange(payload);
-      else this.onRadioChange(payload);
-    },
-    handleClickOutside(event) {
-      if (!this.$el.contains(event.target)) {
-        if (!this.clearSearchAfterClick && this.isFocus) {
-          if (this.search) {
-            this.handleNotClearAfterClickWhenClickOutside();
-          }
-          if (!this.search) {
-            this.search = "";
-            this.selected = [];
-            this.$emit("input", this.selected);
-            this.$emit("change", this.selected);
-          }
-        }
-        this.isFocus = false;
-        this.isOptionsExpanded = false;
-      } else {
-        this.$refs.autocompleteRef.focus();
-      }
-    },
-    handleNotClearAfterSelectDropdown(value) {
-      if (typeof value == "string") {
-        this.search = value;
-      } else if (Array.isArray(value)) {
-        if (value.length) {
-          if (typeof value[0] == "string") {
-            this.search = value[0];
-          } else if (typeof value[0] == "object") {
-            this.search = value[0][this.itemValue];
-          }
-        }
-      } else if (typeof value == "object") {
-        this.search = value[this.itemValue];
-      }
-    },
-    handleNotClearAfterClickWhenClickOutside() {
-      if (typeof this.selected == "string") {
-        this.search = this.selected;
-      } else if (Array.isArray(this.selected)) {
-        if (this.selected.length) {
-          if (typeof this.selected[0] == "string") {
-            this.search = this.selected[0];
-          } else if (typeof this.selected[0] == "object") {
-            this.search = this.selected[0][this.itemValue];
-          }
-        }
-      } else if (typeof this.selected == "object") {
-        this.search = this.selected[this.itemValue];
-      }
-    },
-  },
-  computed: {
-    isAllSelected() {
-      return (
-        this.computedOptions.length > 0 &&
-        this.selected.length === this.computedOptions.length
-      );
-    },
-    computedOptions() {
-      const type = typeof this.options[0];
-      if (type === "object") {
-        let filteredOptions = this.options
-          .filter((opt) => {
-            const searchTerm = this.search.toLowerCase();
-
-            if (this.searchMultipleFields.length > 0) {
-              return this.searchMultipleFields.some((field) => {
-                const fieldValue = opt[field];
-                return (
-                  fieldValue &&
-                  fieldValue.toString().toLowerCase().includes(searchTerm)
-                );
-              });
-            }
-
-            const searchField = this.itemSearch
-              ? this.itemSearch
-              : this.itemText;
-            const fieldValue = opt[searchField];
-            return (
-              fieldValue &&
-              fieldValue.toString().toLowerCase().includes(searchTerm)
-            );
-          })
-          .map((opt) => ({
-            ...opt,
-            selected:
-              this.value.find(
-                (v) => v[this.itemValue] === opt[this.itemValue]
-              ) !== undefined,
-          }));
-        if (this.excludeSelected && this.value.length > 0) {
-          filteredOptions = filteredOptions.filter(
-            (opt) => opt[this.itemValue] !== this.value[0][this.itemValue]
-          );
-        }
-        return filteredOptions;
-      } else {
-        return this.options.filter(
-          (opt) => opt.toLowerCase().indexOf(this.search.toLowerCase()) > -1
-        );
-      }
-    },
-    selectedValueText() {
-      if (this.optionType === "object" || typeof this.value[0] === "object") {
-        return this.value
-          .map((v) => v[this.itemText])
-          .toString()
-          .split(",")
-          .join(", ");
-      }
-      return this.value[0];
-    },
-    formattedSelectedText() {
-      const getFirst = (text) => {
-        if (typeof text === "string" && text.includes(" - ")) {
-          const parts = text.split(" - ");
-          return parts[0];
-        }
-        return text;
-      };
-
-      if (
-        this.optionType === "object" ||
-        (Array.isArray(this.value) && typeof this.value[0] === "object")
-      ) {
-        return this.value.map((v) => getFirst(v[this.itemText])).join(", ");
-      }
-
-      if (this.value && this.value.length > 0) {
-        return getFirst(this.value[0]);
-      }
-      return "";
-    },
-    selectedDescription() {
-      if (this.optionType === "object" || typeof this.value[0] === "object") {
-        return this.value
-          .map((v) => v[this.itemDescription])
-          .toString()
-          .split(",")
-          .join(", ");
-      }
-      return this.value[0];
-    },
-    optionType() {
-      if (this.options.length > 0) {
-        return typeof this.options[0];
-      }
-      return "string";
-    },
-  },
-  mounted() {
-    document.addEventListener("click", this.handleClickOutside);
-    Object.assign(this.selected, this.value);
-  },
-  destroyed() {
-    document.removeEventListener("click", this.handleClickOutside);
-  },
-  watch: {
-    value(val) {
-      this.selected = val;
-    },
-  },
+    }
+  }
 };
 </script>
+
 <style scoped>
-input::-webkit-input-placeholder {
-  color: #0f172a;
+.custom-checkbox {
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid #d1d5db;
+  border-radius: 0.25rem;
+  background-color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
 }
 
-input:-moz-placeholder {
-  /* Firefox 18- */
-  color: #0f172a;
+.custom-checkbox.checked {
+  background-color: #14b8a6 !important;
+  border-color: #14b8a6 !important;
 }
 
-input::-moz-placeholder {
-  /* Firefox 19+ */
-  color: #0f172a;
+.checkmark {
+  width: 0.65rem;
+  height: 0.65rem;
+  clip-path: polygon(14% 44%, 0 65%, 50% 100%, 100% 16%, 80% 0%, 43% 62%);
+  background-color: white;
 }
 
-input:-ms-input-placeholder {
-  color: #0f172a;
-}
-
-input::placeholder {
-  color: #0f172a;
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 </style>

@@ -90,7 +90,7 @@
                 >Settings</a
               >
               <a
-                @click.prevent="logout"
+                @click.prevent="logoutUser"
                 href="#"
                 class="block px-4 py-2 text-sm font-semibold text-gray-700 transition-colors hover:text-white hover:bg-teal-400"
                 >Logout</a
@@ -135,5 +135,22 @@ const vClickOutside = {
   unmounted(el) {
     document.body.removeEventListener("click", el.clickOutsideEvent);
   },
+};
+
+const logoutUser = async () => {
+  try {
+    await window.axios.post('/api/logout');
+    
+    console.log("Logout sukses di backend");
+  } catch (error) {
+    console.error("Gagal logout di backend:", error);
+  } finally {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user_roles');
+    
+    delete window.axios.defaults.headers.common['Authorization'];
+    
+    router.push("/");
+  }
 };
 </script>

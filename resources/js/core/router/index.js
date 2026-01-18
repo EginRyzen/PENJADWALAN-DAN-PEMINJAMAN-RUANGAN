@@ -18,7 +18,8 @@ const routes = [
             {
                 path: '',
                 name: 'auth.login',
-                component: Login
+                component: Login,
+                meta: { guestOnly: true }
             }
         ]
     },
@@ -26,6 +27,7 @@ const routes = [
     {
         path: '/app',
         component: MasterLayout,
+        meta: { requiresAuth: true },
         children: [
                 ...workOrderRoutes,
                 ...dashboardRoutes,
@@ -37,6 +39,18 @@ const routes = [
 const router = createRouter({
     history: createWebHistory(),
     routes,
+});
+
+router.beforeEach((to, from, next) => {
+    const isAuthenticated = localStorage.getItem('token');
+
+    if (to.meta.requiresAuth && !isAuthenticated) {
+        next({ name: 'auth.login' });
+    } else if (to.meta.guestOnly && isAuthenticated) {
+        next({ name: 'dashboard' });
+    } else {
+        next();
+    }
 });
 
 export default router;

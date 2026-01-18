@@ -13,7 +13,6 @@
 
     <div class="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
       <form @submit.prevent="handleLogin" class="space-y-6">
-        
         <div>
           <AppInput
             id="username"
@@ -24,11 +23,16 @@
             v-model="form.username"
             :required="true"
             :markRequiredRight="true"
-          />
+            :error="!!errors.username"
+          >
+            <template #error-message>
+              {{ errors.username }}
+            </template>
+          </AppInput>
         </div>
 
         <div>
-           <AppInput
+          <AppInput
             id="password"
             name="password"
             type="password"
@@ -37,42 +41,81 @@
             v-model="form.password"
             :required="true"
             :markRequiredRight="true"
-           />
+            :error="!!errors.password"
+          >
+            <template #error-message>
+              {{ errors.password }}
+            </template>
+          </AppInput>
         </div>
 
         <div>
           <button
             type="submit"
-            class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600"
+            :disabled="loading"
+            class="flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600 disabled:bg-indigo-300"
           >
-            Sign in
+            <span v-if="loading">Signing in...</span>
+            <span v-else>Sign in</span>
           </button>
         </div>
       </form>
-
     </div>
   </div>
 </template>
 
-<script setup>
-import { ref } from "vue";
-import { useRouter } from "vue-router";
-import AppInput from '@/core/components/AppInput.vue';
+<script>
+import DISPATCH from "@/core/plugins/constants/dispatches";
+import AppInput from "@/core/components/AppInput.vue";
 
-const router = useRouter();
+export default {
+  components: {
+    AppInput,
+  },
+  data() {
+    return {
+      form: {
+        username: "",
+        password: "",
+      },
+      errors: {
+        username: "",
+        password: "",
+      },
+      loading: false,
+    };
+  },
+  methods: {
+    validateForm() {
+      let isValid = true;
+      this.errors = { username: "", password: "" };
 
-const form = ref({
-  username: '',
-  password: ''
-});
+      if (!this.form.username) {
+        this.errors.username = "Username wajib diisi";
+        isValid = false;
+      }
+      if (!this.form.password) {
+        this.errors.password = "Password wajib diisi";
+        isValid = false;
+      }
+      return isValid;
+    },
+    async handleLogin() {
+      if (!this.validateForm()) return;
 
-const handleLogin = () => {
-  console.log("Login clicked", form.value);
-  console.log("Username:", form.value.username);
-  console.log("Password:", form.value.password);
-  
-  if(form.value.username && form.value.password) {
-      router.push("/app/dashboard");
-  }
+      this.loading = true;
+      try {
+        await this.$store.dispatch(DISPATCH.LOGIN, this.form);
+        this.$router.push({ name: "dashboard" });
+      } catch (error) {
+        const message = error.response?.data?.message || "Username atau password salah";
+        
+        this.errors.username = message;
+        this.errors.password = " ";
+      } finally {
+        this.loading = false;
+      }
+    },
+  },
 };
 </script>
