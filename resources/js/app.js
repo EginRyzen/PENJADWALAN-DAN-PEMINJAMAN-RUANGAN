@@ -10,8 +10,8 @@ import GlobalLoader from '@/core/components/GlobalLoader.vue';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
-import { faSearch, faBell, faCog, faHome } from '@fortawesome/free-solid-svg-icons';
-library.add(faSearch, faBell, faCog, faHome);
+import { faSearch, faBell, faCog, faHome, faPlus, faDownload } from '@fortawesome/free-solid-svg-icons';
+library.add(faSearch, faBell, faCog, faHome, faPlus, faDownload);
 
 const app = createApp(App);
 app.component('font-awesome-icon', FontAwesomeIcon);
