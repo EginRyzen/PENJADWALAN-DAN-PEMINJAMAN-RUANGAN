@@ -31,6 +31,7 @@
                 @change="updatePaging($event.target.value)"
               >
                 <option
+                  class="font-semibold"
                   v-for="(page, i) in paging"
                   :key="i"
                   :value="page"
