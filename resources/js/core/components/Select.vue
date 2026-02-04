@@ -15,12 +15,12 @@
             'disabled border-none text-gray-darkest cursor-not-allowed':
               disabled,
             'text-gray-lightest': disabled,
-            'bg-white border-primary focus:shadow-primary-lg focus:border-primary':
+            'bg-white border-teal-400 focus:shadow-primary-lg focus:border-teal-400':
               !disabled && !noBorder,
             'border-error': error,
             'hover:shadow-primary-sm': !noBorder && !disabled,
-            'text-base': size != 'large',
-            'h-11': (size = 'large'),
+            'text-base': size !== 'large',
+            'h-11': size === 'large',
           },
           customClass,
         ]"
@@ -195,6 +195,7 @@ export default {
       type: String,
       default: "text",
     },
+    modelValue: [Object, String, Number],
     required: Boolean,
   },
   name: "SelectApp",
@@ -202,7 +203,9 @@ export default {
     return {
       isOptionsExpanded: false,
       selected:
-        typeof this.value === "object" ? this.value[this.itemText] : this.value,
+        typeof this.modelValue === "object"
+          ? this.modelValue[this.itemText]
+          : this.modelValue,
       internalValue: [],
     };
   },
@@ -224,8 +227,8 @@ export default {
       this.isOptionsExpanded = false;
       this.internalValue = typeof v === "object" ? v[this.itemKey] : v;
       this.selected = typeof v === "object" ? v[this.itemText] : v;
-      this.$emit("change", v);
-      this.$emit("input", v);
+      this.$emit("update:modelValue", this.internalValue);
+      this.$emit("input", this.internalValue);
     },
     toggleOptions() {
       if (this.disabled) {
@@ -239,16 +242,68 @@ export default {
         this.isOptionsExpanded = false;
       }
     },
-  },
-  watch: {
-    value(val) {
-      if (typeof this.value === "object") {
+    updateSelectedLabel(val) {
+      if (val === null || val === undefined || val === "") {
+        this.selected = "";
+        return;
+      }
+
+      if (typeof val === "object") {
         this.selected = val[this.itemText];
         this.internalValue = val[this.itemKey];
       } else {
-        this.selected = val;
+        const option = this.options.find(
+          (opt) => (typeof opt === "object" ? opt[this.itemKey] : opt) === val
+        );
+
+        if (option) {
+          this.selected =
+            typeof option === "object" ? option[this.itemText] : option;
+        } else {
+          this.selected = val;
+        }
         this.internalValue = val;
       }
+    },
+    setOption(v) {
+      if (v.disabled) return false;
+      this.isOptionsExpanded = false;
+
+      const val = typeof v === "object" ? v[this.itemKey] : v;
+      const text = typeof v === "object" ? v[this.itemText] : v;
+
+      this.internalValue = val;
+      this.selected = text;
+
+      this.$emit("update:modelValue", val);
+      this.$emit("input", val);
+    },
+  },
+  watch: {
+    value(val) {
+      this.updateSelectedLabel(val);
+    },
+    modelValue: {
+      handler(val) {
+        if (val !== null && val !== undefined) {
+          const found = this.options.find(
+            (opt) => (typeof opt === "object" ? opt[this.itemKey] : opt) === val
+          );
+          if (found) {
+            this.selected =
+              typeof found === "object" ? found[this.itemText] : found;
+          } else {
+            this.selected = val;
+          }
+        }
+      },
+      immediate: true,
+    },
+    options: {
+      handler() {
+        this.updateSelectedLabel(this.modelValue || this.value);
+      },
+      deep: true,
     },
   },
   beforeDestroy() {

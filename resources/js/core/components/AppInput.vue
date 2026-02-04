@@ -15,87 +15,63 @@
         >*</span
       >
     </label>
+
     <div
-      class="rounded-md flex gap-1 px-2 relative"
+      class="rounded-md flex gap-1 px-2 relative transition-all duration-200"
       :class="{
-        'border border-primary': !disabled && !muted,
+        'border border-red-500 bg-red-50': error,
+        'border border-teal-400 bg-white hover:border-teal-500':
+          !error && !disabled && !muted,
+
+        'hover:border-teal-500 focus-within:border-teal-500':
+          error && !disabled,
+
         'border-0 h-11 bg-white-100 text-white-300': disabled,
-        'border-secondary shadow-secondary-sm bg-white': isFocus,
+        'border-secondary shadow-secondary-sm bg-white': isFocus && !error,
         'mb-1': error || $slots['hint'],
-        'border border-error': error,
         'border border-white-200 bg-white-100': muted && !disabled,
       }"
     >
-      <div
-        class="text-sm text-black flex items-center justify-start"
-        v-if="this.$slots['icon-left']"
-      >
+      <div v-if="$slots['icon-left']" class="flex items-center pl-1">
         <slot name="icon-left"></slot>
       </div>
 
       <input
         v-show="isFocus"
-        autocomplete="off"
-        class="rounded-md w-full h-11 py-3 focus:ring-0 text-sm focus:border-0 focus:shadow-none focus:outline-0 pl-2"
-        :class="{
-          'border border-error': error,
-          'bg-white': !muted,
-          'bg-white-100': muted,
-          'hyperlink-text': hyperlink,
-          'text-right': textRight,
-          'text-black': true,
-        }"
+        ref="inputRef"
+        :type="type"
         :value="modelValue"
         @input="handleInput"
         @blur="handleBlur"
         @focus="handleFocus"
-        @keypress="handleKeyPress"
-        @keydown="handleKeyDown"
-        @paste="handleOnPaste"
-        @keyup="handleKeyUp"
-        :type="type"
+        class="w-full h-11 py-3 focus:outline-none text-sm bg-transparent pl-2"
+        :class="{ 'text-red-600': error }"
         :placeholder="placeholder"
-        :id="$attrs.id"
-        :ref="name"
-        :name="name"
-        :readonly="$attrs.readonly"
+        :disabled="disabled"
       />
-
-      <div
-        v-if="disabled && hyperlink"
-        class="overlay"
-        @click="$emit('handleHyperlink')"
-      ></div>
 
       <input
         v-show="!isFocus"
-        class="rounded-md w-full h-11 border-0 py-3 focus:ring-0 text-sm text-black focus:border-0 focus:shadow-none focus:outline-0 pl-2"
-        :class="{
-          'bg-white-100': disabled || muted,
-          'bg-white': !disabled || !muted,
-          'hyperlink-text': hyperlink,
-          'text-right': textRight,
-        }"
-        :value="computedValue"
+        readonly
         :type="type"
+        :value="computedValue"
+        class="w-full h-11 py-3 focus:outline-none text-sm bg-transparent cursor-pointer pl-2"
+        :class="{ 'text-red-600': error }"
         :placeholder="placeholder"
         @click="handleClick"
-        @focus="handleClick"
         :disabled="disabled || disabledTyping"
-        :readonly="$attrs.readonly"
       />
 
-      <div
-        class="text-sm text-black flex items-center justify-end"
-        v-if="this.$slots['icon-right']"
-      >
+      <div v-if="$slots['icon-right']" class="flex items-center pr-1">
         <slot name="icon-right"></slot>
       </div>
     </div>
-    <div v-if="$slots['hint']" class="text-xs text-black-100 mb-1">
+
+    <div v-if="$slots['hint']" class="text-xs text-gray-400 mt-1">
       <slot name="hint"></slot>
     </div>
-    <div class="text-xs text-error" v-if="error">
+
+    <div class="text-xs text-red-500 mt-1 font-medium" v-if="error">
       <slot name="error-message"></slot>
     </div>
   </div>
@@ -185,11 +161,19 @@ export default {
     "keydown",
     "paste",
     "handleHyperlink",
+    "clear-error",
   ],
   data() {
     return {
       isFocus: false,
     };
+  },
+  watch: {
+    modelValue(newVal) {
+      if (newVal && this.error) {
+        this.$emit("clear-error");
+      }
+    },
   },
   methods: {
     handleInput(e) {
@@ -381,9 +365,9 @@ input {
 }
 
 .hyperlink-text {
-  -webkit-text-fill-color: #0b64fe;
+  /* -webkit-text-fill-color: #0b64fe; */
   opacity: 1;
-  color: #0b64fe !important;
+  /* color: #0b64fe !important; */
   font-style: normal;
   font-weight: 500;
   text-decoration: underline;

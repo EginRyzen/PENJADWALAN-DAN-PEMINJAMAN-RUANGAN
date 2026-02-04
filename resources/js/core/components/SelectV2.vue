@@ -153,7 +153,7 @@
         <p>No Data Available</p>
       </li>
     </ol>
-    <bottom-sheet-bima
+    <bottom-sheet
       v-model="isBottomSheetOpen"
       :title="labelBottomsheet ?? label"
       @close="toggle"
@@ -219,7 +219,7 @@
           {{ actionButtonLabel }}
         </button>
       </div>
-    </bottom-sheet-bima>
+    </bottom-sheet>
   </div>
 </template>
 

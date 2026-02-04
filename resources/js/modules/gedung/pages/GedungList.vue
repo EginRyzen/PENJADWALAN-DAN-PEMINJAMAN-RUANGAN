@@ -9,8 +9,9 @@
 
         <button-app
           expanded
+          color="teal"
           class="mt-4 bg-teal-400 hover:bg-teal-500 text-white font-semibold px-4 py-2 rounded-lg shadow-md transition-colors duration-200"
-          @click="$router.push({ name: 'CreateGedung' })"
+          @click="$router.push({ name: 'gedung.create' })"
         >
           <template #icon-left>
             <font-awesome-icon icon="plus" />

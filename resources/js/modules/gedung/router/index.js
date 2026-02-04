@@ -1,5 +1,5 @@
 import GedungList from '../pages/GedungList.vue';
-// import WorkOrderCreate from '../pages/WorkOrderCreate.vue';
+import GedungCreate from '../pages/GedungCreate.vue';
 
 const routes = [
     {
@@ -8,12 +8,12 @@ const routes = [
         component: GedungList,
         meta: { title: 'Daftar Gedung' }
     },
-    // {
-    //     path: '/work-order/create',
-    //     name: 'work-order.create',
-    //     component: WorkOrderCreate,
-    //     meta: { title: 'Buat Work Order' }
-    // }
+    {
+        path: 'gedung-create',
+        name: 'gedung.create',
+        component: GedungCreate,
+        meta: { title: 'Tambah Gedung' }
+    }
 ];
 
 export default routes;
