@@ -6,7 +6,7 @@
   >
     <input
       type="text"
-      class="form-input w-1/2 hover:shadow-primary-sm focus:ring-0 focus:shadow-primary focus:border-primary shadow-primary border-primary rounded-lg mb-4"
+      class="form-input w-1/2 hover:shadow-primary-sm focus:ring-0 focus:shadow-primary focus:border-teal-400 shadow-primary border-teal-400 rounded-lg mb-4"
       placeholder="Search..."
       v-model="search"
       @input="handleSearch"
@@ -32,7 +32,7 @@
             <th
               v-for="(head, i) in headers"
               :key="i"
-              class="px-4 py-3 border-b-2 border-primary bg-gray-100 text-sm font-semibold text-gray-700 tracking-wider"
+              class="px-4 py-3 border-b-2 border-teal-400 bg-white text-sm font-semibold text-gray-700 tracking-wider"
               :class="{
                 'text-left': head.align === 'start',
                 'text-center': head.align === 'center',
@@ -43,26 +43,33 @@
             >
               <div
                 class="relative flex justify-items-center items-center"
+                :class="{
+                  'justify-start': head.align === 'start',
+                  'justify-center': head.align === 'center',
+                  'justify-end': head.align === 'end',
+                }"
                 @click="head.sortable && sortBy($event, head.value)"
               >
                 <div class="text-error" v-if="head.required">*</div>
                 {{ head.text }}
+
                 <div
                   v-if="
                     head.sortable && findSortDirection(head.value) === false
                   "
-                  class="sort-default"
+                  class="sort-default ml-1"
                 ></div>
                 <div
                   :class="{
-                    'sort-desc': findSortDirection(head.value) === 'desc',
-                    'sort-asc': findSortDirection(head.value) === 'asc',
+                    'sort-desc ml-1': findSortDirection(head.value) === 'desc',
+                    'sort-asc ml-1': findSortDirection(head.value) === 'asc',
                   }"
                 ></div>
               </div>
+
               <button
-                class="rounded-full h-5 w-5 inline-flex justify-center items-center bg-primary-lightest ml-1 text-xs text-primary-dark"
-                @click="removeSorting(head.value)"
+                class="rounded-full h-5 w-5 inline-flex justify-center items-center bg-primary-lightest ml-1 text-xs text-primary-dark absolute right-1 top-1/2 -translate-y-1/2"
+                @click.stop="removeSorting(head.value)"
                 v-if="findSort(head.value) && sortOrder.length > 1"
               >
                 {{ findSortIndex(head.value) + 1 }}
@@ -123,7 +130,7 @@
     <div class="form-group text-gray-dark space-x-1" v-if="showPagination">
       <Pagination
         :current="currentPage"
-        :total="totalRecords"
+        :total="actualTotalRecords"
         :per-page="pageCount"
         :total-rows-on-page="totalRowsOnPage"
         @page-changed="handlePageChange($event)"
@@ -140,7 +147,6 @@
 <script>
 import _ from "lodash";
 import Pagination from "@/core/components/Pagination.vue";
-
 export default {
   name: "TableApp",
   components: {
@@ -150,7 +156,7 @@ export default {
     customHeight: { type: String, default: "" },
     items: { type: [Array, Function], default: () => [] },
     headers: { type: Array, required: true },
-    sortOrder: { type: Array },
+    sortOrder: { type: Array, default: () => [] },
     options: { type: Object },
     notFoundLabel: { type: String, default: "Data not found" },
     showNotFound: { type: Boolean, default: true },
@@ -199,38 +205,35 @@ export default {
     },
     filterData() {
       const obj = this;
-      const data = obj.sortData
-        .filter((_data) => {
-          const rows = obj.headers
-            .filter((head) => head.sortable)
-            .map((q) => q.value);
-          let flag = false;
-          if (rows.length > 0) {
-            rows.forEach((rowsKey) => {
-              if (_data[rowsKey] != undefined) {
-                if (
-                  _data[rowsKey]
-                    .toString()
-                    .toLowerCase()
-                    .indexOf(obj.search.toString().trim().toLowerCase()) != -1
-                ) {
-                  flag = true;
-                }
-              }
-            });
-            return flag;
+      const data = obj.sortData.filter((_data) => {
+        const rows = obj.headers
+          .filter((head) => head.sortable)
+          .map((q) => q.value);
+
+        if (obj.search === "" || rows.length === 0) return true;
+
+        let flag = false;
+        rows.forEach((rowsKey) => {
+          if (_data[rowsKey] != undefined) {
+            if (
+              _data[rowsKey]
+                .toString()
+                .toLowerCase()
+                .includes(obj.search.toLowerCase().trim())
+            ) {
+              flag = true;
+            }
           }
-          return _data;
-        })
-        .map((_data) => {
-          if (obj.search === "") {
-            return _data;
-          }
-          return JSON.parse(JSON.stringify(_data));
         });
-      obj.totalRecords = data.length;
-      obj.countPage(data.length);
+        return flag;
+      });
+
       return data;
+    },
+    actualTotalRecords() {
+      return this.serverSide
+        ? this.options.totalItems || 0
+        : this.filterData.length;
     },
     tableData() {
       const obj = this;
@@ -240,7 +243,6 @@ export default {
 
         return obj.filterData.slice(start, end);
       }
-
       return obj.records;
     },
     usesLocalData() {
@@ -260,15 +262,31 @@ export default {
       this.mapDataToRows();
       const endTime = new Date().getTime();
       const executionTime = endTime - startTime;
+      this.totalRecords = this.options.totalItems || this.items.length;
       console.log(`Execution time loading data to table: ${executionTime} ms`);
     },
-    options(data) {
-      this.pageIndex = data.page - 1;
-      this.currentPage = data.page;
-      this.pageCount = data.itemsPerPage;
+    options: {
+      handler(data) {
+        this.pageIndex = data.page - 1;
+        this.currentPage = data.page;
+        this.pageCount = data.itemsPerPage;
+
+        if (this.serverSide) {
+          this.fetchServerData();
+        }
+      },
+      deep: true,
     },
     pageCount() {
-      this.fetchServerData();
+      if (this.serverSide) {
+        this.fetchServerData();
+      }
+    },
+    "options.totalItems": {
+      handler(newTotal) {
+        this.totalRecords = newTotal;
+      },
+      immediate: true,
     },
   },
   methods: {
@@ -300,14 +318,8 @@ export default {
       this.$emit("left-action");
     },
     countPage(total = 0) {
-      const obj = this;
-      if (total < 1) {
-        obj.totalPage = 0;
-        return obj.totalPage;
-      }
-      obj.totalPage =
-        total < obj.pageCount ? 1 : Math.floor(total / obj.pageCount);
-      return obj.totalPage;
+      if (total < 1) return 0;
+      return Math.ceil(total / this.pageCount);
     },
     sortBy(event, key) {
       const obj = this;
@@ -366,12 +378,17 @@ export default {
       this.pageIndex = 0;
       this.currentPage = 1;
       this.pageCount = parseInt(event);
-      this.options.itemsPerPage = event;
+      this.$emit("update:options", {
+        ...this.options,
+        page: 1,
+        itemsPerPage: this.pageCount,
+      });
 
       this.mapDataToRows();
       this.detectUpdate();
     },
     findSort(field) {
+      if (!this.sortOrder) return null;
       return this.sortOrder.find((sort) => sort.field === field);
     },
     findSortDirection(field) {

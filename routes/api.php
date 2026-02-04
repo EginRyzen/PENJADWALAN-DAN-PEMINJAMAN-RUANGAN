@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\Building\DataBaseBuildingController;
+use App\Http\Controllers\Building\DataBaseBuildingFacilityController;
+use App\Http\Controllers\DataDocumentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -22,5 +25,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/profile', [AuthController::class, 'me']);
     Route::get('/user', function (Request $request) {
         return $request->user();
+    });
+
+    Route::prefix('documents')->group(function () {
+        Route::post('/upload', [DataDocumentController::class, 'store']);
+    });
+
+    Route::prefix('building')->group(function () {
+        Route::apiResource('buildings', DataBaseBuildingController::class);
+        Route::apiResource('facilities', DataBaseBuildingFacilityController::class);
     });
 });
