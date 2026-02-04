@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('building_code')->unique();
             $table->string('building_location');
             $table->enum('building_status', ['active', 'inactive'])->default('inactive');
-            $table->text('building_image')->nullable();
+            $table->foreignUuid('building_image_id')->nullable()->constrained('data_documents')->onDelete('set null');
             $table->timestamps();
         });
     }

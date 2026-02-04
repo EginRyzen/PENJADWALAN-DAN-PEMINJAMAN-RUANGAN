@@ -26,11 +26,23 @@ export const Store = {
                 throw error;
             }
         },
-        async [actions.SAVE_GEDUNG_DATA]({ commit }, formData) {
+        async [actions.UPLOAD_IMAGE]({ commit }, file) {
             try {
-                const response = await Api.post(apiUrl.SAVE_GEDUNG, formData, {
+                const formData = new FormData();
+                formData.append("file", file);
+
+                const response = await Api.post(apiUrl.UPLOAD_IMAGE, formData, {
                     headers: { 'Content-Type': 'multipart/form-data' }
                 });
+                return response.data.result; 
+            } catch (error) {
+                console.error("Error Uploading Image:", error);
+                throw error;
+            }
+        },
+        async [actions.SAVE_GEDUNG_DATA]({ commit }, payload) {
+            try {
+                const response = await Api.post(apiUrl.SAVE_GEDUNG, payload);
                 return response.data;
             } catch (error) {
                 console.error("Error Saving Gedung Data:", error);

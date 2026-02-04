@@ -19,7 +19,7 @@ class StoreBuildingRequest extends FormRequest
             'building_code'     => 'required|string|unique:data_base_buildings,building_code',
             'building_location' => 'required|string',
             'building_status'   => 'required|string',
-            'building_image'    => 'nullable|image|mimes:jpeg,png,jpg|max:2048', // Penanganan Image
+            'building_image_id' => 'nullable|exists:data_documents,id',
 
             // DataBaseBuildingRoom fields
             'rooms'                 => 'required|array|min:1',

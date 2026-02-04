@@ -37,17 +37,13 @@ class DataBaseBuildingController extends Controller
     {
         try {
             return DB::transaction(function () use ($request) {
-                $imagePath = null;
-                if ($request->hasFile('building_image')) {
-                    $imagePath = $request->file('building_image')->store('buildings', 'public');
-                }
-
+                // Langsung ambil ID image dari request payload
                 $building = DataBaseBuilding::create([
                     'building_name'     => $request->building_name,
                     'building_code'     => $request->building_code,
                     'building_location' => $request->building_location,
                     'building_status'   => $request->building_status,
-                    'building_image'    => $imagePath,
+                    'building_image_id' => $request->building_image_id, // Menggunakan ID dari hasil upload asinkron FE
                 ]);
 
                 if ($request->has('rooms')) {
@@ -73,8 +69,13 @@ class DataBaseBuildingController extends Controller
                     }
                 }
 
-                // Menggunakan Trait: Tidak perlu ketik timestamp/code berulang kali
-                return $this->successResponse($building->load('rooms.facility'), 'Gedung berhasil dibuat', 201, 'Created');
+                // Load relasi image untuk dikembalikan ke FE jika diperlukan
+                return $this->successResponse(
+                    $building->load('rooms.facilities.facility', 'image'),
+                    'Gedung berhasil dibuat',
+                    201,
+                    'Created'
+                );
             });
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');

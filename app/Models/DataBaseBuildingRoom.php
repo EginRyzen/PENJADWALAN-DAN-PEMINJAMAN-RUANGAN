@@ -24,6 +24,10 @@ class DataBaseBuildingRoom extends Model
 
     public function building()
     {
-        return $this->belongsTo(DataBaseBuilding::class);
+        return $this->belongsTo(DataBaseBuilding::class, 'building_id');
+    }
+    public function facilities()
+    {
+        return $this->hasMany(BuildingFacilityRoom::class, 'room_id');
     }
 }

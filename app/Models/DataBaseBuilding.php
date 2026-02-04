@@ -17,11 +17,16 @@ class DataBaseBuilding extends Model
         'building_code',
         'building_location',
         'building_status',
-        'building_image',
+        'building_image_id',
     ];
 
-    public function rooms()
+    public function image()
     {
-        return $this->hasMany(DataBaseBuildingRoom::class);
+        return $this->belongsTo(DataDocument::class, 'building_image_id');
     }
+
+    public function rooms()
+{
+    return $this->hasMany(DataBaseBuildingRoom::class, 'building_id');
+}
 }

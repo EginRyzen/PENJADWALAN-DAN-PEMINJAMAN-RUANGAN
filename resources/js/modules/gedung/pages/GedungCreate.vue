@@ -69,7 +69,7 @@
             type="primary"
             color="teal"
             class="bg-teal-400 hover:bg-teal-500 text-white font-semibold px-12 py-2 rounded-lg shadow-md transition-all duration-200"
-            @click="handleFinalSave"
+            @click.stop.prevent="handleFinalSave"
           >
             Simpan Seluruh Data
           </button-app>
@@ -124,56 +124,53 @@ export default {
       this.isFacilityMode = true;
     },
     async handleFinalSave() {
-      const isMainValid = this.$refs.mainInfoForm.validate(); //
-      const isRoomValid = this.$refs.roomListForm.validate(); //
+      if (this.$store.state.isLoading) return;
+      const isMainValid = this.$refs.mainInfoForm.validate();
+      const isRoomValid = this.$refs.roomListForm.validate();
 
       if (isMainValid && isRoomValid) {
-        const mainData = this.$refs.mainInfoForm.getData(); //
-        const roomData = this.$refs.roomListForm.getData(); //
-
-        // PEMBENTUKAN PAYLOAD DI SINI
-        const formData = new FormData();
-        formData.append("building_name", mainData.building_name);
-        formData.append("building_code", mainData.building_code);
-        formData.append("building_location", mainData.building_location);
-        formData.append("building_status", "active"); // Status default
-
-        if (mainData.building_image) {
-          formData.append("building_image", mainData.building_image);
-        }
-
-        // Mapping Ruangan dan Fasilitas ke FormData
-        roomData.forEach((room, index) => {
-          formData.append(`rooms[${index}][room_name]`, room.room_name);
-          formData.append(`rooms[${index}][room_code]`, room.room_code);
-          formData.append(
-            `rooms[${index}][room_location]`,
-            mainData.building_location
-          );
-          formData.append(`rooms[${index}][room_status]`, room.room_status);
-          formData.append(`rooms[${index}][room_capacity]`, room.room_capacity);
-          formData.append(`rooms[${index}][room_purpose]`, room.room_purpose);
-
-          if (room.facilities && room.facilities.length > 0) {
-            room.facilities.forEach((facility, fIndex) => {
-              formData.append(
-                `rooms[${index}][facilities][${fIndex}][facility_id]`,
-                facility.facility_id
-              );
-              formData.append(
-                `rooms[${index}][facilities][${fIndex}][quantity]`,
-                facility.quantity
-              );
-            });
-          }
-        });
-
         try {
           this.$store.commit("SET_LOADING", true);
-          await this.$store.dispatch(DISPATCH.SAVE_GEDUNG_DATA, formData);
+
+          const mainData = this.$refs.mainInfoForm.getData();
+          const roomData = this.$refs.roomListForm.getData();
+          let uploadedImageId = null;
+
+          // STEP 1: Upload Image secara asinkron jika ada file terpilih
+          if (mainData.building_image) {
+            const documentResult = await this.$store.dispatch(
+              DISPATCH.UPLOAD_IMAGE,
+              mainData.building_image
+            );
+            uploadedImageId = documentResult.id; // Ambil ID dari response backend
+          }
+
+          // STEP 2: Susun Payload Final (Sekarang bisa berupa Object/JSON biasa)
+          const payload = {
+            building_name: mainData.building_name,
+            building_code: mainData.building_code,
+            building_location: mainData.building_location,
+            building_status: "active",
+            building_image_id: uploadedImageId, // Gunakan ID yang baru didapat
+            rooms: roomData.map((room) => ({
+              room_name: room.room_name,
+              room_code: room.room_code,
+              room_location: mainData.building_location,
+              room_status: room.room_status,
+              room_capacity: room.room_capacity,
+              room_purpose: room.room_purpose,
+              facilities: room.facilities.map((f) => ({
+                facility_id: f.facility_id,
+                quantity: f.quantity,
+              })),
+            })),
+          };
+
+          // STEP 3: Simpan Data Gedung
+          await this.$store.dispatch(DISPATCH.SAVE_GEDUNG_DATA, payload);
 
           alert("Data Gedung dan Ruangan berhasil disimpan!");
-          this.$router.push({ name: "gedung.list" }); //
+          this.$router.push({ name: "gedung.list" });
         } catch (error) {
           const errorMsg =
             error.response?.data?.message || "Terjadi kesalahan server";
