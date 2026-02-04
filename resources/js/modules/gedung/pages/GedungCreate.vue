@@ -119,7 +119,7 @@ export default {
       breadcrumbItems: [
         { text: "Dashboard", link: "/app/dashboard" },
         { text: "Gedung", link: "/app/gedung-list" },
-        { text: "Buat", link: "#" },
+        { text: "Create", link: "#" },
       ],
     };
   },
