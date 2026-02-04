@@ -104,11 +104,13 @@
               type="button"
               @click="$emit('open-facility', startingIndex + index, row)"
               :disabled="!isRowComplete(row)"
-              class="w-8 h-8 flex items-center justify-center rounded-lg"
+              class="w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-200"
               :class="[
-                isRowComplete(row)
-                  ? 'bg-teal-50 text-teal-500'
-                  : 'bg-gray-100 text-gray-400',
+                !isRowComplete(row)
+                  ? 'bg-gray-100 text-gray-400'
+                  : errors[startingIndex + index]?.facilities_empty
+                  ? 'bg-red-500 text-white shadow-lg'
+                  : 'bg-teal-50 text-teal-500',
               ]"
             >
               <font-awesome-icon icon="plus" />
@@ -201,6 +203,19 @@ export default {
     },
   },
   methods: {
+    clearFacilityError(index) {
+      if (this.errors[index]) {
+        const room = this.rooms[index];
+        const hasFacilities = room.facilities && room.facilities.length > 0;
+        const allFacilitiesValid = room.facilities.every(
+          (f) => f.facility_id && f.quantity
+        );
+
+        if (hasFacilities && allFacilitiesValid) {
+          this.errors[index].facilities_empty = false;
+        }
+      }
+    },
     onlyNumber(event) {
       const forbiddenKeys = ["e", "E", "+", "-", ".", ","];
 
@@ -246,6 +261,19 @@ export default {
         if (!room.room_code) err.room_code = "Wajib";
         if (!room.room_capacity) err.room_capacity = "Wajib";
         if (!room.room_purpose) err.room_purpose = "Wajib";
+        const hasNoFacilities =
+          !room.facilities || room.facilities.length === 0;
+        const hasInvalidFacilities =
+          room.facilities &&
+          room.facilities.some((f) => !f.facility_id || !f.quantity);
+
+        if (
+          this.isRowComplete(room) &&
+          (hasNoFacilities || hasInvalidFacilities)
+        ) {
+          err.facilities_empty = true; // Flag untuk merubah warna tombol
+          isValid = false;
+        }
         this.errors[index] = err;
         if (Object.keys(err).length > 0) isValid = false;
       });

@@ -17,9 +17,9 @@
             icon="exclamation-circle"
             class="text-red-500 text-5xl mb-4"
           />
-          <h3 class="text-lg font-bold mb-2">Form Belum Lengkap</h3>
+          <h3 class="text-lg font-bold mb-2">{{ modal.title }}</h3>
           <p class="text-gray-600 mb-6">
-            Mohon lengkapi semua data pada form sebelum menyimpan.
+            {{ modal.message }}
           </p>
           <button
             @click="modal.error = false"
@@ -80,7 +80,7 @@
         <building-fasilitas-ruangan-form
           :room-name="currentRoom.room_name"
           :facilities="currentRoom.facilities"
-          @back="isFacilityMode = false"
+          @back="handleBackFromFacility"
         />
       </div>
     </div>
@@ -110,7 +110,12 @@ export default {
       isFacilityMode: false,
       currentRoom: null,
       selectedImageSrc: null,
-      modal: { error: false, preview: false },
+      modal: {
+        error: false,
+        preview: false,
+        title: "Form Belum Lengkap",
+        message: "Mohon lengkapi semua data pada form sebelum menyimpan.",
+      },
       breadcrumbItems: [
         { text: "Dashboard", link: "/app/dashboard" },
         { text: "Gedung", link: "/app/gedung-list" },
@@ -119,6 +124,17 @@ export default {
     };
   },
   methods: {
+    handleBackFromFacility() {
+      this.isFacilityMode = false;
+      
+      const roomIndex = this.$refs.roomListForm.rooms.findIndex(
+        (r) => r.id === this.currentRoom.id
+      );
+
+      if (roomIndex !== -1) {
+        this.$refs.roomListForm.clearFacilityError(roomIndex);
+      }
+    },
     handleOpenFacility(index, room) {
       this.currentRoom = room;
       this.isFacilityMode = true;
@@ -128,6 +144,22 @@ export default {
       const isMainValid = this.$refs.mainInfoForm.validate();
       const isRoomValid = this.$refs.roomListForm.validate();
 
+      if (!isMainValid) {
+        this.modal.title = "Informasi Utama Belum Lengkap";
+        this.modal.message =
+          "Silakan isi Nama, Kode, dan Lokasi gedung terlebih dahulu.";
+        this.modal.error = true;
+        return;
+      }
+
+      if (!isRoomValid) {
+        this.modal.title = "Fasilitas Belum Diisi";
+        this.modal.message =
+          "Mohon lengkapi daftar ruangan dan pastikan setiap ruangan sudah memiliki fasilitas (Tombol + merah wajib diisi).";
+        this.modal.error = true;
+        return;
+      }
+
       if (isMainValid && isRoomValid) {
         try {
           this.$store.commit("SET_LOADING", true);
@@ -136,22 +168,20 @@ export default {
           const roomData = this.$refs.roomListForm.getData();
           let uploadedImageId = null;
 
-          // STEP 1: Upload Image secara asinkron jika ada file terpilih
           if (mainData.building_image) {
             const documentResult = await this.$store.dispatch(
               DISPATCH.UPLOAD_IMAGE,
               mainData.building_image
             );
-            uploadedImageId = documentResult.id; // Ambil ID dari response backend
+            uploadedImageId = documentResult.id;
           }
 
-          // STEP 2: Susun Payload Final (Sekarang bisa berupa Object/JSON biasa)
           const payload = {
             building_name: mainData.building_name,
             building_code: mainData.building_code,
             building_location: mainData.building_location,
             building_status: "active",
-            building_image_id: uploadedImageId, // Gunakan ID yang baru didapat
+            building_image_id: uploadedImageId,
             rooms: roomData.map((room) => ({
               room_name: room.room_name,
               room_code: room.room_code,
@@ -166,7 +196,6 @@ export default {
             })),
           };
 
-          // STEP 3: Simpan Data Gedung
           await this.$store.dispatch(DISPATCH.SAVE_GEDUNG_DATA, payload);
 
           alert("Data Gedung dan Ruangan berhasil disimpan!");
