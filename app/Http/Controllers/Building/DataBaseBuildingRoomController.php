@@ -1,11 +1,12 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Building;
 
-use App\Models\DataBaseBuildingFacility;
+use App\Http\Controllers\Controller;
+use App\Models\DataBaseBuildingRoom;
 use Illuminate\Http\Request;
 
-class DataBaseBuildingFacilityController extends Controller
+class DataBaseBuildingRoomController extends Controller
 {
     /**
      * Display a listing of the resource.
@@ -34,7 +35,7 @@ class DataBaseBuildingFacilityController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(DataBaseBuildingFacility $dataBaseBuildingFacility)
+    public function show(DataBaseBuildingRoom $dataBaseBuildingRoom)
     {
         //
     }
@@ -42,7 +43,7 @@ class DataBaseBuildingFacilityController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(DataBaseBuildingFacility $dataBaseBuildingFacility)
+    public function edit(DataBaseBuildingRoom $dataBaseBuildingRoom)
     {
         //
     }
@@ -50,7 +51,7 @@ class DataBaseBuildingFacilityController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, DataBaseBuildingFacility $dataBaseBuildingFacility)
+    public function update(Request $request, DataBaseBuildingRoom $dataBaseBuildingRoom)
     {
         //
     }
@@ -58,7 +59,7 @@ class DataBaseBuildingFacilityController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(DataBaseBuildingFacility $dataBaseBuildingFacility)
+    public function destroy(DataBaseBuildingRoom $dataBaseBuildingRoom)
     {
         //
     }

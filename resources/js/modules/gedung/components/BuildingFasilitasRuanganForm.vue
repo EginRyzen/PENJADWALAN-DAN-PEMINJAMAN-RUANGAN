@@ -105,6 +105,7 @@
 import TableApp from "@/core/components/Table.vue";
 import AppInput from "@/core/components/AppInput.vue";
 import SelectAutoComplete from "@/core/components/SelectAutoComplete.vue";
+import DISPATCH from "@/core/plugins/constants/dispatches";
 
 export default {
   name: "BuildingFasilitasRuanganForm",
@@ -127,13 +128,7 @@ export default {
         { text: "Jumlah (Qty)", value: "quantity", align: "start", width: "w-40" },
         { text: "Aksi", value: "aksi", align: "center", width: "w-24" },
       ],
-      facilityOptions: [
-        { id: 1, name: "Air Conditioner (AC)" },
-        { id: 2, name: "Proyektor" },
-        { id: 3, name: "Meja Rapat" },
-        { id: 4, name: "Kursi Ergonomis" },
-        { id: 5, name: "Whiteboard" },
-      ],
+      facilityOptions: [],
     };
   },
   computed: {
@@ -171,6 +166,21 @@ export default {
         }
       }
     },
+    async fetchFacilityOptions() {
+      try {
+        const data = await this.$store.dispatch(DISPATCH.GET_GEDUNG_FACILITIES);
+        
+        this.facilityOptions = data.map(item => ({
+          id: item.id,
+          name: item.facility_name 
+        }));
+      } catch (error) {
+        console.error("Gagal memuat data fasilitas gedung:", error);
+      }
+    },
+  },
+  mounted(){
+    this.fetchFacilityOptions();
   },
   watch: {
     facilities: {

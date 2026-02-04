@@ -52,25 +52,41 @@
             <app-input
               v-model.number="row.room_capacity"
               type="number"
+              placeholder="0"
               :error="!!errors[startingIndex + index]?.room_capacity"
               @clear-error="errors[startingIndex + index].room_capacity = null"
+              @keydown="onlyNumber"
             >
               <template #error-message>{{
                 errors[startingIndex + index]?.room_capacity
               }}</template>
             </app-input>
           </td>
+
           <td class="p-2 border-b border-gray-100 align-top">
-            <app-input
-              v-model="row.room_purpose"
-              placeholder="Peruntukan"
-              :error="!!errors[startingIndex + index]?.room_purpose"
-              @clear-error="errors[startingIndex + index].room_purpose = null"
-            >
-              <template #error-message>{{
-                errors[startingIndex + index]?.room_purpose
-              }}</template>
-            </app-input>
+            <div class="relative">
+              <select
+                v-model="row.room_purpose"
+                class="w-full bg-white border border-teal-400 text-gray-700 py-3 px-3 pr-8 rounded-md appearance-none text-sm h-11 transition-all focus:border-teal-500 outline-none"
+              >
+                <option
+                  v-for="purpose in room_purpose_options"
+                  :key="purpose"
+                  :value="purpose"
+                >
+                  {{ purpose }}
+                </option>
+              </select>
+              <div
+                class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"
+              >
+                <svg class="fill-current h-4 w-4" viewBox="0 0 20 20">
+                  <path
+                    d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"
+                  />
+                </svg>
+              </div>
+            </div>
           </td>
           <td class="p-2 border-b border-gray-100 align-top">
             <select
@@ -144,10 +160,17 @@ export default {
           room_name: "",
           room_code: "",
           room_capacity: 0,
-          room_purpose: "",
+          room_purpose: "RUANG KELAS",
           room_status: "inactive",
           facilities: [],
         },
+      ],
+      room_purpose_options: [
+        "RUANG KELAS",
+        "LABORATORIUM",
+        "AULA",
+        "RUANG RAPAT",
+        "GUDANG",
       ],
       errors: [],
       tableOptions: { page: 1, itemsPerPage: 10, totalItems: 1 },
@@ -178,6 +201,13 @@ export default {
     },
   },
   methods: {
+    onlyNumber(event) {
+      const forbiddenKeys = ["e", "E", "+", "-", ".", ","];
+
+      if (forbiddenKeys.includes(event.key)) {
+        event.preventDefault();
+      }
+    },
     isRowComplete(row) {
       return row.room_name && row.room_code && row.room_purpose;
     },
@@ -187,7 +217,7 @@ export default {
         room_name: "",
         room_code: "",
         room_capacity: 0,
-        room_purpose: "",
+        room_purpose: "RUANG KELAS",
         room_status: "inactive",
         facilities: [],
       });

@@ -94,6 +94,7 @@ import BuildingFasilitasRuanganForm from "../components/BuildingFasilitasRuangan
 import BuildingImagePreview from "../components/BuildingImagePreview.vue";
 import BreadcrumbBima from "@/core/components/Breadcrumb.vue";
 import ButtonApp from "@/core/components/Button.vue";
+import DISPATCH from "@/core/plugins/constants/dispatches";
 
 export default {
   components: {
@@ -122,17 +123,64 @@ export default {
       this.currentRoom = room;
       this.isFacilityMode = true;
     },
-    handleFinalSave() {
-      const isMainValid = this.$refs.mainInfoForm.validate();
-      const isRoomValid = this.$refs.roomListForm.validate();
+    async handleFinalSave() {
+      const isMainValid = this.$refs.mainInfoForm.validate(); //
+      const isRoomValid = this.$refs.roomListForm.validate(); //
 
       if (isMainValid && isRoomValid) {
-        const finalData = {
-          ...this.$refs.mainInfoForm.getData(),
-          rooms: this.$refs.roomListForm.getData(),
-        };
-        console.log("Data siap kirim API:", finalData);
-        alert("Simpan Berhasil!");
+        const mainData = this.$refs.mainInfoForm.getData(); //
+        const roomData = this.$refs.roomListForm.getData(); //
+
+        // PEMBENTUKAN PAYLOAD DI SINI
+        const formData = new FormData();
+        formData.append("building_name", mainData.building_name);
+        formData.append("building_code", mainData.building_code);
+        formData.append("building_location", mainData.building_location);
+        formData.append("building_status", "active"); // Status default
+
+        if (mainData.building_image) {
+          formData.append("building_image", mainData.building_image);
+        }
+
+        // Mapping Ruangan dan Fasilitas ke FormData
+        roomData.forEach((room, index) => {
+          formData.append(`rooms[${index}][room_name]`, room.room_name);
+          formData.append(`rooms[${index}][room_code]`, room.room_code);
+          formData.append(
+            `rooms[${index}][room_location]`,
+            mainData.building_location
+          );
+          formData.append(`rooms[${index}][room_status]`, room.room_status);
+          formData.append(`rooms[${index}][room_capacity]`, room.room_capacity);
+          formData.append(`rooms[${index}][room_purpose]`, room.room_purpose);
+
+          if (room.facilities && room.facilities.length > 0) {
+            room.facilities.forEach((facility, fIndex) => {
+              formData.append(
+                `rooms[${index}][facilities][${fIndex}][facility_id]`,
+                facility.facility_id
+              );
+              formData.append(
+                `rooms[${index}][facilities][${fIndex}][quantity]`,
+                facility.quantity
+              );
+            });
+          }
+        });
+
+        try {
+          this.$store.commit("SET_LOADING", true);
+          await this.$store.dispatch(DISPATCH.SAVE_GEDUNG_DATA, formData);
+
+          alert("Data Gedung dan Ruangan berhasil disimpan!");
+          this.$router.push({ name: "gedung.list" }); //
+        } catch (error) {
+          const errorMsg =
+            error.response?.data?.message || "Terjadi kesalahan server";
+          alert("Gagal menyimpan: " + errorMsg);
+        } finally {
+          this.$store.commit("SET_LOADING", false);
+        }
       } else {
         this.modal.error = true;
       }

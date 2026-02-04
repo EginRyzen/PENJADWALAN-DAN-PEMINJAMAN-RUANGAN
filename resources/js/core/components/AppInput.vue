@@ -44,7 +44,7 @@
         @input="handleInput"
         @blur="handleBlur"
         @focus="handleFocus"
-        class="w-full h-11 py-3 focus:outline-none text-sm bg-transparent pl-2"
+        class="w-full h-11 py-3 text-gray-600 focus:outline-none text-sm bg-transparent pl-2"
         :class="{ 'text-red-600': error }"
         :placeholder="placeholder"
         :disabled="disabled"
@@ -55,7 +55,7 @@
         readonly
         :type="type"
         :value="computedValue"
-        class="w-full h-11 py-3 focus:outline-none text-sm bg-transparent cursor-pointer pl-2"
+        class="w-full h-11 py-3 text-gray-500 focus:outline-none text-sm bg-transparent cursor-pointer pl-2"
         :class="{ 'text-red-600': error }"
         :placeholder="placeholder"
         @click="handleClick"
@@ -218,8 +218,8 @@ export default {
       this.isFocus = true;
       // Menggunakan nextTick untuk memastikan ref sudah ada
       this.$nextTick(() => {
-        if (this.$refs[this.name]) {
-          this.$refs[this.name].focus();
+        if (this.$refs.inputRef) {
+          this.$refs.inputRef.focus();
         }
       });
     },
