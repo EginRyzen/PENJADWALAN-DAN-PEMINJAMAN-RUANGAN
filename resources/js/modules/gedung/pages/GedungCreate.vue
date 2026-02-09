@@ -38,6 +38,7 @@
 
       <div class="flex items-center justify-between mb-8">
         <div
+          v-if="!isFacilityMode"
           class="flex items-center gap-2 text-gray-500 cursor-pointer"
           @click="$router.go(-1)"
         >
@@ -126,7 +127,7 @@ export default {
   methods: {
     handleBackFromFacility() {
       this.isFacilityMode = false;
-      
+
       const roomIndex = this.$refs.roomListForm.rooms.findIndex(
         (r) => r.id === this.currentRoom.id
       );

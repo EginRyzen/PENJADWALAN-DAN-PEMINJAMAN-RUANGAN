@@ -37,13 +37,12 @@ class DataBaseBuildingController extends Controller
     {
         try {
             return DB::transaction(function () use ($request) {
-                // Langsung ambil ID image dari request payload
                 $building = DataBaseBuilding::create([
                     'building_name'     => $request->building_name,
                     'building_code'     => $request->building_code,
                     'building_location' => $request->building_location,
                     'building_status'   => $request->building_status,
-                    'building_image_id' => $request->building_image_id, // Menggunakan ID dari hasil upload asinkron FE
+                    'building_image_id' => $request->building_image_id,
                 ]);
 
                 if ($request->has('rooms')) {
@@ -69,7 +68,6 @@ class DataBaseBuildingController extends Controller
                     }
                 }
 
-                // Load relasi image untuk dikembalikan ke FE jika diperlukan
                 return $this->successResponse(
                     $building->load('rooms.facilities.facility', 'image'),
                     'Gedung berhasil dibuat',
