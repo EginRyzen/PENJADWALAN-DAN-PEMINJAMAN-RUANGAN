@@ -32,6 +32,8 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::prefix('building')->group(function () {
+        Route::get('/buildings-simple', [DataBaseBuildingController::class, 'listOnly']);
+        Route::get('/buildings', [DataBaseBuildingController::class, 'index']);
         Route::apiResource('buildings', DataBaseBuildingController::class);
         Route::apiResource('facilities', DataBaseBuildingFacilityController::class);
     });

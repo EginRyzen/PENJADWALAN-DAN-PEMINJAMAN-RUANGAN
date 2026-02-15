@@ -118,9 +118,8 @@ export default {
         message: "Mohon lengkapi semua data pada form sebelum menyimpan.",
       },
       breadcrumbItems: [
-        { text: "Dashboard", link: "/app/dashboard" },
         { text: "Gedung", link: "/app/gedung-list" },
-        { text: "Create", link: "#" },
+        { text: "Create Gedung", link: "#" },
       ],
     };
   },

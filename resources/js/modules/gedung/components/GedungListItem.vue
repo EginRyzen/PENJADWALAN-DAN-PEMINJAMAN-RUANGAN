@@ -1,21 +1,12 @@
 <template>
   <div
     class="flex flex-col rounded-lg bg-white border border-gray-100 cursor-pointer hover:shadow-lg transition-shadow duration-300"
-    @click="
-      $router.push({
-        name: 'DetailProfileGedung',
-        query: {
-          branch_code: building.branch_code,
-          suffix: building.suffix,
-        },
-      })
-    "
   >
     <div class="block overflow-hidden bg-indigo-100 rounded-t-lg">
       <img
-        v-if="building.url_image"
-        :src="building.url_image"
-        :alt="`${building.branch_name} photo`"
+        v-if="building.image && building.image.file_path"
+        :src="'/storage/' + building.image.file_path"
+        :alt="building.building_name"
         class="building-image object-cover"
         style="height: 150px"
       />
@@ -30,53 +21,32 @@
     <div class="flex flex-col">
       <div
         class="building-activation"
-        :class="{
-          'building-active': building.activation,
-          'building-inactive': !building.activation,
-        }"
+        :class="
+          building.building_status === 'active'
+            ? 'building-active'
+            : 'building-inactive'
+        "
       >
         <p class="text-[10px] z-10 font-bold uppercase tracking-wider">
-          {{ building.activation ? "Active" : "Inactive " }}
+          {{ building.building_status }}
         </p>
       </div>
       <div class="px-3 py-4">
         <h4
-          id="branch_name"
           class="font-bold truncate text-gray-800"
-          :title="building.branch_name"
+          :title="building.building_name"
         >
-          {{ building.branch_name }}
+          {{ building.building_name }}
         </h4>
         <p
-          id="regional_name"
           class="text-sm mb-4 truncate text-gray-500"
-          :title="building.regional_name"
+          :title="building.building_location"
         >
-          {{ building.regional_name }}
+          {{ building.building_location }}
         </p>
-        
-        <div class="space-y-1">
-          <div
-            v-if="building.incomplete_image"
-            class="incomplete-data"
-            :title="building.incomplete_image_message"
-          >
-            <font-awesome-icon icon="exclamation-triangle" class="w-4 h-4 mr-2" />
-            <p class="truncate">{{ building.incomplete_image_message }}</p>
-          </div>
-          
-          <div
-            v-if="building.incomplete_document"
-            class="incomplete-data"
-            :title="building.incomplete_document_message"
-          >
-            <font-awesome-icon icon="exclamation-triangle" class="w-4 h-4 mr-2" />
-            <p class="truncate">{{ building.incomplete_document_message }}</p>
-          </div>
-        </div>
       </div>
       <router-link
-        class="flex items-end text-indigo-600 font-semibold text-xs px-3 mb-4 hover:text-indigo-800"
+        class="flex items-end text-indigo-600 font-semibold text-md px-3 mb-4 hover:text-indigo-800"
         id="detail_link"
       >
         Lihat selengkapnya
@@ -93,12 +63,12 @@ export default {
       type: Object,
       required: true,
       default: () => ({
-        branch_name: 'Nama Gedung',
-        regional_name: 'Regional',
+        branch_name: "Nama Gedung",
+        regional_name: "Regional",
         activation: true,
         incomplete_image: false,
-        incomplete_document: false
-      })
+        incomplete_document: false,
+      }),
     },
   },
 };

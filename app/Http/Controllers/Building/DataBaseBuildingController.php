@@ -17,9 +17,54 @@ class DataBaseBuildingController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        //
+        try {
+            $query = DataBaseBuilding::with('image');
+
+            if ($request->has('ids') && !empty($request->query('ids'))) {
+                $ids = is_array($request->query('ids'))
+                    ? $request->query('ids')
+                    : explode(',', $request->query('ids'));
+
+                $query->whereIn('id', $ids);
+            }
+
+            if ($request->has('active')) {
+                $status = $request->query('active') === 'true' ? 'active' : 'inactive';
+                $query->where('building_status', $status);
+            }
+
+            if ($request->has('search') && !empty($request->query('search'))) {
+                $search = $request->query('search');
+                $query->where(function ($q) use ($search) {
+                    $q->where('building_name', 'like', "%{$search}%")
+                        ->orWhere('building_code', 'like', "%{$search}%");
+                });
+            }
+
+            $size = $request->query('size', 10);
+            $page = $request->query('page', 0);
+
+            $buildings = $query->orderBy('building_name', 'asc')
+                ->paginate($size, ['*'], 'page', $page + 1);
+
+            $customResponse = [
+                "current_page"            => (int) $page,
+                "total_pages"             => $buildings->lastPage(),
+                "total_elements"          => $buildings->total(),
+                "offset_elements"         => ($buildings->currentPage() - 1) * $buildings->perPage(),
+                "total_elements_per_page" => $buildings->perPage(),
+                "content"                 => $buildings->items()
+            ];
+
+            return $this->successResponse(
+                $customResponse,
+                'Daftar gedung berhasil diambil'
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
+        }
     }
 
     /**
@@ -110,5 +155,25 @@ class DataBaseBuildingController extends Controller
     public function destroy(DataBaseBuilding $dataBaseBuilding)
     {
         //
+    }
+    public function listOnly(Request $request)
+    {
+        try {
+            $query = DataBaseBuilding::query();
+
+            if ($request->has('active') && !empty($request->query('active'))) {
+                $status = is_array($request->query('active')) ? $request->query('active') : explode(',', $request->query('active'));
+                $query->whereIn('building_status', $status);
+            }
+
+            $buildings = $query->orderBy('building_name', 'asc')->get();
+
+            return $this->successResponse(
+                $buildings,
+                'Daftar gedung berhasil diambil'
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
+        }
     }
 }
