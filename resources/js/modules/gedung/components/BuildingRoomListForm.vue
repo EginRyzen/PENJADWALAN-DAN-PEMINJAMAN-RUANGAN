@@ -204,12 +204,26 @@ export default {
     validate() {
       this.errors = [];
       let isValid = true;
+      let existingCodes = new Set();
+      let existingNames = new Set();
+
       this.rooms.forEach((room, index) => {
         let err = {};
         if (!room.room_name) err.room_name = "Wajib";
         if (!room.room_code) err.room_code = "Wajib";
-        if (!room.room_capacity) err.room_capacity = "Wajib";
+        if (!room.room_capacity && room.room_capacity !== 0) err.room_capacity = "Wajib";
         if (!room.room_purpose) err.room_purpose = "Wajib";
+
+        if (room.room_name && existingNames.has(room.room_name.toLowerCase())) {
+          err.room_name = "Nama sudah ada";
+        }
+        if (room.room_code && existingCodes.has(room.room_code.toLowerCase())) {
+          err.room_code = "Kode sudah ada";
+        }
+
+        if (room.room_name) existingNames.add(room.room_name.toLowerCase());
+        if (room.room_code) existingCodes.add(room.room_code.toLowerCase());
+
         const hasNoFacilities =
           !room.facilities || room.facilities.length === 0;
         const hasInvalidFacilities =

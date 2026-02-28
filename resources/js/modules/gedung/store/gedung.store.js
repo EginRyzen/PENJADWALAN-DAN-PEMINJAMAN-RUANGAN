@@ -95,6 +95,15 @@ export const Store = {
                 throw error;
             }
         },
+        async [actions.UPDATE_GEDUNG_DATA]({ commit }, payload) {
+            try {
+                const response = await Api.put(`${apiUrl.UPDATE_GEDUNG}/${payload.id}`, payload);
+                return response.data;
+            } catch (error) {
+                console.error("Error Updating Gedung Data:", error);
+                throw error;
+            }
+        },
         async [actions.GET_BUILDINGS_ONLY]({ commit }, params) {
             try {
                 const response = await Api.get(apiUrl.GET_BUILDINGS_ONLY, { params });

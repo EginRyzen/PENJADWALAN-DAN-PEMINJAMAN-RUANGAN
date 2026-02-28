@@ -80,6 +80,21 @@ class DataBaseBuildingController extends Controller
      */
     public function store(StoreBuildingRequest $request)
     {
+        if ($request->has('rooms')) {
+            $roomCodes = [];
+            $roomNames = [];
+            foreach ($request->rooms as $room) {
+                if (in_array(strtolower($room['room_code']), $roomCodes)) {
+                    return $this->errorResponse('Kode ruangan ' . $room['room_code'] . ' tidak boleh sama di dalam satu gedung.', 400, 'Bad Request');
+                }
+                if (in_array(strtolower($room['room_name']), $roomNames)) {
+                    return $this->errorResponse('Nama ruangan ' . $room['room_name'] . ' tidak boleh sama di dalam satu gedung.', 400, 'Bad Request');
+                }
+                $roomCodes[] = strtolower($room['room_code']);
+                $roomNames[] = strtolower($room['room_name']);
+            }
+        }
+
         try {
             return DB::transaction(function () use ($request) {
                 $building = DataBaseBuilding::create([
@@ -157,9 +172,97 @@ class DataBaseBuildingController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, DataBaseBuilding $dataBaseBuilding)
+    public function update(Request $request, $id)
     {
-        //
+        if ($request->has('rooms')) {
+            $roomCodes = [];
+            $roomNames = [];
+            foreach ($request->rooms as $room) {
+                if (in_array(strtolower($room['room_code']), $roomCodes)) {
+                    return $this->errorResponse('Kode ruangan ' . $room['room_code'] . ' tidak boleh sama di dalam satu gedung.', 400, 'Bad Request');
+                }
+                if (in_array(strtolower($room['room_name']), $roomNames)) {
+                    return $this->errorResponse('Nama ruangan ' . $room['room_name'] . ' tidak boleh sama di dalam satu gedung.', 400, 'Bad Request');
+                }
+                $roomCodes[] = strtolower($room['room_code']);
+                $roomNames[] = strtolower($room['room_name']);
+            }
+        }
+
+        try {
+            return DB::transaction(function () use ($request, $id) {
+                $building = DataBaseBuilding::find($id);
+                
+                if (!$building) {
+                    return $this->errorResponse('Gedung tidak ditemukan', 404, 'Not Found');
+                }
+
+                $building->update([
+                    'building_name'     => $request->building_name,
+                    'building_code'     => $request->building_code,
+                    'building_location' => $request->building_location,
+                    'building_status'   => $request->building_status,
+                ]);
+
+                if ($request->has('building_image_id') && !empty($request->building_image_id)) {
+                    $building->update([
+                        'building_image_id' => $request->building_image_id,
+                    ]);
+                }
+
+                if ($request->has('rooms')) {
+                    $incomingRoomIds = collect($request->rooms)->pluck('id')->filter()->toArray();
+                    
+                    $building->rooms()->whereNotIn('id', $incomingRoomIds)->delete();
+
+                    foreach ($request->rooms as $roomData) {
+                        $room = $building->rooms()->updateOrCreate(
+                            ['id' => $roomData['id'] ?? null],
+                            [
+                                'room_name'     => $roomData['room_name'],
+                                'room_code'     => $roomData['room_code'],
+                                'room_location' => $roomData['room_location'],
+                                'room_status'   => $roomData['room_status'],
+                                'room_capacity' => $roomData['room_capacity'],
+                                'room_purpose'  => $roomData['room_purpose'],
+                            ]
+                        );
+
+                        if (isset($roomData['facilities'])) {
+                            $incomingFacilityIds = collect($roomData['facilities'])->pluck('id')->filter()->toArray();
+                            
+                            BuildingFacilityRoom::where('room_id', $room->id)
+                                ->whereNotIn('id', $incomingFacilityIds)
+                                ->delete();
+
+                            foreach ($roomData['facilities'] as $facilityData) {
+                                BuildingFacilityRoom::updateOrCreate(
+                                    [
+                                        'id' => $facilityData['id'] ?? null,
+                                        'room_id' => $room->id
+                                    ],
+                                    [
+                                        'facility_id' => $facilityData['facility_id'],
+                                        'quantity'    => $facilityData['quantity'],
+                                    ]
+                                );
+                            }
+                        } else {
+                            BuildingFacilityRoom::where('room_id', $room->id)->delete();
+                        }
+                    }
+                }
+
+                return $this->successResponse(
+                    $building->load('rooms.facilities.facility', 'image'),
+                    'Gedung berhasil diperbarui',
+                    200,
+                    'OK'
+                );
+            });
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
+        }
     }
 
     /**
