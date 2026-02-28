@@ -53,6 +53,7 @@
 <script>
 import Autocomplete from "@/core/components/Autocomplete.vue";
 import Checkbox from "@/core/components/Checkbox.vue";
+import DISPATCH from "@/core/plugins/constants/dispatches";
 
 export default {
   name: "FilterGedung",
@@ -64,20 +65,55 @@ export default {
     return {
       activeStatus: ["active"],
       selectedBuilding: [],
-      buildingOptions: [
-        { id: 1, name: "Gedung Menara BCA" },
-        { id: 2, name: "Gedung Wisma Asia" },
-        { id: 4, name: "Gedung KCU Bandung" },
-        { id: 5, name: "Gedung KCU Jakarta" },
-        { id: 6, name: "Gedung KCU Sumatera" },
-        { id: 7, name: "Gedung KCU Suraya" },
-        { id: 8, name: "Gedung KCU Malang" },
-        { id: 9, name: "Gedung KCU Depok" },
-        { id: 10, name: "Gedung KCU Tanggerang" },
-        { id: 11, name: "Gedung KCU Bogor" },
-        { id: 12, name: "Gedung KCU Yogjakarta" },
-      ],
+      buildingOptions: [],
     };
+  },
+
+  methods: {
+    async fetchBuildingOptions() {
+      try {
+        const activeParams = this.activeStatus.join(",");
+
+        const data = await this.$store.dispatch(DISPATCH.GET_BUILDINGS_ONLY, {
+          active: activeParams,
+        });
+
+        this.buildingOptions = data.map((item) => ({
+          id: item.id,
+          name: item.building_code,
+        }));
+      } catch (error) {
+        console.error("Gagal memuat filter gedung:", error);
+      }
+    },
+    updateSelectedFromParent(newSelected) {
+      this.selectedBuilding = newSelected;
+    },
+    resetFilter() {
+      this.selectedBuilding = [];
+    },
+    handleStatusChange(value) {
+      this.activeStatus = value;
+    },
+  },
+  mounted() {
+    this.fetchBuildingOptions();
+  },
+
+  watch: {
+    activeStatus: {
+      deep: true,
+      handler(newVal) {
+        this.fetchBuildingOptions();
+        this.$emit("filter-status", newVal);
+      },
+    },
+    selectedBuilding: {
+      deep: true,
+      handler(newVal) {
+        this.$emit("filter-buildings", newVal);
+      },
+    },
   },
 };
 </script>

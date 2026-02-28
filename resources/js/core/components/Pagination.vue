@@ -153,11 +153,39 @@ export default {
     return {
       input: "",
       initiatePage: this.current,
-      firstRowOnPage: this.total ? 1 : 0,
-      lastRowOnPage: this.perPage,
+      firstRowOnPage: this.total > 0 ? (this.current - 1) * this.perPage + 1 : 0,
+      lastRowOnPage: 0,
     };
   },
+  watch: {
+    current: {
+      handler() {
+        this.setFirstAndLastRowOnPage();
+      }
+    },
+    totalRowsOnPage: {
+      handler() {
+        this.setFirstAndLastRowOnPage();
+      }
+    },
+    total: {
+      handler() {
+        this.setFirstAndLastRowOnPage();
+      }
+    }
+  },
   methods: {
+    updateRowsCount() {
+      if (this.total === 0) {
+        this.firstRowOnPage = 0;
+        this.lastRowOnPage = 0;
+        return;
+      }
+      
+      this.firstRowOnPage = (this.current - 1) * this.perPage + 1;
+      
+      this.lastRowOnPage = this.firstRowOnPage + (this.totalRowsOnPage - 1);
+    },
     hasPrev() {
       return this.current > 1;
     },
@@ -179,20 +207,23 @@ export default {
       this.setFirstAndLastRowOnPage();
     },
     updatePaging(page) {
+      const newSize = parseInt(page);
       this.initiatePage = 1;
-      this.$emit("paging-change", parseInt(page));
+      this.$emit("paging-change", newSize); 
       this.setFirstAndLastRowOnPage();
     },
     setFirstAndLastRowOnPage() {
-      if (this.current > 1) {
-        this.firstRowOnPage = 1 + (this.initiatePage - 1) * this.perPage;
-      } else {
-        this.firstRowOnPage = 1;
+      if (this.total === 0) {
+        this.firstRowOnPage = 0;
+        this.lastRowOnPage = 0;
+        return;
       }
 
-      let lastRow = this.perPage * this.current;
-      if (lastRow > this.total) this.lastRowOnPage = this.total;
-      else this.lastRowOnPage = lastRow;
+      this.firstRowOnPage = (this.current - 1) * this.perPage + 1;
+
+      let lastRow = this.firstRowOnPage + (this.totalRowsOnPage - 1);
+      
+      this.lastRowOnPage = lastRow > this.total ? this.total : lastRow;
     },
     createRange(from, to) {
       const range = [];

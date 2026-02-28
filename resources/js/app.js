@@ -10,8 +10,8 @@ import GlobalLoader from '@/core/components/GlobalLoader.vue';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
-import { faSearch, faBell, faCog, faHome, faPlus, faDownload, faArrowLeft, faExclamationCircle, faExclamationTriangle, faTrashAlt, faEye, faTimes, faCloudUploadAlt } from '@fortawesome/free-solid-svg-icons';
-library.add(faSearch, faBell, faCog, faHome, faPlus, faDownload, faArrowLeft, faExclamationCircle, faExclamationTriangle, faTrashAlt, faEye, faTimes, faCloudUploadAlt);
+import { faSearch, faBell, faCog, faHome, faPlus, faDownload, faArrowLeft, faExclamationCircle, faExclamationTriangle, faTrashAlt, faEye, faTimes, faCloudUploadAlt, faImage } from '@fortawesome/free-solid-svg-icons';
+library.add(faSearch, faBell, faCog, faHome, faPlus, faDownload, faArrowLeft, faExclamationCircle, faExclamationTriangle, faTrashAlt, faEye, faTimes, faCloudUploadAlt, faImage);
 
 const app = createApp(App);
 app.component('font-awesome-icon', FontAwesomeIcon);
@@ -51,13 +51,13 @@ const initApp = async () => {
 
     if (token) {
         window.axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        
+
         try {
             const response = await window.axios.get('/api/user/profile');
             const userData = response.data.result.user;
             localStorage.setItem('user_roles', JSON.stringify(userData.roles));
-            
-            store.commit('SET_USER', userData); 
+
+            store.commit('SET_USER', userData);
         } catch (error) {
             console.error("Gagal memvalidasi sesi", error);
             localStorage.removeItem('token');

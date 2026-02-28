@@ -5,58 +5,34 @@
       <h3 class="text-lg font-bold text-gray-800">Daftar Ruangan</h3>
     </div>
 
-    <table-app
-      v-model:options="tableOptions"
-      :headers="headers"
-      :items="rooms"
-      :show-pagination="true"
-      :use-custom-row="true"
-      :searchable="false"
-    >
+    <table-app v-model:options="tableOptions" :headers="headers" :items="rooms" :show-pagination="true"
+      :use-custom-row="true" :searchable="false">
       <template v-slot:customrow="{ rows }">
-        <tr
-          v-for="(row, index) in rows"
-          :key="row.id"
-          class="hover:bg-gray-50 transition-colors"
-        >
-          <td
-            class="p-4 border-b border-gray-100 text-start font-medium align-top"
-          >
+        <tr v-for="(row, index) in rows" :key="row.id" class="hover:bg-gray-50 transition-colors">
+          <td class="p-4 border-b border-gray-100 text-start font-medium align-top">
             {{ startingIndex + index + 1 }}.
           </td>
           <td class="p-2 border-b border-gray-100 align-top">
-            <app-input
-              v-model="row.room_name"
-              placeholder="Nama Ruangan"
+            <app-input v-model="row.room_name" placeholder="Nama Ruangan"
               :error="!!errors[startingIndex + index]?.room_name"
-              @clear-error="errors[startingIndex + index].room_name = null"
-            >
+              @clear-error="errors[startingIndex + index].room_name = null">
               <template #error-message>{{
                 errors[startingIndex + index]?.room_name
               }}</template>
             </app-input>
           </td>
           <td class="p-2 border-b border-gray-100 align-top">
-            <app-input
-              v-model="row.room_code"
-              placeholder="R-01"
-              :error="!!errors[startingIndex + index]?.room_code"
-              @clear-error="errors[startingIndex + index].room_code = null"
-            >
+            <app-input v-model="row.room_code" placeholder="R-01" :error="!!errors[startingIndex + index]?.room_code"
+              @clear-error="errors[startingIndex + index].room_code = null">
               <template #error-message>{{
                 errors[startingIndex + index]?.room_code
               }}</template>
             </app-input>
           </td>
           <td class="p-2 border-b border-gray-100 align-top">
-            <app-input
-              v-model.number="row.room_capacity"
-              type="number"
-              placeholder="0"
+            <app-input v-model.number="row.room_capacity" type="number" placeholder="0"
               :error="!!errors[startingIndex + index]?.room_capacity"
-              @clear-error="errors[startingIndex + index].room_capacity = null"
-              @keydown="onlyNumber"
-            >
+              @clear-error="errors[startingIndex + index].room_capacity = null" @keydown="onlyNumber">
               <template #error-message>{{
                 errors[startingIndex + index]?.room_capacity
               }}</template>
@@ -65,67 +41,44 @@
 
           <td class="p-2 border-b border-gray-100 align-top">
             <div class="relative">
-              <select
-                v-model="row.room_purpose"
-                class="w-full bg-white border border-teal-400 text-gray-700 py-3 px-3 pr-8 rounded-md appearance-none text-sm h-11 transition-all focus:border-teal-500 outline-none"
-              >
-                <option
-                  v-for="purpose in room_purpose_options"
-                  :key="purpose"
-                  :value="purpose"
-                >
+              <select v-model="row.room_purpose"
+                class="w-full bg-white border border-teal-400 text-gray-700 py-3 px-3 pr-8 rounded-md appearance-none text-sm h-11 transition-all focus:border-teal-500 outline-none">
+                <option v-for="purpose in room_purpose_options" :key="purpose" :value="purpose">
                   {{ purpose }}
                 </option>
               </select>
-              <div
-                class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700"
-              >
+              <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                 <svg class="fill-current h-4 w-4" viewBox="0 0 20 20">
-                  <path
-                    d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"
-                  />
+                  <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
                 </svg>
               </div>
             </div>
           </td>
           <td class="p-2 border-b border-gray-100 align-top">
-            <select
-              v-model="row.room_status"
-              class="w-full bg-white border border-teal-400 text-gray-700 py-3 px-3 rounded-md appearance-none text-sm h-11"
-            >
+            <select v-model="row.room_status"
+              class="w-full bg-white border border-teal-400 text-gray-700 py-3 px-3 rounded-md appearance-none text-sm h-11">
               <option value="active">Aktif</option>
               <option value="inactive">Tidak Aktif</option>
             </select>
           </td>
-          <td
-            class="p-2 border-b border-gray-100 text-center flex justify-center gap-2 align-top pt-3"
-          >
-            <button
-              type="button"
-              @click="$emit('open-facility', startingIndex + index, row)"
+          <td class="p-2 border-b border-gray-100 text-center flex justify-center gap-2 align-top pt-3">
+            <button type="button" @click="$emit('open-facility', startingIndex + index, row)"
               :disabled="!isRowComplete(row)"
-              class="w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-200"
-              :class="[
+              class="w-8 h-8 flex items-center justify-center rounded-lg transition-all duration-200" :class="[
                 !isRowComplete(row)
                   ? 'bg-gray-100 text-gray-400'
                   : errors[startingIndex + index]?.facilities_empty
-                  ? 'bg-red-500 text-white shadow-lg'
-                  : 'bg-teal-50 text-teal-500',
-              ]"
-            >
+                    ? 'bg-red-500 text-white shadow-lg'
+                    : 'bg-teal-50 text-teal-500',
+              ]">
               <font-awesome-icon icon="plus" />
             </button>
-            <button
-              type="button"
-              @click="removeRow(row.id)"
-              :disabled="rooms.length === 1"
-              class="w-8 h-8 flex items-center justify-center rounded-lg"
-              :class="[
+            <button type="button" @click="removeRow(row.id)" :disabled="rooms.length === 1"
+              class="w-8 h-8 flex items-center justify-center rounded-lg" :class="[
                 rooms.length > 1
                   ? 'bg-red-50 text-red-500'
                   : 'bg-gray-100 text-gray-400',
-              ]"
-            >
+              ]">
               <font-awesome-icon icon="trash-alt" />
             </button>
           </td>
@@ -134,11 +87,7 @@
       <template v-slot:lastrow>
         <tr>
           <td colspan="7" class="p-4 border-t border-gray-100">
-            <button
-              type="button"
-              @click="addRow"
-              class="text-teal-500 font-bold"
-            >
+            <button type="button" @click="addRow" class="text-teal-500 font-bold">
               + Tambah Baris Ruangan
             </button>
           </td>
@@ -255,12 +204,26 @@ export default {
     validate() {
       this.errors = [];
       let isValid = true;
+      let existingCodes = new Set();
+      let existingNames = new Set();
+
       this.rooms.forEach((room, index) => {
         let err = {};
         if (!room.room_name) err.room_name = "Wajib";
         if (!room.room_code) err.room_code = "Wajib";
-        if (!room.room_capacity) err.room_capacity = "Wajib";
+        if (!room.room_capacity && room.room_capacity !== 0) err.room_capacity = "Wajib";
         if (!room.room_purpose) err.room_purpose = "Wajib";
+
+        if (room.room_name && existingNames.has(room.room_name.toLowerCase())) {
+          err.room_name = "Nama sudah ada";
+        }
+        if (room.room_code && existingCodes.has(room.room_code.toLowerCase())) {
+          err.room_code = "Kode sudah ada";
+        }
+
+        if (room.room_name) existingNames.add(room.room_name.toLowerCase());
+        if (room.room_code) existingCodes.add(room.room_code.toLowerCase());
+
         const hasNoFacilities =
           !room.facilities || room.facilities.length === 0;
         const hasInvalidFacilities =
@@ -271,7 +234,7 @@ export default {
           this.isRowComplete(room) &&
           (hasNoFacilities || hasInvalidFacilities)
         ) {
-          err.facilities_empty = true; // Flag untuk merubah warna tombol
+          err.facilities_empty = true;
           isValid = false;
         }
         this.errors[index] = err;
