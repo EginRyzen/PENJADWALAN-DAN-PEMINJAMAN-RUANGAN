@@ -21,7 +21,7 @@ export const Store = {
             state.facilities = data;
         },
         SET_BUILDINGS(state, payload) {
-            state.buildings = payload.content; 
+            state.buildings = payload.content;
             state.pagination = {
                 current_page: payload.current_page,
                 total_pages: payload.total_pages,
@@ -32,17 +32,35 @@ export const Store = {
     },
     actions: {
         async [actions.GET_GEDUNG_DATA]({ commit }, params) {
-        try {
-            const response = await Api.get(apiUrl.GET_GEDUNG, { params });
-            
-            const data = response.data.result;
-            commit("SET_BUILDINGS", data);
-            return data;
-        } catch (error) {
-            console.error("Error Fetching Gedung Data:", error);
-            throw error;
-        }
-    },
+            try {
+                const response = await Api.get(apiUrl.GET_GEDUNG, { params });
+
+                const data = response.data.result;
+                commit("SET_BUILDINGS", data);
+                return data;
+            } catch (error) {
+                console.error("Error Fetching Gedung Data:", error);
+                throw error;
+            }
+        },
+        async [actions.GET_DETAIL_GEDUNG_DATA]({ commit }, id) {
+            try {
+                const response = await Api.get(`${apiUrl.GET_DETAIL_GEDUNG}/${id}`);
+                return response.data.result;
+            } catch (error) {
+                console.error("Error Fetching Detail Gedung Data:", error);
+                throw error;
+            }
+        },
+        async [actions.GET_ROOM_FACILITIES]({ commit }, roomId) {
+            try {
+                const response = await Api.get(`${apiUrl.GET_ROOM_FACILITIES}/${roomId}/facilities`);
+                return response.data;
+            } catch (error) {
+                console.error("Error Fetching Room Facilities Data:", error);
+                throw error;
+            }
+        },
         async [actions.GET_GEDUNG_FACILITIES]({ commit }) {
             try {
                 const response = await Api.get(apiUrl.GEDUNG_FACILITIES);

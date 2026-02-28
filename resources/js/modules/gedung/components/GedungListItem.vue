@@ -1,5 +1,6 @@
 <template>
   <div
+    @click="handleClick"
     class="flex flex-col rounded-lg bg-white border border-gray-100 cursor-pointer hover:shadow-lg transition-shadow duration-300"
   >
     <div class="block overflow-hidden bg-indigo-100 rounded-t-lg">
@@ -69,6 +70,15 @@ export default {
         incomplete_image: false,
         incomplete_document: false,
       }),
+    },
+  },
+
+  methods: {
+    handleClick() {
+      this.$router.push({
+        name: "gedung.detail",
+        params: { id: this.building.id },
+      });
     },
   },
 };

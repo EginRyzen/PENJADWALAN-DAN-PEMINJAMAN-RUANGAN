@@ -2,46 +2,25 @@
   <div class="p-6">
     <breadcrumb-bima :items="breadcrumbItems" class="mb-6" />
     <div class="bg-white rounded-lg shadow-sm mt-5 p-6">
-      <div
-        v-if="modal.error"
-        class="fixed inset-0 z-[999] flex items-center justify-center p-4"
-      >
-        <div
-          class="absolute inset-0 bg-black/50"
-          @click="modal.error = false"
-        ></div>
-        <div
-          class="relative bg-white rounded-2xl p-8 text-center max-w-sm w-full"
-        >
-          <font-awesome-icon
-            icon="exclamation-circle"
-            class="text-red-500 text-5xl mb-4"
-          />
+      <div v-if="modal.error" class="fixed inset-0 z-[999] flex items-center justify-center p-4">
+        <div class="absolute inset-0 bg-black/50" @click="modal.error = false"></div>
+        <div class="relative bg-white rounded-2xl p-8 text-center max-w-sm w-full">
+          <font-awesome-icon icon="exclamation-circle" class="text-red-500 text-5xl mb-4" />
           <h3 class="text-lg font-bold mb-2">{{ modal.title }}</h3>
           <p class="text-gray-600 mb-6">
             {{ modal.message }}
           </p>
-          <button
-            @click="modal.error = false"
-            class="w-full py-2 bg-teal-500 text-white rounded-lg"
-          >
+          <button @click="modal.error = false" class="w-full py-2 bg-teal-500 text-white rounded-lg">
             Tutup
           </button>
         </div>
       </div>
 
-      <building-image-preview
-        :show="modal.preview"
-        :src="selectedImageSrc"
-        @close="modal.preview = false"
-      />
+      <building-image-preview :show="modal.preview" :src="selectedImageSrc" @close="modal.preview = false" />
 
       <div class="flex items-center justify-between mb-8">
-        <div
-          v-if="!isFacilityMode"
-          class="flex items-center gap-2 text-gray-500 cursor-pointer"
-          @click="$router.go(-1)"
-        >
+        <div v-if="!isFacilityMode" class="flex items-center gap-2 text-gray-500 cursor-pointer"
+          @click="$router.go(-1)">
           <font-awesome-icon icon="arrow-left" /> Kembali
         </div>
         <h2 class="text-xl font-bold text-gray-800">
@@ -50,39 +29,27 @@
       </div>
 
       <div v-show="!isFacilityMode">
-        <building-main-info-form
-          ref="mainInfoForm"
-          @preview-image="
-            (src) => {
-              selectedImageSrc = src;
-              modal.preview = true;
-            }
-          "
-        />
+        <building-main-info-form ref="mainInfoForm" @preview-image="
+          (src) => {
+            selectedImageSrc = src;
+            modal.preview = true;
+          }
+        " />
 
-        <building-room-list-form
-          ref="roomListForm"
-          @open-facility="handleOpenFacility"
-        />
+        <building-room-list-form ref="roomListForm" @open-facility="handleOpenFacility" />
 
         <div class="flex justify-center mt-10 pt-6 border-t border-gray-100">
-          <button-app
-            type="primary"
-            color="teal"
+          <button-app type="primary" color="teal"
             class="bg-teal-400 hover:bg-teal-500 text-white font-semibold px-12 py-2 rounded-lg shadow-md transition-all duration-200"
-            @click.stop.prevent="handleFinalSave"
-          >
+            @click.stop.prevent="handleFinalSave">
             Simpan Seluruh Data
           </button-app>
         </div>
       </div>
 
       <div v-if="isFacilityMode">
-        <building-fasilitas-ruangan-form
-          :room-name="currentRoom.room_name"
-          :facilities="currentRoom.facilities"
-          @back="handleBackFromFacility"
-        />
+        <building-fasilitas-ruangan-form :room-name="currentRoom.room_name" :facilities="currentRoom.facilities"
+          @back="handleBackFromFacility" />
       </div>
     </div>
   </div>
@@ -198,12 +165,10 @@ export default {
 
           await this.$store.dispatch(DISPATCH.SAVE_GEDUNG_DATA, payload);
 
-          alert("Data Gedung dan Ruangan berhasil disimpan!");
           this.$router.push({ name: "gedung.list" });
         } catch (error) {
           const errorMsg =
             error.response?.data?.message || "Terjadi kesalahan server";
-          alert("Gagal menyimpan: " + errorMsg);
         } finally {
           this.$store.commit("SET_LOADING", false);
         }
@@ -220,6 +185,7 @@ export default {
   -webkit-appearance: none;
   margin: 0;
 }
+
 :deep(input[type="number"]) {
   -moz-appearance: textfield;
 }

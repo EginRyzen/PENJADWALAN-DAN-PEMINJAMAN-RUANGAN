@@ -128,9 +128,22 @@ class DataBaseBuildingController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(DataBaseBuilding $dataBaseBuilding)
+    public function show($id)
     {
-        //
+        try {
+            $building = DataBaseBuilding::with(['image', 'rooms'])->find($id);
+
+            if (!$building) {
+                return $this->errorResponse('Gedung tidak ditemukan', 404, 'Not Found');
+            }
+
+            return $this->successResponse(
+                $building,
+                'Detail gedung berhasil diambil'
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
+        }
     }
 
     /**

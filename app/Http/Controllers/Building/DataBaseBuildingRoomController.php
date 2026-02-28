@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Building;
 
 use App\Http\Controllers\Controller;
 use App\Models\DataBaseBuildingRoom;
+use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 
 class DataBaseBuildingRoomController extends Controller
 {
+    use ApiResponse;
     /**
      * Display a listing of the resource.
      */
@@ -62,5 +64,26 @@ class DataBaseBuildingRoomController extends Controller
     public function destroy(DataBaseBuildingRoom $dataBaseBuildingRoom)
     {
         //
+    }
+
+    /**
+     * Get facilities of the specified room.
+     */
+    public function getFacilities($id)
+    {
+        try {
+            $room = DataBaseBuildingRoom::with('facilities.facility')->find($id);
+
+            if (!$room) {
+                return $this->errorResponse('Ruangan tidak ditemukan', 404, 'Not Found');
+            }
+
+            return $this->successResponse(
+                $room->facilities,
+                'Fasilitas ruangan berhasil diambil'
+            );
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
+        }
     }
 }

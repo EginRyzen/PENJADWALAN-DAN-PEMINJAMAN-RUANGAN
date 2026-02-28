@@ -3,6 +3,7 @@
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Building\DataBaseBuildingController;
 use App\Http\Controllers\Building\DataBaseBuildingFacilityController;
+use App\Http\Controllers\Building\DataBaseBuildingRoomController;
 use App\Http\Controllers\DataDocumentController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +36,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/buildings-simple', [DataBaseBuildingController::class, 'listOnly']);
         Route::get('/buildings', [DataBaseBuildingController::class, 'index']);
         Route::apiResource('buildings', DataBaseBuildingController::class);
+        Route::get('/rooms/{id}/facilities', [DataBaseBuildingRoomController::class, 'getFacilities']);
         Route::apiResource('facilities', DataBaseBuildingFacilityController::class);
     });
 });
