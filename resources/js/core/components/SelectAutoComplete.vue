@@ -65,7 +65,7 @@ export default {
     placeholder: { type: String, default: "Pilih..." },
     disabled: { type: Boolean, default: false }
   },
-  emits: ['update:modelValue', 'change', 'focus', 'blur'],
+  emits: ['update:modelValue', 'change', 'focus', 'blur', 'search'],
   data() {
     return {
       isFocus: false,
@@ -77,6 +77,11 @@ export default {
         zIndex: 9999
       }
     };
+  },
+  watch: {
+    searchQuery(val) {
+      this.$emit('search', val);
+    }
   },
   computed: {
     selectedLabel() {

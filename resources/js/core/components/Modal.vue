@@ -1,18 +1,22 @@
 <template>
   <div
-    class="fixed z-50 top-0 right-0 bottom-0 left-0 modal flex items-center"
-    v-show="value"
+    v-if="modelValue"
+    class="fixed inset-0 flex items-center justify-center p-4"
+    style="z-index: 9999; background-color: rgba(0,0,0,0.5);"
     @click.self="handleClickOutside"
   >
+    <!-- Modal Card -->
     <div
-      class="rounded-md bg-white mx-auto flex flex-col items-stretch modal-width max-h-screen overflow-y-auto"
+      class="relative bg-white rounded-2xl shadow-xl overflow-y-auto"
+      style="max-height: 90vh;"
       :class="{
         'w-3/4': size === 'large',
         'w-2/4': size === 'medium',
         'w-2/6': size === 'small',
         'w-1/6': size === 'micro',
       }"
-      :style="`max-width: ${maxWidth}; min-height: ${minHeight}`"
+      :style="`max-width: ${maxWidth};`"
+      @click.stop
     >
       <slot></slot>
     </div>
@@ -23,36 +27,43 @@
 export default {
   name: "ModalApp",
   props: {
-    value: Boolean,
-    maxWidth: {
-      type: String,
-      default: "1140px",
-    },
-    minHeight: String,
-    size: {
-      type: String,
-      default: "large",
-    },
-    clickOutside: {
+    modelValue: {
       type: Boolean,
       default: false,
     },
+    maxWidth: {
+      type: String,
+      default: "600px",
+    },
+    minHeight: {
+      type: String,
+      default: "",
+    },
+    size: {
+      type: String,
+      default: "medium",
+    },
+    clickOutside: {
+      type: Boolean,
+      default: true,
+    },
   },
+  emits: ["update:modelValue", "close"],
   methods: {
     handleClickOutside() {
-      this.$emit("close", false);
+      if (this.clickOutside) {
+        this.$emit("update:modelValue", false);
+        this.$emit("close", false);
+      }
     },
   },
 };
 </script>
+
 <style scoped>
 @media screen and (max-width: 641px) {
-  .modal-width {
+  .bg-white {
     width: 90% !important;
   }
-}
-
-.z-50 {
-  z-index: 50;
 }
 </style>

@@ -42,7 +42,7 @@
               scope="col"
             >
               <div
-                class="relative flex justify-items-center items-center"
+                class="relative flex justify-items-center items-center gap-1"
                 :class="{
                   'justify-start': head.align === 'start',
                   'justify-center': head.align === 'center',
@@ -53,18 +53,27 @@
                 <div class="text-error" v-if="head.required">*</div>
                 {{ head.text }}
 
-                <div
-                  v-if="
-                    head.sortable && findSortDirection(head.value) === false
-                  "
-                  class="sort-default ml-1"
-                ></div>
-                <div
-                  :class="{
-                    'sort-desc ml-1': findSortDirection(head.value) === 'desc',
-                    'sort-asc ml-1': findSortDirection(head.value) === 'asc',
-                  }"
-                ></div>
+                <!-- Sort Icon: chevron atas & bawah -->
+                <span v-if="head.sortable" class="inline-flex flex-col items-center ml-1.5 gap-0">
+                  <!-- Chevron Up -->
+                  <svg
+                    class="w-4 h-4 -mb-1 transition-all duration-150"
+                    :class="findSortDirection(head.value) === 'asc' ? 'text-teal-500' : 'text-gray-300'"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                    :stroke-width="findSortDirection(head.value) === 'asc' ? '3' : '2.5'"
+                  >
+                    <path d="M5 15l7-7 7 7" />
+                  </svg>
+                  <!-- Chevron Down -->
+                  <svg
+                    class="w-4 h-4 -mt-1 transition-all duration-150"
+                    :class="findSortDirection(head.value) === 'desc' ? 'text-teal-500' : 'text-gray-300'"
+                    viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round"
+                    :stroke-width="findSortDirection(head.value) === 'desc' ? '3' : '2.5'"
+                  >
+                    <path d="M19 9l-7 7-7-7" />
+                  </svg>
+                </span>
               </div>
 
               <button
@@ -305,11 +314,18 @@ export default {
       obj.totalRecords = obj.options.totalItems;
       obj.records = obj.items;
 
-      obj.$emit("update:options", {
+      const payload = {
         page: obj.currentPage || 1,
         itemsPerPage: obj.pageCount,
-        totalItems: obj.totalRecords,
-      });
+      };
+
+      if (!obj.serverSide) {
+        payload.totalItems = obj.totalRecords;
+      } else {
+        payload.totalItems = obj.options.totalItems;
+      }
+
+      obj.$emit("update:options", payload);
       const endTime = new Date().getTime();
       const executionTime = endTime - startTime;
       console.log(`Execution time fetch server data: ${executionTime} ms`);

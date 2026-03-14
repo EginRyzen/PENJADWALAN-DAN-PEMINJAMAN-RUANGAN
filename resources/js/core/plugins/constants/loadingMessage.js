@@ -4,4 +4,5 @@ export default {
     DOWNLOAD: "Data Sedang Diunduh",
     SAVE: "Data Sedang Disimpan",
     DELETE: "Data Sedang Dihapus",
+    FETCH: "Data Sedang Diambil",
 };

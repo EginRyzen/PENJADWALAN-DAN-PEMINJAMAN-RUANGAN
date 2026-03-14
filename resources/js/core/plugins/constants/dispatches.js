@@ -2,6 +2,7 @@ import ACTIONS from "@/core/plugins/constants/actions.js";
 const namespaces = {
     AUTH: "auth/",
     GEDUNG: "gedung/",
+    MASTER_DATA: "masterData/",
 };
 
 export default {
@@ -16,4 +17,14 @@ export default {
     GET_ROOM_FACILITIES: namespaces.GEDUNG + ACTIONS.GET_ROOM_FACILITIES,
     UPLOAD_IMAGE: namespaces.GEDUNG + ACTIONS.UPLOAD_IMAGE,
     GET_BUILDINGS_ONLY: namespaces.GEDUNG + ACTIONS.GET_BUILDINGS_ONLY,
+    // Master Data - Program Studi
+    GET_PROGRAM_STUDI: namespaces.MASTER_DATA + ACTIONS.GET_PROGRAM_STUDI,
+    CREATE_PROGRAM_STUDI: namespaces.MASTER_DATA + ACTIONS.CREATE_PROGRAM_STUDI,
+    UPDATE_PROGRAM_STUDI: namespaces.MASTER_DATA + ACTIONS.UPDATE_PROGRAM_STUDI,
+    DELETE_PROGRAM_STUDI: namespaces.MASTER_DATA + ACTIONS.DELETE_PROGRAM_STUDI,
+    // Master Data - Mata Kuliah
+    GET_MATA_KULIAH: namespaces.MASTER_DATA + ACTIONS.GET_MATA_KULIAH,
+    CREATE_MATA_KULIAH: namespaces.MASTER_DATA + ACTIONS.CREATE_MATA_KULIAH,
+    UPDATE_MATA_KULIAH: namespaces.MASTER_DATA + ACTIONS.UPDATE_MATA_KULIAH,
+    DELETE_MATA_KULIAH: namespaces.MASTER_DATA + ACTIONS.DELETE_MATA_KULIAH,
 };

@@ -6,9 +6,9 @@ import LoginLayout from '@/core/layouts/LoginLayout.vue';
 
 // Pages
 import Login from '@/modules/auth/pages/Login.vue';
-import workOrderRoutes from '@/modules/work-order/router';
 import dashboardRoutes from '@/modules/dashboard/router';
 import gedungRoutes from '@/modules/gedung/router';
+import masterDataRoutes from '@/modules/master-data/router';
 
 const routes = [
     {
@@ -29,10 +29,10 @@ const routes = [
         component: MasterLayout,
         meta: { requiresAuth: true },
         children: [
-                ...workOrderRoutes,
-                ...dashboardRoutes,
-                ...gedungRoutes
-            ]
+            ...dashboardRoutes,
+            ...gedungRoutes,
+            ...masterDataRoutes
+        ]
     }
 ];
 
