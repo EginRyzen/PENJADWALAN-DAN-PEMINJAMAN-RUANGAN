@@ -136,6 +136,20 @@ const menus = ref([
     ],
   },
   {
+    label: "Master Data",
+    children: [
+      {
+        label: "General",
+        children: [
+          { label: "Mata Kuliah", path: "/app/mata-kuliah" },
+          { label: "Program Studi", path: "/app/program-studi" },
+        ]
+      },
+      { label: "Mahasiswa", path: "/app/mahasiswa-list" },
+      { label: "Dosen", path: "/app/dosen-list" },
+    ],
+  },
+  {
     label: "Settings",
     path: "/app/settings",
   },

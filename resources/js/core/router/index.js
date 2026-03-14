@@ -8,6 +8,7 @@ import LoginLayout from '@/core/layouts/LoginLayout.vue';
 import Login from '@/modules/auth/pages/Login.vue';
 import dashboardRoutes from '@/modules/dashboard/router';
 import gedungRoutes from '@/modules/gedung/router';
+import masterDataRoutes from '@/modules/master-data/router';
 
 const routes = [
     {
@@ -29,7 +30,8 @@ const routes = [
         meta: { requiresAuth: true },
         children: [
             ...dashboardRoutes,
-            ...gedungRoutes
+            ...gedungRoutes,
+            ...masterDataRoutes
         ]
     }
 ];
