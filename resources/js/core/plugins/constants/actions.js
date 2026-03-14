@@ -15,4 +15,9 @@ export default {
     CREATE_PROGRAM_STUDI: "createProgramStudi",
     UPDATE_PROGRAM_STUDI: "updateProgramStudi",
     DELETE_PROGRAM_STUDI: "deleteProgramStudi",
+    // Master Data - Mata Kuliah
+    GET_MATA_KULIAH: "getMataKuliah",
+    CREATE_MATA_KULIAH: "createMataKuliah",
+    UPDATE_MATA_KULIAH: "updateMataKuliah",
+    DELETE_MATA_KULIAH: "deleteMataKuliah",
 }

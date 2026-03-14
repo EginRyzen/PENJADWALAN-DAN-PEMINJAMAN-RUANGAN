@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\MasterData;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreMasterDataProgramStudi;
-use App\Models\MasterDataProgramStudi;
+use App\Http\Requests\StoreMasterDataMataKuliah;
+use App\Models\MasterDataMataKuliah;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 
-class MasterDataProgramStudiController extends Controller
+class MasterDataMataKuliahController extends Controller
 {
     use ApiResponse;
 
@@ -18,29 +18,24 @@ class MasterDataProgramStudiController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = MasterDataProgramStudi::query();
+            $query = MasterDataMataKuliah::with('programStudi');
 
             if ($request->has('search') && !empty($request->query('search'))) {
                 $search = $request->query('search');
                 $query->where(function ($q) use ($search) {
                     $q->where('nama', 'like', "%{$search}%")
-                      ->orWhere('kode', 'like', "%{$search}%")
-                      ->orWhere('jenjang', 'like', "%{$search}%");
+                      ->orWhere('kode', 'like', "%{$search}%");
                 });
             }
 
-            if ($request->has('status') && !empty($request->query('status'))) {
-                $query->where('status', $request->query('status'));
-            }
-
-            if ($request->has('jenjang') && !empty($request->query('jenjang'))) {
-                $query->where('jenjang', $request->query('jenjang'));
+            if ($request->has('program_studi_id') && !empty($request->query('program_studi_id'))) {
+                $query->where('program_studi_id', $request->query('program_studi_id'));
             }
 
             // Jika ada query param 'all', kembalikan semua tanpa pagination
             if ($request->boolean('all')) {
                 $data = $query->orderBy('nama', 'asc')->get();
-                return $this->successResponse($data, 'Daftar program studi berhasil diambil');
+                return $this->successResponse($data, 'Daftar mata kuliah berhasil diambil');
             }
 
             $size = $request->query('size', 10);
@@ -58,7 +53,7 @@ class MasterDataProgramStudiController extends Controller
                 'content'                 => $paginated->items(),
             ];
 
-            return $this->successResponse($customResponse, 'Daftar program studi berhasil diambil');
+            return $this->successResponse($customResponse, 'Daftar mata kuliah berhasil diambil');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
         }
@@ -67,18 +62,18 @@ class MasterDataProgramStudiController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreMasterDataProgramStudi $request)
+    public function store(StoreMasterDataMataKuliah $request)
     {
         try {
-            $programStudi = MasterDataProgramStudi::create([
-                'kode'     => $request->kode,
-                'nama'     => $request->nama,
-                'fakultas' => $request->fakultas ?? 'Kampus 5 PSDKU',
-                'jenjang'  => $request->jenjang,
-                'status'   => $request->status,
+            $mataKuliah = MasterDataMataKuliah::create([
+                'kode'             => $request->kode,
+                'nama'             => $request->nama,
+                'sks'              => $request->sks,
+                'semester'         => $request->semester,
+                'program_studi_id' => $request->program_studi_id,
             ]);
 
-            return $this->successResponse($programStudi, 'Program studi berhasil dibuat', 201, 'Created');
+            return $this->successResponse($mataKuliah->load('programStudi'), 'Mata kuliah berhasil dibuat', 201, 'Created');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
         }
@@ -90,13 +85,13 @@ class MasterDataProgramStudiController extends Controller
     public function show($id)
     {
         try {
-            $programStudi = MasterDataProgramStudi::find($id);
+            $mataKuliah = MasterDataMataKuliah::with('programStudi')->find($id);
 
-            if (!$programStudi) {
-                return $this->errorResponse('Program studi tidak ditemukan', 404, 'Not Found');
+            if (!$mataKuliah) {
+                return $this->errorResponse('Mata kuliah tidak ditemukan', 404, 'Not Found');
             }
 
-            return $this->successResponse($programStudi, 'Detail program studi berhasil diambil');
+            return $this->successResponse($mataKuliah, 'Detail mata kuliah berhasil diambil');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
         }
@@ -105,24 +100,24 @@ class MasterDataProgramStudiController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(StoreMasterDataProgramStudi $request, $id)
+    public function update(StoreMasterDataMataKuliah $request, $id)
     {
         try {
-            $programStudi = MasterDataProgramStudi::find($id);
+            $mataKuliah = MasterDataMataKuliah::find($id);
 
-            if (!$programStudi) {
-                return $this->errorResponse('Program studi tidak ditemukan', 404, 'Not Found');
+            if (!$mataKuliah) {
+                return $this->errorResponse('Mata kuliah tidak ditemukan', 404, 'Not Found');
             }
 
-            $programStudi->update([
-                'kode'     => $request->kode,
-                'nama'     => $request->nama,
-                'fakultas' => $request->fakultas ?? 'Kampus 5 PSDKU',
-                'jenjang'  => $request->jenjang,
-                'status'   => $request->status,
+            $mataKuliah->update([
+                'kode'             => $request->kode,
+                'nama'             => $request->nama,
+                'sks'              => $request->sks,
+                'semester'         => $request->semester,
+                'program_studi_id' => $request->program_studi_id,
             ]);
 
-            return $this->successResponse($programStudi, 'Program studi berhasil diperbarui');
+            return $this->successResponse($mataKuliah->load('programStudi'), 'Mata kuliah berhasil diperbarui');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
         }
@@ -134,15 +129,15 @@ class MasterDataProgramStudiController extends Controller
     public function destroy($id)
     {
         try {
-            $programStudi = MasterDataProgramStudi::find($id);
+            $mataKuliah = MasterDataMataKuliah::find($id);
 
-            if (!$programStudi) {
-                return $this->errorResponse('Program studi tidak ditemukan', 404, 'Not Found');
+            if (!$mataKuliah) {
+                return $this->errorResponse('Mata kuliah tidak ditemukan', 404, 'Not Found');
             }
 
-            $programStudi->delete();
+            $mataKuliah->delete();
 
-            return $this->successResponse(null, 'Program studi berhasil dihapus');
+            return $this->successResponse(null, 'Mata kuliah berhasil dihapus');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
         }

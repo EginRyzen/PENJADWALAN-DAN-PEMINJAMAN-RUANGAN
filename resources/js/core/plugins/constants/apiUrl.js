@@ -12,5 +12,6 @@ const apiUrl = {
     GET_BUILDINGS_ONLY: "/building/buildings-simple",
     // Master Data - Program Studi
     PROGRAM_STUDI: "/master-data/program-studi",
+    MATA_KULIAH: "/master-data/mata-kuliah",
 };
 export default apiUrl;

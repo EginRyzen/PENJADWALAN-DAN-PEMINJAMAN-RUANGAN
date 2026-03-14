@@ -6,6 +6,7 @@ use App\Http\Controllers\Building\DataBaseBuildingFacilityController;
 use App\Http\Controllers\Building\DataBaseBuildingRoomController;
 use App\Http\Controllers\DataDocumentController;
 use App\Http\Controllers\MasterData\MasterDataProgramStudiController;
+use App\Http\Controllers\MasterData\MasterDataMataKuliahController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -42,5 +43,6 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::prefix('master-data')->group(function () {
         Route::apiResource('program-studi', MasterDataProgramStudiController::class);
+        Route::apiResource('mata-kuliah', MasterDataMataKuliahController::class);
     });
 });
