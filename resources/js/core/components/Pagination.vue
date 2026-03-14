@@ -250,7 +250,7 @@ export default {
       const right = this.totalPages - left + 1 + even;
       if (this.current > left && this.current < right) {
         const first = 1;
-        const last = parseInt(this.totalpages);
+        const last = parseInt(this.totalPages);
         const start = this.current - left + 2;
         const end = this.current + left - 2 - even;
         const second = start - 1 === first + 1 ? 2 : "...";

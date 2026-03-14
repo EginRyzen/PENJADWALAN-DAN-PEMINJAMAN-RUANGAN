@@ -314,11 +314,18 @@ export default {
       obj.totalRecords = obj.options.totalItems;
       obj.records = obj.items;
 
-      obj.$emit("update:options", {
+      const payload = {
         page: obj.currentPage || 1,
         itemsPerPage: obj.pageCount,
-        totalItems: obj.totalRecords,
-      });
+      };
+
+      if (!obj.serverSide) {
+        payload.totalItems = obj.totalRecords;
+      } else {
+        payload.totalItems = obj.options.totalItems;
+      }
+
+      obj.$emit("update:options", payload);
       const endTime = new Date().getTime();
       const executionTime = endTime - startTime;
       console.log(`Execution time fetch server data: ${executionTime} ms`);

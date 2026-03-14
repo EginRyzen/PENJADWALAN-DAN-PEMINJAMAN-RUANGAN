@@ -40,6 +40,8 @@
         :items="filteredData"
         :headers="headers"
         :options="tableOptions"
+        :server-side="true"
+        @update:options="tableOptions = $event"
         :searchable="false"
         :show-pagination="true"
         :use-custom-row="true"
@@ -51,15 +53,15 @@
             :key="item.id"
             class="bg-white hover:bg-gray-50 transition"
           >
-            <td class="p-4 border-b text-gray-500 text-md">{{ index + 1 }}</td>
+            <td class="p-4 border-b text-gray-500 text-md">{{ startingIndex + index + 1 }}</td>
             <td class="p-4 border-b font-medium text-gray-700 text-md">{{ item.kode }}</td>
             <td class="p-4 border-b text-gray-700 text-md">{{ item.nama }}</td>
             <td class="p-4 border-b text-gray-600 text-md">{{ item.fakultas }}</td>
             <td class="p-4 border-b text-gray-600 text-md text-center">{{ item.jenjang }}</td>
             <td class="p-4 border-b text-center">
               <span
-                class="inline-block px-2 py-1 rounded-full text-xs font-semibold"
-                :class="item.status === 'Aktif'
+                class="inline-block px-2 py-1 rounded-full text-xs font-semibold capitalize"
+                :class="item.status === 'aktif'
                   ? 'bg-teal-100 text-teal-700'
                   : 'bg-red-100 text-red-600'"
               >
@@ -74,12 +76,12 @@
                       d="M15.232 5.232l3.536 3.536M9 13l6.586-6.586a2 2 0 112.828 2.828L11.828 15.828a2 2 0 01-1.414.586H9v-1.414A2 2 0 019 13z" />
                   </svg>
                 </span>
-                <span class="cursor-pointer text-red-500 hover:text-red-600 transition" @click="handleDelete(item)">
+                <!-- <span class="cursor-pointer text-red-500 hover:text-red-600 transition" @click="handleDelete(item)">
                   <svg class="w-7 h-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                       d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6M9 7h6m2 0a1 1 0 00-1-1h-4a1 1 0 00-1 1m6 0H7" />
                   </svg>
-                </span>
+                </span> -->
               </div>
             </td>
           </tr>
@@ -127,7 +129,7 @@
             v-model="form.status"
             :options="statusOptions"
             item-text="name"
-            item-value="name"
+            item-value="id"
             placeholder="Pilih Status..."
           />
         </div>
@@ -145,6 +147,23 @@
         </button>
       </div>
     </modal-app>
+
+    <!-- ===== MODAL CONFIRM ===== -->
+    <modal-pop-up-confirm
+      v-model="showConfirmModal"
+      :title="confirmData.title"
+      :description="confirmData.description"
+      @confirm="confirmData.action"
+    />
+
+    <!-- ===== MODAL SUCCESS ===== -->
+    <modal-pop-up-success
+      v-model="showSuccessModal"
+      :title="successData.title"
+      :description="successData.description"
+      :button-text="successData.buttonText"
+      @close-action="successData.action"
+    />
   </div>
 </template>
 
@@ -155,6 +174,9 @@ import AppInput from "@/core/components/AppInput.vue";
 import TableApp from "@/core/components/Table.vue";
 import ModalApp from "@/core/components/Modal.vue";
 import SelectAutoComplete from "@/core/components/SelectAutoComplete.vue";
+import ModalPopUpConfirm from "@/core/components/ModalPopUpConfirm.vue";
+import ModalPopUpSuccess from "@/core/components/ModalPopUpSuccess.vue";
+import DISPATCH from "@/core/plugins/constants/dispatches";
 
 export default {
   name: "ListProgramStudi",
@@ -165,19 +187,36 @@ export default {
     TableApp,
     ModalApp,
     SelectAutoComplete,
+    ModalPopUpConfirm,
+    ModalPopUpSuccess,
   },
   data() {
     return {
       search: "",
       showModal: false,
       isEditMode: false,
+      isSaving: false,
       editId: null,
       form: {
         kode: "",
         nama: "",
-        fakultas: "Kampus 5 PSDKU",
         jenjang: "",
         status: "",
+      },
+      // PopUp Confirm State
+      showConfirmModal: false,
+      confirmData: {
+        title: "",
+        description: "",
+        action: () => {},
+      },
+      // PopUp Success State
+      showSuccessModal: false,
+      successData: {
+        title: "",
+        description: "",
+        buttonText: "Oke",
+        action: () => {},
       },
       jenjangOptions: [
         { name: "D3" },
@@ -187,8 +226,8 @@ export default {
         { name: "S3" },
       ],
       statusOptions: [
-        { name: "Aktif" },
-        { name: "Non-Aktif" },
+        { id: "aktif", name: "Aktif" },
+        { id: "non-aktif", name: "Non-Aktif" },
       ],
       breadcrumbItems: [
         { text: "Master Data", link: "#" },
@@ -196,47 +235,80 @@ export default {
         { text: "Program Studi", link: "/app/program-studi" },
       ],
       headers: [
-        { text: "No",             value: "no",       align: "start",  sortable: false },
-        { text: "Kode",           value: "kode",     align: "start",  sortable: true  },
-        { text: "Nama Prodi",     value: "nama",     align: "start",  sortable: true  },
-        { text: "Fakultas",       value: "fakultas", align: "start",  sortable: true  },
-        { text: "Jenjang",        value: "jenjang",  align: "center", sortable: false },
-        { text: "Status",         value: "status",   align: "center", sortable: false },
-        { text: "Aksi",           value: "aksi",     align: "center", sortable: false },
+        { text: "No",          value: "no",       align: "start",  sortable: false },
+        { text: "Kode",        value: "kode",     align: "start",  sortable: true  },
+        { text: "Nama Prodi",  value: "nama",     align: "start",  sortable: true  },
+        { text: "Fakultas",    value: "fakultas", align: "start",  sortable: true  },
+        { text: "Jenjang",     value: "jenjang",  align: "center", sortable: false },
+        { text: "Status",      value: "status",   align: "center", sortable: false },
+        { text: "Aksi",        value: "aksi",     align: "center", sortable: false },
       ],
       tableOptions: {
         page: 1,
         itemsPerPage: 10,
+        totalItems: 0,
       },
-      // Data dummy — ganti dengan pemanggilan API sesuai kebutuhan
-      programStudiList: [
-        { id: 1, kode: "TI", nama: "Teknik Informatika",       fakultas: "Kampus 5 PSDKU", jenjang: "S1", status: "Aktif"     },
-        { id: 2, kode: "SI", nama: "Sistem Informasi",         fakultas: "Kampus 5 PSDKU", jenjang: "S1", status: "Aktif"     },
-        { id: 3, kode: "TE", nama: "Teknik Elektro",           fakultas: "Kampus 5 PSDKU", jenjang: "S1", status: "Aktif"     },
-        { id: 4, kode: "MN", nama: "Manajemen",                fakultas: "Kampus 5 PSDKU", jenjang: "S1", status: "Aktif"     },
-        { id: 5, kode: "AK", nama: "Akuntansi",                fakultas: "Kampus 5 PSDKU", jenjang: "S1", status: "Aktif"     },
-        { id: 6, kode: "HK", nama: "Hukum",                    fakultas: "Kampus 5 PSDKU", jenjang: "S1", status: "Aktif"     },
-        { id: 7, kode: "PS", nama: "Psikologi",                fakultas: "Kampus 5 PSDKU", jenjang: "S1", status: "Non-Aktif" },
-      ],
     };
   },
   computed: {
+    programStudiList() {
+      return this.$store.state.masterData.programStudiList;
+    },
+    pagination() {
+      return this.$store.state.masterData.pagination;
+    },
+    startingIndex() {
+      return ((this.tableOptions.page ?? 1) - 1) * this.tableOptions.itemsPerPage;
+    },
     filteredData() {
-      const q = this.search.toLowerCase().trim();
-      if (!q) return this.programStudiList;
-      return this.programStudiList.filter(
-        (item) =>
-          item.kode.toLowerCase().includes(q) ||
-          item.nama.toLowerCase().includes(q) ||
-          item.fakultas.toLowerCase().includes(q)
-      );
+      return this.programStudiList;
+    },
+  },
+  mounted() {
+    this.fetchData();
+  },
+  watch: {
+    search(val) {
+      clearTimeout(this._searchTimer);
+      this._searchTimer = setTimeout(() => {
+        this.tableOptions.page = 1;
+        this.fetchData();
+      }, 400);
+    },
+    tableOptions: {
+      handler(newVal, oldVal) {
+        // Hanya hit API jika page atau itemsPerPage berubah
+        if (oldVal && (newVal.page !== oldVal.page || newVal.itemsPerPage !== oldVal.itemsPerPage)) {
+          this.fetchData();
+        }
+      },
+      deep: true,
     },
   },
   methods: {
+    async fetchData() {
+      this.$store.commit("SET_LOADING", true);
+      try {
+        await this.$store.dispatch(DISPATCH.GET_PROGRAM_STUDI, {
+          search: this.search || undefined,
+          page: (this.tableOptions.page ?? 1) - 1,
+          size: this.tableOptions.itemsPerPage,
+        });
+        // Update total items untuk pagination di table
+        this.tableOptions = {
+          ...this.tableOptions,
+          totalItems: this.pagination.total_elements,
+        };
+      } catch (e) {
+        console.error("Gagal memuat data:", e);
+      } finally {
+        this.$store.commit("SET_LOADING", false);
+      }
+    },
     handleTambah() {
       this.isEditMode = false;
       this.editId = null;
-      this.form = { kode: "", nama: "", fakultas: "", jenjang: "", status: "" };
+      this.form = { kode: "", nama: "", jenjang: "", status: "" };
       this.showModal = true;
     },
     handleEdit(item) {
@@ -245,27 +317,67 @@ export default {
       this.form = {
         kode:     item.kode,
         nama:     item.nama,
-        fakultas: "Kampus 5 PSDKU",
         jenjang:  item.jenjang,
         status:   item.status,
       };
       this.showModal = true;
     },
-    handleDelete(item) {
-      // TODO: konfirmasi & hapus data
-      console.log("Delete:", item);
+    async handleDelete(item) {
+      this.confirmData = {
+        title: "Hapus Program Studi",
+        description: `Apakah Anda yakin ingin menghapus program studi "${item.nama}"? Data yang dihapus tidak dapat dikembalikan.`,
+        action: async () => {
+          this.$store.commit("SET_LOADING", true);
+          try {
+            await this.$store.dispatch(DISPATCH.DELETE_PROGRAM_STUDI, item.id);
+            this.successData = {
+              title: "Berhasil Dihapus",
+              description: `Program studi "${item.nama}" telah berhasil dihapus dari sistem.`,
+              buttonText: "Oke",
+              action: () => this.fetchData(),
+            };
+            this.showSuccessModal = true;
+          } catch (e) {
+            console.error("Gagal menghapus:", e);
+          } finally {
+            this.$store.commit("SET_LOADING", false);
+          }
+        },
+      };
+      this.showConfirmModal = true;
     },
-    handleSimpan() {
-      if (this.isEditMode) {
-        const idx = this.programStudiList.findIndex((m) => m.id === this.editId);
-        if (idx !== -1) {
-          this.programStudiList[idx] = { id: this.editId, ...this.form };
+    async handleSimpan() {
+      if (this.isSaving) return;
+      this.isSaving = true;
+      this.$store.commit("SET_LOADING", true);
+      try {
+        const payload = { ...this.form };
+        let message = "";
+        if (this.isEditMode) {
+          await this.$store.dispatch(DISPATCH.UPDATE_PROGRAM_STUDI, { id: this.editId, ...payload });
+          message = `Perubahan pada program studi "${payload.nama}" berhasil disimpan.`;
+        } else {
+          await this.$store.dispatch(DISPATCH.CREATE_PROGRAM_STUDI, payload);
+          message = `Program studi "${payload.nama}" berhasil ditambahkan ke sistem.`;
         }
-      } else {
-        const newId = Date.now();
-        this.programStudiList.push({ id: newId, ...this.form });
+
+        this.closeModal(); // Tutup modal form dulu sesuai request
+
+        this.successData = {
+          title: this.isEditMode ? "Berhasil Diperbarui" : "Berhasil Ditambahkan",
+          description: message,
+          buttonText: "Selesai",
+          action: () => {
+            this.fetchData();
+          },
+        };
+        this.showSuccessModal = true;
+      } catch (e) {
+        console.error("Gagal menyimpan:", e);
+      } finally {
+        this.isSaving = false;
+        this.$store.commit("SET_LOADING", false);
       }
-      this.closeModal();
     },
     closeModal() {
       this.showModal = false;
@@ -273,6 +385,7 @@ export default {
   },
 };
 </script>
+
 
 <style scoped>
 :deep(input::-webkit-outer-spin-button),

@@ -10,5 +10,7 @@ const apiUrl = {
     GET_ROOM_FACILITIES: "/building/rooms",
     UPLOAD_IMAGE: "/documents/upload",
     GET_BUILDINGS_ONLY: "/building/buildings-simple",
+    // Master Data - Program Studi
+    PROGRAM_STUDI: "/master-data/program-studi",
 };
 export default apiUrl;

@@ -120,11 +120,6 @@ const menus = ref([
     label: "Gedung",
     children: [
       { label: "Profil Gedung", path: "/app/gedung-list" },
-    ],
-  },
-  {
-    label: "Peminjaman",
-    children: [
       {
         label: "Peminjaman Gedung",
         children: [
