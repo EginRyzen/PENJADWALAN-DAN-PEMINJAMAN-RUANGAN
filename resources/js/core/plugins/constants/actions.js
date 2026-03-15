@@ -20,4 +20,9 @@ export default {
     CREATE_MATA_KULIAH: "createMataKuliah",
     UPDATE_MATA_KULIAH: "updateMataKuliah",
     DELETE_MATA_KULIAH: "deleteMataKuliah",
+    // Master Data - Mahasiswa
+    GET_MAHASISWA: "getMahasiswa",
+    CREATE_MAHASISWA: "createMahasiswa",
+    UPDATE_MAHASISWA: "updateMahasiswa",
+    DELETE_MAHASISWA: "deleteMahasiswa",
 }

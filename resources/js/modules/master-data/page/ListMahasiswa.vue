@@ -40,6 +40,8 @@
         :items="filteredData"
         :headers="headers"
         :options="tableOptions"
+        :server-side="true"
+        @update:options="tableOptions = $event"
         :searchable="false"
         :show-pagination="true"
         :use-custom-row="true"
@@ -51,10 +53,10 @@
             :key="item.id"
             class="bg-white hover:bg-gray-50 transition"
           >
-            <td class="p-4 border-b text-gray-500 text-md">{{ index + 1 }}</td>
+            <td class="p-4 border-b text-gray-500 text-md">{{ startingIndex + index + 1 }}</td>
             <td class="p-4 border-b font-medium text-gray-700 text-md">{{ item.nim }}</td>
             <td class="p-4 border-b text-gray-700 text-md">{{ item.nama }}</td>
-            <td class="p-4 border-b text-gray-600 text-md">{{ item.prodi }}</td>
+            <td class="p-4 border-b text-gray-600 text-md">{{ item.program_studi ? item.program_studi.nama : '-' }}</td>
             <td class="p-4 border-b text-gray-600 text-md text-center">{{ item.semester }}</td>
             <td class="p-4 border-b text-gray-600 text-md text-center">{{ item.angkatan }}</td>
             <td class="p-4 border-b text-center">
@@ -119,11 +121,12 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Program Studi <span class="text-red-500">*</span></label>
           <select-auto-complete
-            v-model="form.prodi"
-            :options="prodiOptions"
-            item-text="name"
-            item-value="name"
+            v-model="form.program_studi_id"
+            :options="programStudiOptions"
+            item-text="nama"
+            item-value="id"
             placeholder="Pilih Program Studi..."
+            @search="handleSearchProdi"
           />
         </div>
         <div>
@@ -150,10 +153,27 @@
         </button>
         <button @click="handleSimpan"
           class="px-6 py-2 rounded-lg bg-teal-400 hover:bg-teal-500 text-white text-sm font-semibold shadow-md transition-all duration-200">
-          {{ isEditMode ? 'Simpan Perubahan' : 'Simpan' }}
+          {{ isEditMode ? (isSaving ? 'Menyimpan...' : 'Simpan Perubahan') : (isSaving ? 'Menyimpan...' : 'Simpan') }}
         </button>
       </div>
     </modal-app>
+
+    <!-- ===== MODAL CONFIRM ===== -->
+    <modal-pop-up-confirm
+      v-model="showConfirmModal"
+      :title="confirmData.title"
+      :description="confirmData.description"
+      @confirm="confirmData.action"
+    />
+
+    <!-- ===== MODAL SUCCESS ===== -->
+    <modal-pop-up-success
+      v-model="showSuccessModal"
+      :title="successData.title"
+      :description="successData.description"
+      :button-text="successData.buttonText"
+      @close-action="successData.action"
+    />
   </div>
 </template>
 
@@ -164,6 +184,9 @@ import AppInput from "@/core/components/AppInput.vue";
 import TableApp from "@/core/components/Table.vue";
 import ModalApp from "@/core/components/Modal.vue";
 import SelectAutoComplete from "@/core/components/SelectAutoComplete.vue";
+import ModalPopUpConfirm from "@/core/components/ModalPopUpConfirm.vue";
+import ModalPopUpSuccess from "@/core/components/ModalPopUpSuccess.vue";
+import DISPATCH from "@/core/plugins/constants/dispatches";
 
 export default {
   name: "ListMahasiswa",
@@ -174,39 +197,45 @@ export default {
     TableApp,
     ModalApp,
     SelectAutoComplete,
+    ModalPopUpConfirm,
+    ModalPopUpSuccess,
   },
   data() {
     return {
       search: "",
       showModal: false,
       isEditMode: false,
+      isSaving: false,
       editId: null,
       form: {
         nim: "",
         nama: "",
-        prodi: "",
+        program_studi_id: "",
         semester: "",
         angkatan: "",
         status: "",
       },
-      prodiOptions: [
-        { name: "Teknik Informatika" },
-        { name: "Sistem Informasi" },
-        { name: "Teknik Elektro" },
-        { name: "Teknik Mesin" },
-        { name: "Teknik Sipil" },
-        { name: "Manajemen" },
-        { name: "Akuntansi" },
-        { name: "Ilmu Komunikasi" },
-        { name: "Hukum" },
-        { name: "Psikologi" },
-      ],
       statusOptions: [
         { name: "Aktif" },
         { name: "Non-Aktif" },
         { name: "Cuti" },
         { name: "Lulus" },
       ],
+      // PopUp Confirm State
+      showConfirmModal: false,
+      confirmData: {
+        title: "",
+        description: "",
+        action: () => {},
+      },
+      // PopUp Success State
+      showSuccessModal: false,
+      successData: {
+        title: "",
+        description: "",
+        buttonText: "Oke",
+        action: () => {},
+      },
       breadcrumbItems: [
         { text: "Master Data", link: "#" },
         { text: "Mahasiswa", link: "/app/mahasiswa-list" },
@@ -224,64 +253,159 @@ export default {
       tableOptions: {
         page: 1,
         itemsPerPage: 10,
+        totalItems: 0,
       },
-      // Data dummy — ganti dengan pemanggilan API sesuai kebutuhan
-      mahasiswaList: [
-        { id: 1, nim: "2021001", nama: "Budi Santoso",    prodi: "Teknik Informatika", semester: 5, angkatan: 2021, status: "Aktif" },
-        { id: 2, nim: "2021002", nama: "Siti Rahayu",     prodi: "Sistem Informasi",   semester: 5, angkatan: 2021, status: "Aktif" },
-        { id: 3, nim: "2020003", nama: "Andi Wijaya",     prodi: "Teknik Informatika", semester: 7, angkatan: 2020, status: "Aktif" },
-        { id: 4, nim: "2019004", nama: "Dewi Lestari",    prodi: "Manajemen",          semester: 9, angkatan: 2019, status: "Cuti"  },
-        { id: 5, nim: "2018005", nama: "Rizky Pratama",   prodi: "Akuntansi",          semester: 1, angkatan: 2018, status: "Lulus" },
-      ],
     };
   },
   computed: {
+    mahasiswaList() {
+      return this.$store.state.masterData.mahasiswaList;
+    },
+    pagination() {
+      return this.$store.state.masterData.mhsPagination;
+    },
+    programStudiOptions() {
+      return this.$store.state.masterData.programStudiList;
+    },
+    startingIndex() {
+      return ((this.tableOptions.page ?? 1) - 1) * this.tableOptions.itemsPerPage;
+    },
     filteredData() {
-      const q = this.search.toLowerCase().trim();
-      if (!q) return this.mahasiswaList;
-      return this.mahasiswaList.filter(
-        (item) =>
-          item.nim.toLowerCase().includes(q) ||
-          item.nama.toLowerCase().includes(q) ||
-          item.prodi.toLowerCase().includes(q)
-      );
+      return this.mahasiswaList;
+    },
+  },
+  mounted() {
+    this.fetchData();
+    this.fetchProgramStudi();
+  },
+  watch: {
+    search(val) {
+      clearTimeout(this._searchTimer);
+      this._searchTimer = setTimeout(() => {
+        this.tableOptions.page = 1;
+        this.fetchData();
+      }, 400);
+    },
+    tableOptions: {
+      handler(newVal, oldVal) {
+        if (oldVal && (newVal.page !== oldVal.page || newVal.itemsPerPage !== oldVal.itemsPerPage)) {
+          this.fetchData();
+        }
+      },
+      deep: true,
     },
   },
   methods: {
+    async fetchData() {
+      this.$store.commit("SET_LOADING", true);
+      try {
+        await this.$store.dispatch(DISPATCH.GET_MAHASISWA, {
+          search: this.search || undefined,
+          page: (this.tableOptions.page ?? 1) - 1,
+          size: this.tableOptions.itemsPerPage,
+        });
+        this.tableOptions = {
+          ...this.tableOptions,
+          totalItems: this.pagination.total_elements,
+        };
+      } catch (e) {
+        console.error("Gagal memuat data mahasiswa:", e);
+      } finally {
+        this.$store.commit("SET_LOADING", false);
+      }
+    },
+    async fetchProgramStudi(query) {
+      try {
+        await this.$store.dispatch(DISPATCH.GET_PROGRAM_STUDI, {
+          search: query || undefined,
+          page: 0,
+          size: 10,
+        });
+      } catch (e) {
+        console.error("Gagal memuat data program studi:", e);
+      }
+    },
+    handleSearchProdi(query) {
+      clearTimeout(this._prodiSearchTimer);
+      this._prodiSearchTimer = setTimeout(() => {
+        this.fetchProgramStudi(query);
+      }, 500);
+    },
     handleTambah() {
       this.isEditMode = false;
       this.editId = null;
-      this.form = { nim: "", nama: "", prodi: "", semester: "", angkatan: "", status: "" };
+      this.form = { nim: "", nama: "", program_studi_id: "", semester: "", angkatan: "", status: "" };
       this.showModal = true;
     },
     handleEdit(item) {
       this.isEditMode = true;
       this.editId = item.id;
       this.form = {
-        nim:      item.nim,
-        nama:     item.nama,
-        prodi:    item.prodi,
-        semester: item.semester,
-        angkatan: item.angkatan,
-        status:   item.status,
+        nim:              item.nim,
+        nama:             item.nama,
+        program_studi_id: item.program_studi_id,
+        semester:         item.semester,
+        angkatan:         item.angkatan,
+        status:           item.status,
       };
       this.showModal = true;
     },
-    handleDelete(item) {
-      // TODO: konfirmasi & hapus data
-      console.log("Delete:", item);
+    async handleDelete(item) {
+      this.confirmData = {
+        title: "Hapus Mahasiswa",
+        description: `Apakah Anda yakin ingin menghapus mahasiswa "${item.nama}"? Data yang dihapus tidak dapat dikembalikan.`,
+        action: async () => {
+          this.$store.commit("SET_LOADING", true);
+          try {
+            await this.$store.dispatch(DISPATCH.DELETE_MAHASISWA, item.id);
+            this.successData = {
+              title: "Berhasil Dihapus",
+              description: `Mahasiswa "${item.nama}" telah berhasil dihapus dari sistem.`,
+              buttonText: "Oke",
+              action: () => this.fetchData(),
+            };
+            this.showSuccessModal = true;
+          } catch (e) {
+            console.error("Gagal menghapus:", e);
+          } finally {
+            this.$store.commit("SET_LOADING", false);
+          }
+        },
+      };
+      this.showConfirmModal = true;
     },
-    handleSimpan() {
-      if (this.isEditMode) {
-        const idx = this.mahasiswaList.findIndex((m) => m.id === this.editId);
-        if (idx !== -1) {
-          this.mahasiswaList[idx] = { id: this.editId, ...this.form };
+    async handleSimpan() {
+      if (this.isSaving) return;
+      this.isSaving = true;
+      this.$store.commit("SET_LOADING", true);
+      try {
+        const payload = { ...this.form };
+        let message = "";
+        if (this.isEditMode) {
+          await this.$store.dispatch(DISPATCH.UPDATE_MAHASISWA, { id: this.editId, ...payload });
+          message = `Perubahan pada mahasiswa "${payload.nama}" berhasil disimpan.`;
+        } else {
+          await this.$store.dispatch(DISPATCH.CREATE_MAHASISWA, payload);
+          message = `Mahasiswa "${payload.nama}" berhasil ditambahkan ke sistem.`;
         }
-      } else {
-        const newId = Date.now();
-        this.mahasiswaList.push({ id: newId, ...this.form });
+
+        this.closeModal();
+
+        this.successData = {
+          title: this.isEditMode ? "Berhasil Diperbarui" : "Berhasil Ditambahkan",
+          description: message,
+          buttonText: "Selesai",
+          action: () => {
+            this.fetchData();
+          },
+        };
+        this.showSuccessModal = true;
+      } catch (e) {
+        console.error("Gagal menyimpan:", e);
+      } finally {
+        this.isSaving = false;
+        this.$store.commit("SET_LOADING", false);
       }
-      this.closeModal();
     },
     closeModal() {
       this.showModal = false;

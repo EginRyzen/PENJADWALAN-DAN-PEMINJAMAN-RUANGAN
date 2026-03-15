@@ -13,5 +13,6 @@ const apiUrl = {
     // Master Data - Program Studi
     PROGRAM_STUDI: "/master-data/program-studi",
     MATA_KULIAH: "/master-data/mata-kuliah",
+    MAHASISWA: "/master-data/mahasiswa",
 };
 export default apiUrl;
