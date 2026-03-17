@@ -8,6 +8,7 @@ use App\Http\Controllers\DataDocumentController;
 use App\Http\Controllers\MasterData\MasterDataProgramStudiController;
 use App\Http\Controllers\MasterData\MasterDataMataKuliahController;
 use App\Http\Controllers\MasterData\MasterDataMahasiswaController;
+use App\Http\Controllers\MasterData\MasterDataDosenController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -46,5 +47,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('program-studi', MasterDataProgramStudiController::class);
         Route::apiResource('mata-kuliah', MasterDataMataKuliahController::class);
         Route::apiResource('mahasiswa', MasterDataMahasiswaController::class);
+        Route::apiResource('dosen', MasterDataDosenController::class);
     });
 });

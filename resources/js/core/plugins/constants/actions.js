@@ -25,4 +25,9 @@ export default {
     CREATE_MAHASISWA: "createMahasiswa",
     UPDATE_MAHASISWA: "updateMahasiswa",
     DELETE_MAHASISWA: "deleteMahasiswa",
+    // Master Data - Dosen
+    GET_DOSEN: "getDosen",
+    CREATE_DOSEN: "createDosen",
+    UPDATE_DOSEN: "updateDosen",
+    DELETE_DOSEN: "deleteDosen",
 }
