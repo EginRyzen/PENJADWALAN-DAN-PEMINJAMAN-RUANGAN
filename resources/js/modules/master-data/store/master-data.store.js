@@ -17,6 +17,20 @@ const defaultState = () => ({
         total_elements: 0,
         total_elements_per_page: 10,
     },
+    mahasiswaList: [],
+    mhsPagination: {
+        current_page: 0,
+        total_pages: 0,
+        total_elements: 0,
+        total_elements_per_page: 10,
+    },
+    dosenList: [],
+    dosenPagination: {
+        current_page: 0,
+        total_pages: 0,
+        total_elements: 0,
+        total_elements_per_page: 10,
+    },
 });
 
 export const Store = {
@@ -42,6 +56,32 @@ export const Store = {
             } else {
                 state.mataKuliahList = payload.content || [];
                 state.mkPagination = {
+                    current_page: payload.current_page || 0,
+                    total_pages: payload.total_pages || 0,
+                    total_elements: payload.total_elements || 0,
+                    total_elements_per_page: payload.total_elements_per_page || 10,
+                };
+            }
+        },
+        SET_MAHASISWA(state, payload) {
+            if (Array.isArray(payload)) {
+                state.mahasiswaList = payload;
+            } else {
+                state.mahasiswaList = payload.content || [];
+                state.mhsPagination = {
+                    current_page: payload.current_page || 0,
+                    total_pages: payload.total_pages || 0,
+                    total_elements: payload.total_elements || 0,
+                    total_elements_per_page: payload.total_elements_per_page || 10,
+                };
+            }
+        },
+        SET_DOSEN(state, payload) {
+            if (Array.isArray(payload)) {
+                state.dosenList = payload;
+            } else {
+                state.dosenList = payload.content || [];
+                state.dosenPagination = {
                     current_page: payload.current_page || 0,
                     total_pages: payload.total_pages || 0,
                     total_elements: payload.total_elements || 0,
@@ -125,6 +165,84 @@ export const Store = {
                 return response.data;
             } catch (error) {
                 console.error("Error Deleting Mata Kuliah:", error);
+                throw error;
+            }
+        },
+        // Mahasiswa Actions
+        async [actions.GET_MAHASISWA]({ commit }, params) {
+            try {
+                const response = await Api.get(apiUrl.MAHASISWA, { params });
+                const data = response.data.result;
+                commit("SET_MAHASISWA", data);
+                return data;
+            } catch (error) {
+                console.error("Error Fetching Mahasiswa:", error);
+                throw error;
+            }
+        },
+        async [actions.CREATE_MAHASISWA]({ commit }, payload) {
+            try {
+                const response = await Api.post(apiUrl.MAHASISWA, payload);
+                return response.data;
+            } catch (error) {
+                console.error("Error Creating Mahasiswa:", error);
+                throw error;
+            }
+        },
+        async [actions.UPDATE_MAHASISWA]({ commit }, payload) {
+            try {
+                const response = await Api.put(`${apiUrl.MAHASISWA}/${payload.id}`, payload);
+                return response.data;
+            } catch (error) {
+                console.error("Error Updating Mahasiswa:", error);
+                throw error;
+            }
+        },
+        async [actions.DELETE_MAHASISWA]({ commit }, id) {
+            try {
+                const response = await Api.delete(`${apiUrl.MAHASISWA}/${id}`);
+                return response.data;
+            } catch (error) {
+                console.error("Error Deleting Mahasiswa:", error);
+                throw error;
+            }
+        },
+        // Dosen Actions
+        async [actions.GET_DOSEN]({ commit }, params) {
+            try {
+                const response = await Api.get(apiUrl.DOSEN, { params });
+                const data = response.data.result;
+                commit("SET_DOSEN", data);
+                return data;
+            } catch (error) {
+                console.error("Error Fetching Dosen:", error);
+                throw error;
+            }
+        },
+        async [actions.CREATE_DOSEN]({ commit }, payload) {
+            try {
+                const response = await Api.post(apiUrl.DOSEN, payload);
+                return response.data;
+            } catch (error) {
+                console.error("Error Creating Dosen:", error);
+                throw error;
+            }
+        },
+        async [actions.UPDATE_DOSEN]({ commit }, payload) {
+            try {
+                const response = await Api.put(`${apiUrl.DOSEN}/${payload.id}`, payload);
+                return response.data;
+            } catch (error) {
+                console.error("Error Updating Dosen:", error);
+                throw error;
+            }
+        },
+        async [actions.DELETE_DOSEN]({ commit }, id) {
+            try {
+                const response = await Api.delete(`${apiUrl.DOSEN}/${id}`);
+                return response.data;
+            } catch (error) {
+                console.error("Error Deleting Dosen:", error);
                 throw error;
             }
         },

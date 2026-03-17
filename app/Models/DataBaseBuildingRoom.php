@@ -30,4 +30,8 @@ class DataBaseBuildingRoom extends Model
     {
         return $this->hasMany(BuildingFacilityRoom::class, 'room_id');
     }
+    public function pengajuanRuangan()
+    {
+        return $this->hasMany(PengajuanRuangan::class, 'ruangan_id');
+    }
 }

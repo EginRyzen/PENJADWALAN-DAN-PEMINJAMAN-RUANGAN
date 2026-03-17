@@ -40,6 +40,8 @@
         :items="filteredData"
         :headers="headers"
         :options="tableOptions"
+        :server-side="true"
+        @update:options="tableOptions = $event"
         :searchable="false"
         :show-pagination="true"
         :use-custom-row="true"
@@ -51,10 +53,11 @@
             :key="item.id"
             class="bg-white hover:bg-gray-50 transition"
           >
-            <td class="p-4 border-b text-gray-500 text-md">{{ index + 1 }}</td>
+            <td class="p-4 border-b text-gray-500 text-md">{{ startingIndex + index + 1 }}</td>
             <td class="p-4 border-b font-medium text-gray-700 text-md">{{ item.nidn }}</td>
+            <td class="p-4 border-b text-gray-700 text-md">{{ item.nip || '-' }}</td>
             <td class="p-4 border-b text-gray-700 text-md">{{ item.nama }}</td>
-            <td class="p-4 border-b text-gray-600 text-md">{{ item.prodi }}</td>
+            <td class="p-4 border-b text-gray-600 text-md">{{ item.program_studi ? item.program_studi.nama : '-' }}</td>
             <td class="p-4 border-b text-gray-600 text-md">{{ item.jabatan }}</td>
             <td class="p-4 border-b text-center">
               <span
@@ -108,6 +111,10 @@
           <app-input v-model="form.nidn" placeholder="Contoh: 0012345678" label="" />
         </div>
         <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">NIP (Opsional)</label>
+          <app-input v-model="form.nip" placeholder="Contoh: 19800101..." label="" />
+        </div>
+        <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Jabatan <span class="text-red-500">*</span></label>
           <select-auto-complete
             v-model="form.jabatan"
@@ -117,21 +124,22 @@
             placeholder="Pilih Jabatan..."
           />
         </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Program Studi <span class="text-red-500">*</span></label>
+          <select-auto-complete
+            v-model="form.program_studi_id"
+            :options="programStudiOptions"
+            item-text="nama"
+            item-value="id"
+            placeholder="Pilih Program Studi..."
+            @search="handleSearchProdi"
+          />
+        </div>
         <div class="sm:col-span-2">
           <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap <span class="text-red-500">*</span></label>
           <app-input v-model="form.nama" placeholder="Contoh: Dr. Budi Santoso, M.T." label="" />
         </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Program Studi <span class="text-red-500">*</span></label>
-          <select-auto-complete
-            v-model="form.prodi"
-            :options="prodiOptions"
-            item-text="name"
-            item-value="name"
-            placeholder="Pilih Program Studi..."
-          />
-        </div>
-        <div>
+        <div class="sm:col-span-2">
           <label class="block text-sm font-medium text-gray-700 mb-1">Status <span class="text-red-500">*</span></label>
           <select-auto-complete
             v-model="form.status"
@@ -155,6 +163,23 @@
         </button>
       </div>
     </modal-app>
+
+    <!-- ===== MODAL CONFIRM ===== -->
+    <modal-pop-up-confirm
+      v-model="showConfirmModal"
+      :title="confirmData.title"
+      :description="confirmData.description"
+      @confirm="confirmData.action"
+    />
+
+    <!-- ===== MODAL SUCCESS ===== -->
+    <modal-pop-up-success
+      v-model="showSuccessModal"
+      :title="successData.title"
+      :description="successData.description"
+      :button-text="successData.buttonText"
+      @close-action="successData.action"
+    />
   </div>
 </template>
 
@@ -165,6 +190,9 @@ import AppInput from "@/core/components/AppInput.vue";
 import TableApp from "@/core/components/Table.vue";
 import ModalApp from "@/core/components/Modal.vue";
 import SelectAutoComplete from "@/core/components/SelectAutoComplete.vue";
+import ModalPopUpConfirm from "@/core/components/ModalPopUpConfirm.vue";
+import ModalPopUpSuccess from "@/core/components/ModalPopUpSuccess.vue";
+import DISPATCH from "@/core/plugins/constants/dispatches";
 
 export default {
   name: "ListDosen",
@@ -175,19 +203,38 @@ export default {
     TableApp,
     ModalApp,
     SelectAutoComplete,
+    ModalPopUpConfirm,
+    ModalPopUpSuccess,
   },
   data() {
     return {
       search: "",
       showModal: false,
       isEditMode: false,
+      isSaving: false,
       editId: null,
       form: {
-        nidn:    "",
-        nama:    "",
-        prodi:   "",
-        jabatan: "",
-        status:  "",
+        nidn:             "",
+        nip:              "",
+        nama:             "",
+        program_studi_id: "",
+        jabatan:          "",
+        status:           "",
+      },
+      // PopUp Confirm State
+      showConfirmModal: false,
+      confirmData: {
+        title: "",
+        description: "",
+        action: () => {},
+      },
+      // PopUp Success State
+      showSuccessModal: false,
+      successData: {
+        title: "",
+        description: "",
+        buttonText: "Oke",
+        action: () => {},
       },
       jabatanOptions: [
         { name: "Asisten Ahli" },
@@ -196,18 +243,6 @@ export default {
         { name: "Guru Besar / Profesor" },
         { name: "Dosen Tetap" },
         { name: "Dosen Tidak Tetap" },
-      ],
-      prodiOptions: [
-        { name: "Teknik Informatika" },
-        { name: "Sistem Informasi" },
-        { name: "Teknik Elektro" },
-        { name: "Teknik Mesin" },
-        { name: "Teknik Sipil" },
-        { name: "Manajemen" },
-        { name: "Akuntansi" },
-        { name: "Ilmu Komunikasi" },
-        { name: "Hukum" },
-        { name: "Psikologi" },
       ],
       statusOptions: [
         { name: "Aktif" },
@@ -221,6 +256,7 @@ export default {
       headers: [
         { text: "No",           value: "no",      align: "start",  sortable: false },
         { text: "NIDN",         value: "nidn",    align: "start",  sortable: true  },
+        { text: "NIP",          value: "nip",     align: "start",  sortable: true  },
         { text: "Nama",         value: "nama",    align: "start",  sortable: true  },
         { text: "Program Studi", value: "prodi",  align: "start",  sortable: true  },
         { text: "Jabatan",      value: "jabatan", align: "start",  sortable: false },
@@ -230,63 +266,159 @@ export default {
       tableOptions: {
         page: 1,
         itemsPerPage: 10,
+        totalItems: 0,
       },
-      // Data dummy — ganti dengan pemanggilan API sesuai kebutuhan
-      dosenList: [
-        { id: 1, nidn: "0011223344", nama: "Dr. Andi Wijaya, M.Kom.",      prodi: "Teknik Informatika", jabatan: "Lektor Kepala",  status: "Aktif"     },
-        { id: 2, nidn: "0022334455", nama: "Prof. Siti Rahayu, Ph.D.",     prodi: "Sistem Informasi",   jabatan: "Guru Besar / Profesor", status: "Aktif" },
-        { id: 3, nidn: "0033445566", nama: "Budi Santoso, M.T.",           prodi: "Teknik Elektro",     jabatan: "Lektor",         status: "Aktif"     },
-        { id: 4, nidn: "0044556677", nama: "Dewi Lestari, S.E., M.M.",     prodi: "Manajemen",          jabatan: "Asisten Ahli",   status: "Aktif"     },
-        { id: 5, nidn: "0055667788", nama: "Rizky Pratama, S.H., M.H.",    prodi: "Hukum",              jabatan: "Dosen Tetap",    status: "Non-Aktif" },
-      ],
     };
   },
   computed: {
+    dosenList() {
+      return this.$store.state.masterData.dosenList;
+    },
+    pagination() {
+      return this.$store.state.masterData.dosenPagination;
+    },
+    programStudiOptions() {
+      return this.$store.state.masterData.programStudiList;
+    },
+    startingIndex() {
+      return ((this.tableOptions.page ?? 1) - 1) * this.tableOptions.itemsPerPage;
+    },
     filteredData() {
-      const q = this.search.toLowerCase().trim();
-      if (!q) return this.dosenList;
-      return this.dosenList.filter(
-        (item) =>
-          item.nidn.toLowerCase().includes(q) ||
-          item.nama.toLowerCase().includes(q) ||
-          item.prodi.toLowerCase().includes(q)
-      );
+      return this.dosenList;
+    },
+  },
+  mounted() {
+    this.fetchData();
+    this.fetchProgramStudi();
+  },
+  watch: {
+    search(val) {
+      clearTimeout(this._searchTimer);
+      this._searchTimer = setTimeout(() => {
+        this.tableOptions.page = 1;
+        this.fetchData();
+      }, 400);
+    },
+    tableOptions: {
+      handler(newVal, oldVal) {
+        if (oldVal && (newVal.page !== oldVal.page || newVal.itemsPerPage !== oldVal.itemsPerPage)) {
+          this.fetchData();
+        }
+      },
+      deep: true,
     },
   },
   methods: {
+    async fetchData() {
+      this.$store.commit("SET_LOADING", true);
+      try {
+        await this.$store.dispatch(DISPATCH.GET_DOSEN, {
+          search: this.search || undefined,
+          page: (this.tableOptions.page ?? 1) - 1,
+          size: this.tableOptions.itemsPerPage,
+        });
+        this.tableOptions = {
+          ...this.tableOptions,
+          totalItems: this.pagination.total_elements,
+        };
+      } catch (e) {
+        console.error("Gagal memuat data dosen:", e);
+      } finally {
+        this.$store.commit("SET_LOADING", false);
+      }
+    },
+    async fetchProgramStudi(query) {
+      try {
+        await this.$store.dispatch(DISPATCH.GET_PROGRAM_STUDI, {
+          search: query || undefined,
+          page: 0,
+          size: 10,
+        });
+      } catch (e) {
+        console.error("Gagal memuat data program studi:", e);
+      }
+    },
+    handleSearchProdi(query) {
+      clearTimeout(this._prodiSearchTimer);
+      this._prodiSearchTimer = setTimeout(() => {
+        this.fetchProgramStudi(query);
+      }, 500);
+    },
     handleTambah() {
       this.isEditMode = false;
       this.editId = null;
-      this.form = { nidn: "", nama: "", prodi: "", jabatan: "", status: "" };
+      this.form = { nidn: "", nip: "", nama: "", program_studi_id: "", jabatan: "", status: "" };
       this.showModal = true;
     },
     handleEdit(item) {
       this.isEditMode = true;
       this.editId = item.id;
       this.form = {
-        nidn:    item.nidn,
-        nama:    item.nama,
-        prodi:   item.prodi,
-        jabatan: item.jabatan,
-        status:  item.status,
+        nidn:             item.nidn,
+        nip:              item.nip || "",
+        nama:             item.nama,
+        program_studi_id: item.program_studi_id,
+        jabatan:          item.jabatan,
+        status:           item.status,
       };
       this.showModal = true;
     },
-    handleDelete(item) {
-      // TODO: konfirmasi & hapus data
-      console.log("Delete:", item);
+    async handleDelete(item) {
+      this.confirmData = {
+        title: "Hapus Dosen",
+        description: `Apakah Anda yakin ingin menghapus dosen "${item.nama}"? Data yang dihapus tidak dapat dikembalikan.`,
+        action: async () => {
+          this.$store.commit("SET_LOADING", true);
+          try {
+            await this.$store.dispatch(DISPATCH.DELETE_DOSEN, item.id);
+            this.successData = {
+              title: "Berhasil Dihapus",
+              description: `Dosen "${item.nama}" telah berhasil dihapus dari sistem.`,
+              buttonText: "Oke",
+              action: () => this.fetchData(),
+            };
+            this.showSuccessModal = true;
+          } catch (e) {
+            console.error("Gagal menghapus:", e);
+          } finally {
+            this.$store.commit("SET_LOADING", false);
+          }
+        },
+      };
+      this.showConfirmModal = true;
     },
-    handleSimpan() {
-      if (this.isEditMode) {
-        const idx = this.dosenList.findIndex((d) => d.id === this.editId);
-        if (idx !== -1) {
-          this.dosenList[idx] = { id: this.editId, ...this.form };
+    async handleSimpan() {
+      if (this.isSaving) return;
+      this.isSaving = true;
+      this.$store.commit("SET_LOADING", true);
+      try {
+        const payload = { ...this.form };
+        let message = "";
+        if (this.isEditMode) {
+          await this.$store.dispatch(DISPATCH.UPDATE_DOSEN, { id: this.editId, ...payload });
+          message = `Perubahan pada dosen "${payload.nama}" berhasil disimpan.`;
+        } else {
+          await this.$store.dispatch(DISPATCH.CREATE_DOSEN, payload);
+          message = `Dosen "${payload.nama}" berhasil ditambahkan ke sistem.`;
         }
-      } else {
-        const newId = Date.now();
-        this.dosenList.push({ id: newId, ...this.form });
+
+        this.closeModal();
+
+        this.successData = {
+          title: this.isEditMode ? "Berhasil Diperbarui" : "Berhasil Ditambahkan",
+          description: message,
+          buttonText: "Selesai",
+          action: () => {
+            this.fetchData();
+          },
+        };
+        this.showSuccessModal = true;
+      } catch (e) {
+        console.error("Gagal menyimpan:", e);
+      } finally {
+        this.isSaving = false;
+        this.$store.commit("SET_LOADING", false);
       }
-      this.closeModal();
     },
     closeModal() {
       this.showModal = false;

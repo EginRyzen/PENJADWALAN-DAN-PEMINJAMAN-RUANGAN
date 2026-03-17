@@ -22,4 +22,8 @@ class DataDocument extends Model
     public function document(){
         return $this->hasMany(DataBaseBuilding::class, 'building_image_id');
     }
+    public function pengajuanRuangan()
+    {
+        return $this->hasMany(PengajuanRuangan::class, 'dokumen_pendukung_id');
+    }
 }
