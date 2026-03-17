@@ -34,6 +34,14 @@ class User extends Authenticatable
         return $this->belongsToMany(Role::class, 'role_users', 'user_id', 'role_id')
             ->withTimestamps();
     }
+    public function pengajuanRuangan()
+    {
+        return $this->hasMany(PengajuanRuangan::class, 'user_id');
+    }
+    public function histories()
+    {
+        return $this->hasMany(PengajuanHistory::class, 'user_id');
+    }
 
     /**
      * The attributes that should be hidden for serialization.
