@@ -16,19 +16,19 @@
     <div
       class="rounded-md relative"
       :class="{
-        'border border-primary': !disabled && !muted && !isFocused && !error,
-        'border-0 bg-white-100 text-white-300': disabled,
-        'border-2 border-secondary': isFocused && !error,
-        'mb-1': error || $slots['hint'],
-        'border border-error': error,
-        'border border-white-200 bg-white-100': muted && !disabled && !error,
+        'border border-teal-400 bg-white transition-all hover:border-teal-500': !disabled && !muted && !isFocused && !showError,
+        'border-0 bg-gray-100 text-gray-400': disabled,
+        'border border-teal-500 ring-1 ring-teal-100': isFocused && !showError,
+        'mb-1': showError || $slots['hint'],
+        'border border-red-500 bg-red-50 hover:border-red-600': showError,
+        'border border-gray-200 bg-gray-50': muted && !disabled && !showError,
       }"
     >
       <textarea
         ref="textarea"
         :id="id"
         :disabled="disabled || disabledTyping"
-        :value="value"
+        :value="modelValue !== undefined ? modelValue : value"
         :placeholder="placeholder"
         @input="handleInput"
         @blur="handleBlur"
@@ -68,6 +68,7 @@ export default {
       default: "Alasan Pembelian Barang wajib diisi.",
     },
     value: { type: String, default: "" },
+    modelValue: { type: [String, Number] },
     placeholder: { type: String, default: "" },
     disabled: { type: Boolean, default: false },
     disabledTyping: { type: Boolean, default: false },
@@ -97,6 +98,7 @@ export default {
   methods: {
     handleInput(e) {
       this.$emit("input", e.target.value);
+      this.$emit("update:modelValue", e.target.value);
       if (this.required && e.target.value.trim() === "") {
         this.localError = true;
       } else {

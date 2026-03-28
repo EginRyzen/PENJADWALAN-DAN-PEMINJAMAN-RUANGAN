@@ -20,7 +20,7 @@ import ButtonApp from "@/core/components/Button.vue";
 import ListPeminjamanDekstop from "../components/ListPeminjamanDekstop.vue";
 
 export default {
-  name: "ListPeminjamanRuangan",
+  name: "PeminjamanRuanganList",
   components: {
     Breadcrumb,
     ButtonApp,

@@ -91,6 +91,8 @@ export default {
       default: "",
     },
   },
+  
+  emits: ["click"],
 
   computed: {
     cursor() {

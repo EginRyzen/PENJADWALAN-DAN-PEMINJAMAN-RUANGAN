@@ -109,14 +109,16 @@
             </div>
           </button>
         </div>
-        <button-app
-          color="teal"
-          size="sm"
-          class="bg-teal-500 hover:bg-teal-600 text-white font-semibold text-xs px-4 py-2"
-        >
-          <font-awesome-icon icon="plus" class="mr-2" />
-          Buat Pengajuan
-        </button-app>
+        <router-link :to="{ name: 'peminjaman.create' }">
+          <button-app
+            color="teal"
+            size="sm"
+            class="bg-teal-500 hover:bg-teal-600 text-white font-semibold text-xs px-4 py-2"
+          >
+            <font-awesome-icon icon="plus" class="mr-2" />
+            Buat Pengajuan
+          </button-app>
+        </router-link>
       </div>
       
       <ModalDatePicker
@@ -162,6 +164,12 @@
         <template #tipe_pengajuan="{ slotProps }">
           <span class="text-xs font-semibold text-gray-600">
             {{ slotProps.data.tipe_pengajuan }}
+          </span>
+        </template>
+
+        <template #created_at="{ slotProps }">
+          <span class="text-xs font-medium text-gray-600">
+            {{ formatDateData(slotProps.data.created_at) }}
           </span>
         </template>
 
@@ -237,6 +245,7 @@ export default {
         { text: "Ruangan", value: "ruangan", align: "start" },
         { text: "Peminjam", value: "user", align: "start" },
         { text: "Tipe", value: "tipe_pengajuan", align: "start" },
+        { text: "Waktu Pembuatan", value: "created_at", align: "start" },
         { text: "Status", value: "status", align: "start" },
         { text: "Aksi", value: "aksi", align: "center" },
       ],
@@ -365,6 +374,10 @@ export default {
         color: "#374151",
         borderColor: "rgba(55, 65, 81, 0.1)",
       };
+    },
+    formatDateData(date) {
+      if (!date) return "-";
+      return moment(date).format("DD/MM/YYYY HH:mm");
     },
   },
   mounted() {

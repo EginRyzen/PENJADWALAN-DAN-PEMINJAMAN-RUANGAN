@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col relative" id="autocompleteWrapper" :title="selectedValueText">
+  <div class="flex flex-col relative w-full" id="autocompleteWrapper" ref="autocompleteContainer" :title="selectedValueText">
     <label class="text-sm font-semibold text-gray-700 mb-1">
       <span v-if="label && required && !markRequiredRight && !disabled" class="text-red-500">*</span>
       {{ label }}
@@ -46,31 +46,43 @@
       </div>
     </div>
 
-    <ul v-show="isFocus" class="absolute bg-white w-full top-[72px] rounded-lg shadow-xl border border-gray-100 z-[100] overflow-y-auto max-h-60 p-1">
-      <li
-        v-if="multiple && showSelectAll && options.length > 0"
-        @mousedown.prevent="toggleSelectAll"
-        class="px-3 py-2 text-sm cursor-pointer hover:bg-teal-50 rounded-md flex items-center mb-1 border-b border-gray-50"
+    <!-- Teleport ensures dropdown is never clipped by parent overflow-hidden -->
+    <teleport to="body">
+      <ul 
+        v-if="isFocus" 
+        class="fixed bg-white rounded-lg shadow-2xl border border-gray-100 overflow-y-auto max-h-60 p-1"
+        :style="dropdownStyle"
       >
-        <div class="custom-checkbox mr-3" :class="{ 'checked': isAllSelected }">
-           <div v-if="isAllSelected" class="checkmark"></div>
-        </div>
-        <span class="font-bold text-teal-700">ALL</span>
-      </li>
+        <li
+          v-if="multiple && showSelectAll && options.length > 0"
+          @mousedown.prevent="toggleSelectAll"
+          class="px-3 py-2 text-sm cursor-pointer hover:bg-teal-50 rounded-md flex items-center mb-1 border-b border-gray-50"
+        >
+          <div class="custom-checkbox mr-3" :class="{ 'checked': isAllSelected }">
+             <div v-if="isAllSelected" class="checkmark"></div>
+          </div>
+          <span class="font-bold text-teal-700">ALL</span>
+        </li>
 
-      <li
-        v-for="(option, i) in computedOptions"
-        :key="`option-${i}`"
-        @mousedown.prevent="setValue(option)"
-        class="px-3 py-2 text-sm cursor-pointer flex items-center rounded-md transition-colors mb-0.5"
-        :class="option.selected ? 'bg-teal-50 text-teal-700 font-medium' : 'hover:bg-gray-50 text-gray-600'"
-      >
-        <div class="custom-checkbox mr-3" :class="{ 'checked': option.selected }">
-           <div v-if="option.selected" class="checkmark"></div>
-        </div>
-        <span class="flex-1">{{ optionType === 'string' ? option : option[itemText] }}</span>
-      </li>
-    </ul>
+        <li
+          v-for="(option, i) in computedOptions"
+          :key="`option-${i}`"
+          @mousedown.prevent="setValue(option)"
+          class="px-3 py-2 text-sm cursor-pointer flex items-center rounded-md transition-colors mb-0.5"
+          :class="option.selected ? 'bg-teal-50 text-teal-700 font-medium' : 'hover:bg-gray-50 text-gray-600'"
+        >
+          <div class="custom-checkbox mr-3" :class="{ 'checked': option.selected }">
+             <div v-if="option.selected" class="checkmark"></div>
+          </div>
+          <span class="flex-1">
+            {{ optionType === 'string' ? option : (option[itemText] || '-') }}
+          </span>
+        </li>
+        <li v-if="computedOptions.length === 0 && !showSelectAll" class="px-3 py-2 text-sm text-gray-400 text-center">
+            Data tidak ditemukan
+        </li>
+      </ul>
+    </teleport>
   </div>
 </template>
 
@@ -78,7 +90,6 @@
 export default {
   name: "Autocomplete",
   props: {
-    // Di Vue 3, gunakan modelValue
     modelValue: { type: Array, required: true, default: () => [] },
     label: { type: String, default: "" },
     placeholder: { type: String, default: "Pilih..." },
@@ -94,11 +105,17 @@ export default {
     loading: { type: Boolean, default: false },
     id: { type: String, default: "" }
   },
-  emits: ['update:modelValue', 'search'], // Deklarasikan emits
+  emits: ['update:modelValue', 'search'],
   data() {
     return {
       isFocus: false,
       search: "",
+      dropdownStyle: {
+        top: '0px',
+        left: '0px',
+        width: '0px',
+        zIndex: 9999
+      }
     };
   },
   computed: {
@@ -106,53 +123,79 @@ export default {
       return this.options.length > 0 ? typeof this.options[0] : "string";
     },
     isAllSelected() {
-      if (this.options.length === 0 || !this.modelValue) return false;
+      if (this.options.length === 0 || !Array.isArray(this.modelValue)) return false;
       return this.options.every(opt => {
         const optVal = this.optionType === 'string' ? opt : opt[this.itemValue];
         return this.modelValue.some(v => (this.optionType === 'string' ? v : v[this.itemValue]) === optVal);
       });
     },
     computedOptions() {
-      const searchTerm = this.search.toLowerCase();
+      const searchTerm = (this.search || "").toLowerCase();
       return this.options
         .filter(opt => {
-          const text = (this.optionType === 'string' ? opt : opt[this.itemText]).toString().toLowerCase();
+          const val = this.optionType === 'string' ? opt : opt[this.itemText];
+          const text = (val || "").toString().toLowerCase();
           return text.includes(searchTerm);
         })
         .map(opt => {
           const optVal = this.optionType === 'string' ? opt : opt[this.itemValue];
-          const isSelected = this.modelValue.some(v => (this.optionType === 'string' ? v : v[this.itemValue]) === optVal);
+          const isSelected = Array.isArray(this.modelValue) && this.modelValue.some(v => (this.optionType === 'string' ? v : v[this.itemValue]) === optVal);
           return { ...opt, selected: isSelected };
         });
     },
     selectedValueText() {
-      if (!this.modelValue || this.modelValue.length === 0) return "";
-      return this.modelValue.map(v => (this.optionType === 'string' ? v : v[this.itemText])).join(", ");
+      if (!Array.isArray(this.modelValue) || this.modelValue.length === 0) return "";
+      return this.modelValue
+        .map(v => (this.optionType === 'string' ? v : v[this.itemText]))
+        .filter(v => v)
+        .join(", ");
     }
   },
   methods: {
+    updateDropdownPosition() {
+      if (this.$refs.autocompleteContainer) {
+        const rect = this.$refs.autocompleteContainer.getBoundingClientRect();
+        // Position below the label+input container
+        const inputHeight = 44; // Approx height with label
+        this.dropdownStyle = {
+          top: `${rect.bottom + window.scrollY + 4}px`,
+          left: `${rect.left + window.scrollX}px`,
+          width: `${rect.width}px`,
+          zIndex: 9999
+        };
+      }
+    },
     onDisplayTextClick() {
       if (this.disabled) return;
+      this.updateDropdownPosition();
       this.isFocus = true;
-      this.$nextTick(() => this.$refs.autocompleteRef.focus());
+      this.$nextTick(() => {
+        if (this.$refs.autocompleteRef) this.$refs.autocompleteRef.focus();
+      });
+      window.addEventListener('scroll', this.updateDropdownPosition);
+      window.addEventListener('resize', this.updateDropdownPosition);
     },
     onAutocompleteBlur() {
       setTimeout(() => {
         this.isFocus = false;
         this.search = "";
+        window.removeEventListener('scroll', this.updateDropdownPosition);
+        window.removeEventListener('resize', this.updateDropdownPosition);
       }, 200);
     },
     onClickArrow() {
       this.isFocus ? (this.isFocus = false) : this.onDisplayTextClick();
     },
     setValue(option) {
-      let newValue = [...this.modelValue];
+      let newValue = Array.isArray(this.modelValue) ? [...this.modelValue] : [];
       const optVal = this.optionType === 'string' ? option : option[this.itemValue];
 
       if (this.multiple) {
         const index = newValue.findIndex(v => (this.optionType === 'string' ? v : v[this.itemValue]) === optVal);
         index > -1 ? newValue.splice(index, 1) : newValue.push(option);
-        this.$nextTick(() => this.$refs.autocompleteRef.focus());
+        this.$nextTick(() => {
+          if (this.$refs.autocompleteRef) this.$refs.autocompleteRef.focus();
+        });
       } else {
         newValue = [option];
         this.isFocus = false;
@@ -162,11 +205,17 @@ export default {
     toggleSelectAll() {
       const newValue = this.isAllSelected ? [] : [...this.options];
       this.$emit("update:modelValue", newValue);
-      this.$nextTick(() => this.$refs.autocompleteRef.focus());
+      this.$nextTick(() => {
+        if (this.$refs.autocompleteRef) this.$refs.autocompleteRef.focus();
+      });
     },
     onInput(e) {
       this.$emit("search", e.target.value);
     }
+  },
+  beforeUnmount() {
+    window.removeEventListener('scroll', this.updateDropdownPosition);
+    window.removeEventListener('resize', this.updateDropdownPosition);
   }
 };
 </script>

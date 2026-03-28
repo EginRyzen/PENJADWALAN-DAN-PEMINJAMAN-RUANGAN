@@ -398,10 +398,10 @@ export default {
         .replaceAll(",", ", ");
     },
     checkViewport() {
-      if (
-        document.getElementById("bima_theme").offsetWidth < MOBILE_BREAKPOINT &&
-        !this.stickDesktopMode
-      ) {
+      const themeElement = document.getElementById("bima_theme");
+      const width = themeElement ? themeElement.offsetWidth : window.innerWidth;
+      
+      if (width < MOBILE_BREAKPOINT && !this.stickDesktopMode) {
         this.isMobile = true;
       }
     },
