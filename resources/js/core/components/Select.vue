@@ -1,7 +1,7 @@
 <template>
   <div :id="$attrs.id" class="flex flex-col">
     <label
-      class="flex items-center text-sm text-black-primary"
+      class="flex items-center text-sm font-semibold text-gray-700 mb-1"
       :class="{ 'text-error': error }"
     >
       <span class="text-error" v-if="required">*</span>{{ label }}
@@ -16,8 +16,8 @@
               disabled,
             'text-gray-lightest': disabled,
             'bg-white border-teal-400 focus:shadow-primary-lg focus:border-teal-400':
-              !disabled && !noBorder,
-            'border-error': error,
+              !disabled && !noBorder && !error,
+            'bg-red-50 border-red-500 focus:border-red-500': error,
             'hover:shadow-primary-sm': !noBorder && !disabled,
             'text-base': size !== 'large',
             'h-11': size === 'large',
@@ -203,14 +203,14 @@ export default {
     return {
       isOptionsExpanded: false,
       selected:
-        typeof this.modelValue === "object"
+        this.modelValue && typeof this.modelValue === "object"
           ? this.modelValue[this.itemText]
           : this.modelValue,
       internalValue: [],
     };
   },
   mounted() {
-    if (typeof this.value === "object") {
+    if (this.value && typeof this.value === "object") {
       this.selected = this.value[this.itemText];
       this.internalValue = this.value[this.itemKey];
     } else {
@@ -248,17 +248,17 @@ export default {
         return;
       }
 
-      if (typeof val === "object") {
+      if (val && typeof val === "object") {
         this.selected = val[this.itemText];
         this.internalValue = val[this.itemKey];
       } else {
         const option = this.options.find(
-          (opt) => (typeof opt === "object" ? opt[this.itemKey] : opt) === val
+          (opt) => (opt && typeof opt === "object" ? opt[this.itemKey] : opt) === val
         );
 
         if (option) {
           this.selected =
-            typeof option === "object" ? option[this.itemText] : option;
+            option && typeof option === "object" ? option[this.itemText] : option;
         } else {
           this.selected = val;
         }

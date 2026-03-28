@@ -16,7 +16,6 @@ class PengajuanRuangan extends Model
         'no_pengajuan',
         'tipe_pengajuan',
         'current_status_id',
-        'ruangan_id',
         'user_id',
         'tanggal_pengajuan',
         'tanggal_start_peminjaman',
@@ -32,11 +31,6 @@ class PengajuanRuangan extends Model
         return $this->belongsTo(WorkflowStep::class, 'current_status_id');
     }
 
-    public function ruangan(): BelongsTo
-    {
-        return $this->belongsTo(DataBaseBuildingRoom::class, 'ruangan_id');
-    }
-
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id');
@@ -50,5 +44,10 @@ class PengajuanRuangan extends Model
     public function histories(): HasMany
     {
         return $this->hasMany(PengajuanHistory::class, 'pengajuan_id');
+    }
+
+    public function items(): HasMany
+    {
+        return $this->hasMany(PengajuanRuanganItem::class, 'pengajuan_id');
     }
 }

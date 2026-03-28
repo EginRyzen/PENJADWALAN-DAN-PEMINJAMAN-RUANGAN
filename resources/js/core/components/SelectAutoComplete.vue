@@ -1,8 +1,13 @@
 <template>
   <div class="flex flex-col relative w-full" ref="selectContainer">
+    <label v-if="label" class="text-sm font-semibold text-gray-700 mb-1">
+      <span v-if="required && !markRequiredRight && !disabled" class="text-red-500">*</span>
+      {{ label }}
+      <span v-if="required && markRequiredRight && !disabled" class="text-red-500">*</span>
+    </label>
     <div
-      class="flex rounded-md border transition-all duration-200 bg-white border-teal-400"
-      :class="{ 'ring-1 ring-teal-100': isFocus }"
+      class="flex rounded-md border transition-all duration-200 bg-white"
+      :class="{ 'ring-1 ring-teal-100 border-teal-500': isFocus && !error, 'border-teal-400': !isFocus && !error, 'border-red-500': error }"
     >
       <input
         v-if="isFocus"
@@ -63,7 +68,11 @@ export default {
     itemText: { type: String, default: "name" },
     itemValue: { type: String, default: "id" },
     placeholder: { type: String, default: "Pilih..." },
-    disabled: { type: Boolean, default: false }
+    disabled: { type: Boolean, default: false },
+    label: { type: String, default: "" },
+    required: { type: Boolean, default: false },
+    markRequiredRight: { type: Boolean, default: false },
+    error: { type: Boolean, default: false },
   },
   emits: ['update:modelValue', 'change', 'focus', 'blur', 'search'],
   data() {

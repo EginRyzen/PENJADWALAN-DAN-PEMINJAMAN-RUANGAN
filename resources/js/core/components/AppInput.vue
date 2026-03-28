@@ -1,7 +1,7 @@
 <template>
   <div class="flex flex-col">
     <label
-      class="text-sm label-input mb-1"
+      class="text-sm font-semibold text-gray-700 mb-1"
       :for="$attrs.id"
       v-show="label && label.length > 0"
     >
@@ -162,6 +162,7 @@ export default {
     "paste",
     "handleHyperlink",
     "clear-error",
+    "click",
   ],
   data() {
     return {
@@ -214,7 +215,9 @@ export default {
       }
       this.$emit("keypress", e.target.value);
     },
-    handleClick() {
+    handleClick(e) {
+      if (this.disabled) return;
+      this.$emit("click", e);
       this.isFocus = true;
       // Menggunakan nextTick untuk memastikan ref sudah ada
       this.$nextTick(() => {

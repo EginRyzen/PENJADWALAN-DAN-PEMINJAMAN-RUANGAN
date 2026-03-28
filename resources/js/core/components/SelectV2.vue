@@ -398,10 +398,10 @@ export default {
         .replaceAll(",", ", ");
     },
     checkViewport() {
-      if (
-        document.getElementById("bima_theme").offsetWidth < MOBILE_BREAKPOINT &&
-        !this.stickDesktopMode
-      ) {
+      const themeElement = document.getElementById("bima_theme");
+      const width = themeElement ? themeElement.offsetWidth : window.innerWidth;
+      
+      if (width < MOBILE_BREAKPOINT && !this.stickDesktopMode) {
         this.isMobile = true;
       }
     },
@@ -569,7 +569,7 @@ export default {
   font-weight: 500;
   font-size: 14px;
   color: #0f172a;
-  border: 1px solid rgb(var(--white-200));
+  border: 1px solid #2dd4bf;
   border-radius: 8px;
   min-height: 44px;
   min-width: 90px;

@@ -1,0 +1,24 @@
+
+> build
+> vite build
+
+[36mvite v7.3.1 [32mbuilding client environment for production...[36m[39m
+transforming...
+/*! 🌼 daisyUI 5.5.14 */
+(node:22116) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///D:/A/my-project/postcss.config.js?t=1774655961184 is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to D:\A\my-project\package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+[32m✓[39m 117 modules transformed.
+[31m✗[39m Build failed in 2.77s
+[31merror during build:
+[31m[vite:css] Preprocessor dependency "sass-embedded" not found. Did you install it? Try `npm install -D sass-embedded`.[31m
+file: [36mD:/A/my-project/resources/js/core/components/ModalDatePicker.vue?vue&type=style&index=0&scoped=5cbc1634&lang.scss[31m
+    at loadPreprocessorPath (file:///D:/A/my-project/node_modules/vite/dist/node/chunks/config.js:30478:8)
+    at loadSassPackage (file:///D:/A/my-project/node_modules/vite/dist/node/chunks/config.js:30484:10)
+    at process (file:///D:/A/my-project/node_modules/vite/dist/node/chunks/config.js:30571:22)
+    at compileCSSPreprocessors (file:///D:/A/my-project/node_modules/vite/dist/node/chunks/config.js:30022:33)
+    at compileCSS (file:///D:/A/my-project/node_modules/vite/dist/node/chunks/config.js:30050:36)
+    at Object.handler (file:///D:/A/my-project/node_modules/vite/dist/node/chunks/config.js:29592:60)
+    at Object.handler (file:///D:/A/my-project/node_modules/vite/dist/node/chunks/config.js:33730:13)
+    at file:///D:/A/my-project/node_modules/rollup/dist/es/shared/node-entry.js:22571:40[39m

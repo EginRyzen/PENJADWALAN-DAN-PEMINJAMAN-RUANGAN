@@ -2,6 +2,7 @@ import { createStore } from 'vuex';
 import { Store as auth } from '@/modules/auth/store/auth.store';
 import { Store as gedung } from '@/modules/gedung/store/gedung.store';
 import { Store as masterData } from '@/modules/master-data/store/master-data.store';
+import { Store as listPengajuan } from '@/modules/list-pengajuan/store/list-pengajuan.store';
 import LOADING_MESSAGE from '@/core/plugins/constants/loadingMessage';
 
 export default createStore({
@@ -24,5 +25,6 @@ export default createStore({
     auth,
     gedung,
     masterData,
+    listPengajuan,
   }
 });

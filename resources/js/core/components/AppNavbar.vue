@@ -123,7 +123,7 @@ const menus = ref([
       {
         label: "Peminjaman Gedung",
         children: [
-          { label: "List Peminjaman", path: "/app/peminjaman-list" },
+          { label: "List Peminjaman", path: "/app/list-peminjaman-ruangan" },
           { label: "List Pengembalian", path: "/app/pengembalian-list" },
         ]
       },
