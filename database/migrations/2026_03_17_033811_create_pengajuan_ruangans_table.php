@@ -16,7 +16,6 @@ return new class extends Migration
             $table->string('no_pengajuan')->unique();
             $table->enum('tipe_pengajuan', ['PEMBELAJARAN', 'EVENT']);
             $table->foreignUuid('current_status_id')->constrained('workflow_steps');
-            $table->foreignUuid('ruangan_id')->constrained('data_base_building_rooms');
             $table->foreignUuid('user_id')->constrained('users');
             $table->date('tanggal_pengajuan');
             $table->date('tanggal_start_peminjaman');
