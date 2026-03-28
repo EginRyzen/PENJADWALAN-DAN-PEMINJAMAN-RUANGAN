@@ -233,24 +233,29 @@ export default {
 </script>
 
 <style scoped>
->>> .vue-scroll-picker-item {
-  height: 48px;
-  line-height: 48px;
-  font-size: 20px;
+/* To enlarge the picker without breaking the scroll math, we keep height relative (em) */
+:deep(.vue-scroll-picker) {
+  font-size: 20px; /* Base font size to scale up the entire picker */
 }
->>> .vue-scroll-picker-item.-selected {
-  height: 48px;
-  line-height: 58px;
+:deep(.vue-scroll-picker-item) {
+  height: 2em;
+  line-height: 2em;
+  font-size: 20px;
+  transition: all 0.2s ease;
+}
+:deep(.vue-scroll-picker-item.-selected) {
+  height: 2em;
+  line-height: 2em;
   font-weight: bold;
-  font-size: 36px;
+  font-size: 28px; /* Slightly larger but keeping block height same */
   color: #46bebb;
   background-color: #f0fdfa;
   border-radius: 8px;
 }
->>> .vue-scroll-picker-layer .top {
+:deep(.vue-scroll-picker-layer .top) {
   border-bottom: none;
 }
->>> .vue-scroll-picker-layer .bottom {
+:deep(.vue-scroll-picker-layer .bottom) {
   border-top: none;
 }
 </style>
