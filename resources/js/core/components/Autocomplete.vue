@@ -7,11 +7,11 @@
     </label>
 
     <div
-      class="flex rounded-md border-2 transition-all duration-200 bg-white"
+      class="flex rounded-md border transition-all duration-200 bg-white"
       :class="{
         'border-red-500': error,
         'border-teal-500 ring-1 ring-teal-100': isFocus && !error,
-        'border-gray-200': !isFocus && !error,
+        'border-teal-400': !isFocus && !error,
         'bg-gray-50 opacity-75': disabled,
       }"
     >

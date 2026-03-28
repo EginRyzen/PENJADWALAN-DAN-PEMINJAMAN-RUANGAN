@@ -9,6 +9,7 @@ import Login from '@/modules/auth/pages/Login.vue';
 import dashboardRoutes from '@/modules/dashboard/router';
 import gedungRoutes from '@/modules/gedung/router';
 import masterDataRoutes from '@/modules/master-data/router';
+import pengajuanRoutes from '@/modules/list-pengajuan/router';
 
 const routes = [
     {
@@ -31,7 +32,8 @@ const routes = [
         children: [
             ...dashboardRoutes,
             ...gedungRoutes,
-            ...masterDataRoutes
+            ...masterDataRoutes,
+            ...pengajuanRoutes
         ]
     }
 ];

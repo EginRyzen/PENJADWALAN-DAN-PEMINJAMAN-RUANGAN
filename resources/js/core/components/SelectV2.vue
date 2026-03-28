@@ -569,7 +569,7 @@ export default {
   font-weight: 500;
   font-size: 14px;
   color: #0f172a;
-  border: 1px solid rgb(var(--white-200));
+  border: 1px solid #2dd4bf;
   border-radius: 8px;
   min-height: 44px;
   min-width: 90px;
