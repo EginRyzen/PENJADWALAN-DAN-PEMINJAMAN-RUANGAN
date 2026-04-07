@@ -10,6 +10,7 @@ import dashboardRoutes from '@/modules/dashboard/router';
 import gedungRoutes from '@/modules/gedung/router';
 import masterDataRoutes from '@/modules/master-data/router';
 import pengajuanRoutes from '@/modules/list-pengajuan/router';
+import settingsRoutes from '@/modules/settings/router';
 
 const routes = [
     {
@@ -33,7 +34,8 @@ const routes = [
             ...dashboardRoutes,
             ...gedungRoutes,
             ...masterDataRoutes,
-            ...pengajuanRoutes
+            ...pengajuanRoutes,
+            ...settingsRoutes
         ]
     }
 ];

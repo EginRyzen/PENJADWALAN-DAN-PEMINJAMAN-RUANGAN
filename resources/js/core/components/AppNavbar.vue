@@ -148,7 +148,7 @@ const menus = ref([
     label: "Settings",
     children: [
       { label: "Kelas & Mahasiswa", path: "/app/pengaturan-kelas-mahasiswa" },
-      { label: "Ujian & Ruangan", path: "/app/pengaturan-ujian-ruangan" },
+      { label: "Ujian", path: "/app/pengaturan-ujian-ruangan" },
     ],
   },
 ]);
