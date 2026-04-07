@@ -153,7 +153,7 @@ export default {
         active: "true",
       },
       breadcrumbs: [
-        { text: "Gedung" },
+        { text: "Gedung", link: "#" },
         { text: "Profile Gedung", link: "/app/gedung-list" },
       ],
     };

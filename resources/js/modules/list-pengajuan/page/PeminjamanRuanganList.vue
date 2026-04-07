@@ -30,8 +30,8 @@ export default {
     return {
       isMobile: false,
       breadcrumbs: [
-        { text: "Gedung" },
-        { text: "Peminjaman Ruangan" },
+        { text: "Gedung", link: "#" },
+        { text: "Peminjaman Ruangan", link: "#" },
         { text: "List Peminjaman", link: "/app/list-peminjaman-ruangan" },
       ],
     };

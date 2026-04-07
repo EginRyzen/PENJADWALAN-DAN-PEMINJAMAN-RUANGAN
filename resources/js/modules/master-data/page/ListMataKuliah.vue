@@ -277,10 +277,12 @@ export default {
           page: (this.tableOptions.page ?? 1) - 1,
           size: this.tableOptions.itemsPerPage,
         });
-        this.tableOptions = {
-          ...this.tableOptions,
-          totalItems: this.pagination.total_elements,
-        };
+        if (this.tableOptions.totalItems !== (this.pagination?.total_elements ?? 0)) {
+          this.tableOptions = {
+            ...this.tableOptions,
+            totalItems: this.pagination?.total_elements ?? 0,
+          };
+        }
       } catch (e) {
         console.error("Gagal memuat data mata kuliah:", e);
       } finally {
