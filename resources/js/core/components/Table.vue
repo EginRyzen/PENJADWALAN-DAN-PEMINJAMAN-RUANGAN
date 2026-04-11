@@ -317,15 +317,19 @@ export default {
       const payload = {
         page: obj.currentPage || 1,
         itemsPerPage: obj.pageCount,
+        totalItems: obj.serverSide ? obj.options.totalItems : obj.totalRecords,
       };
 
-      if (!obj.serverSide) {
-        payload.totalItems = obj.totalRecords;
-      } else {
-        payload.totalItems = obj.options.totalItems;
-      }
+      // Hanya emit jika data berbeda dengan prop options guna menghindari infinity loop
+      const isSame =
+        obj.options &&
+        payload.page === obj.options.page &&
+        payload.itemsPerPage === obj.options.itemsPerPage &&
+        payload.totalItems === obj.options.totalItems;
 
-      obj.$emit("update:options", payload);
+      if (!isSame) {
+        obj.$emit("update:options", payload);
+      }
       const endTime = new Date().getTime();
       const executionTime = endTime - startTime;
       console.log(`Execution time fetch server data: ${executionTime} ms`);

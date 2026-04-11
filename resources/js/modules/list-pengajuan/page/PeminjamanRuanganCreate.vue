@@ -460,9 +460,9 @@ export default {
   data() {
     return {
       breadcrumbs: [
-        { text: "Gedung" },
+        { text: "Gedung", link: "/app/gedung" },
         { text: "List Peminjaman Ruangan", link: "/app/list-peminjaman-ruangan" },
-        { text: "Buat Pengajuan Peminjaman" },
+        { text: "Buat Pengajuan Peminjaman", link: "#"},
       ],
       tipeOptions: [
         { id: "PEMBELAJARAN", name: "Pembelajaran" },

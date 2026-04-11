@@ -146,7 +146,10 @@ const menus = ref([
   },
   {
     label: "Settings",
-    path: "/app/settings",
+    children: [
+      { label: "Kelas", path: "/app/pengaturan-kelas" },
+      { label: "Ujian", path: "/app/pengaturan-ujian-ruangan" },
+    ],
   },
 ]);
 

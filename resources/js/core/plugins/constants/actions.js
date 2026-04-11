@@ -15,6 +15,17 @@ export default {
     CREATE_PROGRAM_STUDI: "createProgramStudi",
     UPDATE_PROGRAM_STUDI: "updateProgramStudi",
     DELETE_PROGRAM_STUDI: "deleteProgramStudi",
+    // Master Data - Kelas
+    GET_KELAS: "getKelas",
+    CREATE_KELAS: "createKelas",
+    UPDATE_KELAS: "updateKelas",
+    DELETE_KELAS: "deleteKelas",
+    // Settings - SKS Setting
+    GET_SKS_SETTING: "getSksSetting",
+    UPDATE_SKS_SETTING: "updateSksSetting",
+    // Settings - Operasional Schedule
+    GET_OPERASIONAL_SCHEDULE: "getOperasionalSchedule",
+    UPDATE_OPERASIONAL_SCHEDULE: "updateOperasionalSchedule",
     // Master Data - Mata Kuliah
     GET_MATA_KULIAH: "getMataKuliah",
     CREATE_MATA_KULIAH: "createMataKuliah",

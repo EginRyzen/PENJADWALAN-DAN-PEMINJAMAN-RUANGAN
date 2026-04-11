@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('nim')->unique();
             $table->string('nama');
             $table->foreignUuid('program_studi_id')->constrained('master_data_program_studis')->onDelete('cascade');
+            $table->foreignUuid('kelas_id')->nullable()->constrained('master_data_kelas')->onDelete('set null');
             $table->integer('semester');
             $table->integer('angkatan');
             $table->string('status'); // Aktif, Non-Aktif, Cuti, Lulus

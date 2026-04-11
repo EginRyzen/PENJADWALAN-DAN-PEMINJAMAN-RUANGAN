@@ -57,6 +57,7 @@
             <td class="p-4 border-b font-medium text-gray-700 text-md">{{ item.nim }}</td>
             <td class="p-4 border-b text-gray-700 text-md">{{ item.nama }}</td>
             <td class="p-4 border-b text-gray-600 text-md">{{ item.program_studi ? item.program_studi.nama : '-' }}</td>
+            <td class="p-4 border-b text-gray-600 text-md text-center">{{ item.kelas ? item.kelas.nama_kelas : '-' }}</td>
             <td class="p-4 border-b text-gray-600 text-md text-center">{{ item.semester }}</td>
             <td class="p-4 border-b text-gray-600 text-md text-center">{{ item.angkatan }}</td>
             <td class="p-4 border-b text-center">
@@ -127,7 +128,21 @@
             item-value="id"
             placeholder="Pilih Program Studi..."
             @search="handleSearchProdi"
+            @update:modelValue="onProdiChange"
           />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">Kelas <span class="text-red-500">*</span></label>
+          <select-auto-complete
+            v-model="form.kelas_id"
+            :options="kelasList"
+            item-text="nama_kelas"
+            item-value="id"
+            :placeholder="!form.program_studi_id ? 'Pilih Prodi terlebih dahulu' : 'Pilih Kelas...'"
+            @search="handleSearchKelas"
+            @click="checkProdi"
+          />
+          <p v-if="prodiError && !form.program_studi_id" class="text-xs text-red-500 mt-1">Pilih Program Studi terlebih dahulu!</p>
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Semester <span class="text-red-500">*</span></label>
@@ -211,10 +226,12 @@ export default {
         nim: "",
         nama: "",
         program_studi_id: "",
+        kelas_id: "",
         semester: "",
         angkatan: "",
         status: "",
       },
+      prodiError: false,
       statusOptions: [
         { name: "Aktif" },
         { name: "Non-Aktif" },
@@ -245,6 +262,7 @@ export default {
         { text: "NIM",          value: "nim",      align: "start",  sortable: true  },
         { text: "Nama",         value: "nama",     align: "start",  sortable: true  },
         { text: "Program Studi", value: "prodi",   align: "start",  sortable: true  },
+        { text: "Kelas",        value: "kelas",    align: "center", sortable: true  },
         { text: "Semester",     value: "semester", align: "center", sortable: false },
         { text: "Angkatan",     value: "angkatan", align: "center", sortable: false },
         { text: "Status",       value: "status",   align: "center", sortable: false },
@@ -266,6 +284,9 @@ export default {
     },
     programStudiOptions() {
       return this.$store.state.masterData.programStudiList;
+    },
+    kelasList() {
+      return this.$store.state.settings.kelasList;
     },
     startingIndex() {
       return ((this.tableOptions.page ?? 1) - 1) * this.tableOptions.itemsPerPage;
@@ -331,23 +352,60 @@ export default {
         this.fetchProgramStudi(query);
       }, 500);
     },
+    async fetchKelas(query) {
+      if (!this.form.program_studi_id) return;
+      try {
+        await this.$store.dispatch(DISPATCH.GET_KELAS, {
+          search: query || undefined,
+          program_studi_id: this.form.program_studi_id,
+          all: true,
+        });
+      } catch (e) {
+        console.error("Gagal memuat data kelas:", e);
+      }
+    },
+    handleSearchKelas(query) {
+      if (!this.form.program_studi_id) {
+        this.prodiError = true;
+        return;
+      }
+      clearTimeout(this._kelasSearchTimer);
+      this._kelasSearchTimer = setTimeout(() => {
+        this.fetchKelas(query);
+      }, 500);
+    },
+    checkProdi() {
+      if (!this.form.program_studi_id) {
+        this.prodiError = true;
+      }
+    },
+    onProdiChange() {
+      this.form.kelas_id = "";
+      this.prodiError = false;
+      this.fetchKelas();
+    },
     handleTambah() {
       this.isEditMode = false;
       this.editId = null;
-      this.form = { nim: "", nama: "", program_studi_id: "", semester: "", angkatan: "", status: "" };
+      this.prodiError = false;
+      this.form = { nim: "", nama: "", program_studi_id: "", kelas_id: "", semester: "", angkatan: "", status: "" };
+      this.$store.commit("settings/SET_KELAS", []); // Clear kelas list on add
       this.showModal = true;
     },
     handleEdit(item) {
       this.isEditMode = true;
       this.editId = item.id;
+      this.prodiError = false;
       this.form = {
         nim:              item.nim,
         nama:             item.nama,
         program_studi_id: item.program_studi_id,
+        kelas_id:         item.kelas_id,
         semester:         item.semester,
         angkatan:         item.angkatan,
         status:           item.status,
       };
+      this.fetchKelas(); // Load kelas list for this student's prodi
       this.showModal = true;
     },
     async handleDelete(item) {
