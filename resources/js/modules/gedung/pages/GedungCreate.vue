@@ -156,6 +156,8 @@ export default {
               room_status: room.room_status,
               room_capacity: room.room_capacity,
               room_purpose: room.room_purpose,
+              can_ujian: room.can_ujian,
+              can_pembelajaran: room.can_pembelajaran,
               facilities: room.facilities.map((f) => ({
                 facility_id: f.facility_id,
                 quantity: f.quantity,

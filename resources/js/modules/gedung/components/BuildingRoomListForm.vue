@@ -55,6 +55,20 @@
             </div>
           </td>
           <td class="p-2 border-b border-gray-100 align-top">
+            <select v-model="row.can_ujian"
+              class="w-full bg-white border border-teal-400 text-gray-700 py-3 px-3 rounded-md appearance-none text-sm h-11 transition-all focus:border-teal-500 outline-none">
+              <option :value="true">Bisa</option>
+              <option :value="false">Tidak</option>
+            </select>
+          </td>
+          <td class="p-2 border-b border-gray-100 align-top">
+            <select v-model="row.can_pembelajaran"
+              class="w-full bg-white border border-teal-400 text-gray-700 py-3 px-3 rounded-md appearance-none text-sm h-11 transition-all focus:border-teal-500 outline-none">
+              <option :value="true">Bisa</option>
+              <option :value="false">Tidak</option>
+            </select>
+          </td>
+          <td class="p-2 border-b border-gray-100 align-top">
             <select v-model="row.room_status"
               class="w-full bg-white border border-teal-400 text-gray-700 py-3 px-3 rounded-md appearance-none text-sm h-11">
               <option value="active">Aktif</option>
@@ -86,7 +100,7 @@
       </template>
       <template v-slot:lastrow>
         <tr>
-          <td colspan="7" class="p-4 border-t border-gray-100">
+          <td colspan="9" class="p-4 border-t border-gray-100">
             <button type="button" @click="addRow" class="text-teal-500 font-bold">
               + Tambah Baris Ruangan
             </button>
@@ -112,6 +126,8 @@ export default {
           room_code: "",
           room_capacity: 0,
           room_purpose: "RUANG KELAS",
+          can_ujian: false,
+          can_pembelajaran: false,
           room_status: "inactive",
           facilities: [],
         },
@@ -136,6 +152,8 @@ export default {
           width: "w-24",
         },
         { text: "Peruntukan", value: "room_purpose", align: "start" },
+        { text: "Ujian?", value: "can_ujian", align: "center", width: "w-24" },
+        { text: "Pembelajaran?", value: "can_pembelajaran", align: "center", width: "w-24" },
         {
           text: "Status",
           value: "room_status",
@@ -182,6 +200,8 @@ export default {
         room_code: "",
         room_capacity: 0,
         room_purpose: "RUANG KELAS",
+        can_ujian: false,
+        can_pembelajaran: false,
         room_status: "inactive",
         facilities: [],
       });

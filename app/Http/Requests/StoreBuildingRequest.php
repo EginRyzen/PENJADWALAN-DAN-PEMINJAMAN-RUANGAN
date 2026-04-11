@@ -29,6 +29,8 @@ class StoreBuildingRequest extends FormRequest
             'rooms.*.room_status'   => 'required|string',
             'rooms.*.room_capacity' => 'required|integer',
             'rooms.*.room_purpose'  => 'required|string',
+            'rooms.*.can_ujian'     => 'required|boolean',
+            'rooms.*.can_pembelajaran' => 'required|boolean',
 
             // BuildingFacilityRoom fields
             'rooms.*.facilities'             => 'nullable|array',
