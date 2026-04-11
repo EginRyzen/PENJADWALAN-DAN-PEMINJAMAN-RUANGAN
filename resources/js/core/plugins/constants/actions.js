@@ -23,6 +23,9 @@ export default {
     // Settings - SKS Setting
     GET_SKS_SETTING: "getSksSetting",
     UPDATE_SKS_SETTING: "updateSksSetting",
+    // Settings - Operasional Schedule
+    GET_OPERASIONAL_SCHEDULE: "getOperasionalSchedule",
+    UPDATE_OPERASIONAL_SCHEDULE: "updateOperasionalSchedule",
     // Master Data - Mata Kuliah
     GET_MATA_KULIAH: "getMataKuliah",
     CREATE_MATA_KULIAH: "createMataKuliah",

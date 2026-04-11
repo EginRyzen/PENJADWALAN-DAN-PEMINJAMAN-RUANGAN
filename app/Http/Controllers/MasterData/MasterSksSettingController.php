@@ -61,24 +61,9 @@ class MasterSksSettingController extends Controller
                 'duration_minutes' => $validated['duration_minutes']
             ]);
 
-            // Update schedules only if provided
-            if (!empty($validated['schedules'])) {
-                foreach ($validated['schedules'] as $schedData) {
-                    MatserOperationalSchedule::where('id', $schedData['id'])
-                        ->where('sks_setting_id', $id)
-                        ->update([
-                            'start_time'  => $schedData['start_time'],
-                            'end_time'    => $schedData['end_time'],
-                            'break_start' => $schedData['break_start'],
-                            'break_end'   => $schedData['break_end'],
-                            'status'      => $schedData['status'],
-                        ]);
-                }
-            }
-
             DB::commit();
 
-            return $this->successResponse($setting->load('operationalSchedules'), 'Konfigurasi berhasil diperbarui');
+            return $this->successResponse($setting, 'Konfigurasi berhasil diperbarui');
         } catch (ValidationException $e) {
             return $this->errorResponse($e->getMessage(), 422, 'Unprocessable Content', $e->errors());
         } catch (\Exception $e) {

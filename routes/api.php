@@ -11,6 +11,7 @@ use App\Http\Controllers\MasterData\MasterDataMataKuliahController;
 use App\Http\Controllers\MasterData\MasterDataMahasiswaController;
 use App\Http\Controllers\MasterData\MasterDataDosenController;
 use App\Http\Controllers\MasterData\MasterSksSettingController;
+use App\Http\Controllers\MasterData\MasterOperasionalScheduleController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -52,5 +53,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('mahasiswa', MasterDataMahasiswaController::class);
         Route::apiResource('dosen', MasterDataDosenController::class);
         Route::apiResource('sks-setting', MasterSksSettingController::class);
+        Route::post('operasional-schedule/bulk-update', [MasterOperasionalScheduleController::class, 'bulkUpdate']);
+        Route::apiResource('operasional-schedule', MasterOperasionalScheduleController::class);
     });
 });

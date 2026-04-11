@@ -218,6 +218,9 @@ export default {
     sksSetting() {
       return this.$store.state.settings.sksSetting;
     },
+    operasionalSchedules() {
+      return this.$store.state.settings.operasionalScheduleList;
+    },
     currentTabLabel() {
       return this.tabs.find(t => t.value === this.activeTab)?.label || "";
     }
@@ -231,7 +234,14 @@ export default {
       handler(newVal) {
         if (newVal) {
           this.sksDuration = newVal.duration_minutes;
-          this.mapSchedules(newVal.operationalSchedules);
+        }
+      },
+      deep: true,
+    },
+    operasionalSchedules: {
+      handler(newVal) {
+        if (newVal) {
+          this.mapSchedules(newVal);
         }
       },
       deep: true,
@@ -241,9 +251,13 @@ export default {
     async fetchData() {
       this.loading = true;
       try {
-        await this.$store.dispatch(DISPATCH.GET_SKS_SETTING, { type: this.activeTab });
+        const params = { type: this.activeTab };
+        await Promise.all([
+          this.$store.dispatch(DISPATCH.GET_SKS_SETTING, params),
+          this.$store.dispatch(DISPATCH.GET_OPERASIONAL_SCHEDULE, params)
+        ]);
       } catch (e) {
-        console.error("Gagal mengambil data SKS:", e);
+        console.error("Gagal mengambil data:", e);
       } finally {
         this.loading = false;
       }
@@ -256,10 +270,10 @@ export default {
       this.dailySchedules = schedules.map(s => ({
         id: s.id,
         name: s.day,
-        start: s.start_time.substring(0, 5),
-        end: s.end_time.substring(0, 5),
-        breakStart: s.break_start.substring(0, 5),
-        breakEnd: s.break_end.substring(0, 5),
+        start: s.start_time ? s.start_time.substring(0, 5) : "08:00",
+        end: s.end_time ? s.end_time.substring(0, 5) : "17:00",
+        breakStart: s.break_start ? s.break_start.substring(0, 5) : "12:00",
+        breakEnd: s.break_end ? s.break_end.substring(0, 5) : "13:00",
         isActive: s.status === 'aktif',
       }));
     },
@@ -268,9 +282,14 @@ export default {
       this.isSaving = true;
       this.$store.commit("SET_LOADING", true);
       try {
-        const payload = {
+        // 1. Update SKS Duration
+        const sksPayload = {
           id: this.sksSetting.id,
           duration_minutes: this.sksDuration,
+        };
+        
+        // 2. Update Schedules (Bulk)
+        const schedulePayload = {
           schedules: this.dailySchedules.map(s => ({
             id: s.id,
             start_time: s.start,
@@ -281,7 +300,10 @@ export default {
           }))
         };
         
-        await this.$store.dispatch(DISPATCH.UPDATE_SKS_SETTING, payload);
+        await Promise.all([
+          this.$store.dispatch(DISPATCH.UPDATE_SKS_SETTING, sksPayload),
+          this.$store.dispatch(DISPATCH.UPDATE_OPERASIONAL_SCHEDULE, schedulePayload)
+        ]);
         
         this.successData = {
           title: "Pembaruan Berhasil",

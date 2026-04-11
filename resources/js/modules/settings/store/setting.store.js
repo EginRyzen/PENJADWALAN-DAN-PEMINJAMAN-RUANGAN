@@ -11,6 +11,7 @@ const defaultState = () => ({
         total_elements_per_page: 10,
     },
     sksSetting: null,
+    operasionalScheduleList: [],
 });
 
 export const Store = {
@@ -33,8 +34,35 @@ export const Store = {
         SET_SKS_SETTING(state, payload) {
             state.sksSetting = payload;
         },
+        SET_OPERASIONAL_SCHEDULE(state, payload) {
+            state.operasionalScheduleList = payload;
+        },
     },
     actions: {
+        async [actions.GET_OPERASIONAL_SCHEDULE]({ commit }, params) {
+            try {
+                const response = await Api.get(apiUrl.OPERASIONAL_SCHEDULE, { params });
+                const data = response.data.result;
+                commit("SET_OPERASIONAL_SCHEDULE", data);
+                return data;
+            } catch (error) {
+                console.error("Error Fetching Operasional Schedule:", error);
+                throw error;
+            }
+        },
+        async [actions.UPDATE_OPERASIONAL_SCHEDULE]({ commit }, payload) {
+            try {
+                const url = payload.schedules 
+                    ? `${apiUrl.OPERASIONAL_SCHEDULE}/bulk-update` 
+                    : `${apiUrl.OPERASIONAL_SCHEDULE}/${payload.id}`;
+                
+                const response = await Api.post(url, payload);
+                return response.data;
+            } catch (error) {
+                console.error("Error Updating Operasional Schedule:", error);
+                throw error;
+            }
+        },
         async [actions.GET_SKS_SETTING]({ commit }, params) {
             try {
                 const response = await Api.get(apiUrl.SKS_SETTING, { params });
