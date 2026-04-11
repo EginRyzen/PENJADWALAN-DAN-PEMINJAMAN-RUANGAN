@@ -16,7 +16,7 @@ class MasterDataKelas extends Model
     protected $fillable = [
         'nama_kelas',
         'program_studi_id',
-        'angkatan',
+        'periode_id',
     ];
 
     public function programStudi()
@@ -27,5 +27,10 @@ class MasterDataKelas extends Model
     public function mahasiswas()
     {
         return $this->hasMany(MasterDataMahasiswa::class, 'kelas_id');
+    }
+
+    public function periode()
+    {
+        return $this->belongsTo(MasterDataPeriode::class, 'periode_id');
     }
 }

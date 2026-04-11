@@ -19,4 +19,14 @@ class MasterDataPeriode extends Model
         'status',
     ];
 
+    public function kelas()
+    {
+        return $this->hasMany(MasterDataKelas::class, 'periode_id');
+    }
+
+    public function mahasiswas()
+    {
+        return $this->hasMany(MasterDataMahasiswa::class, 'periode_id');
+    }
+
 }

@@ -27,7 +27,7 @@ class StoreMasterDataMahasiswa extends FormRequest
             'program_studi_id' => 'required|uuid|exists:master_data_program_studis,id',
             'kelas_id'         => 'nullable|uuid|exists:master_data_kelas,id',
             'semester'         => 'required|integer|min:1|max:14',
-            'angkatan'         => 'required|integer|min:2000|max:' . (date('Y') + 1),
+            'periode_id'       => 'required|exists:master_data_periodes,id',
             'status'           => 'required|in:Aktif,Non-Aktif,Cuti,Lulus',
         ];
     }
@@ -42,7 +42,8 @@ class StoreMasterDataMahasiswa extends FormRequest
             'program_studi_id.exists'   => 'Program studi tidak valid.',
             'kelas_id.exists'           => 'Kelas tidak valid.',
             'semester.required'         => 'Semester wajib diisi.',
-            'angkatan.required'         => 'Angkatan wajib diisi.',
+            'periode_id.required'       => 'Periode wajib dipilih.',
+            'periode_id.exists'         => 'Periode tidak valid.',
             'status.required'           => 'Status wajib dipilih.',
             'status.in'                 => 'Status tidak valid. Pilih: Aktif, Non-Aktif, Cuti, atau Lulus.',
         ];

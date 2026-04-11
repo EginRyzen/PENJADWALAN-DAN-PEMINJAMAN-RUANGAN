@@ -59,7 +59,7 @@
             <td class="p-4 border-b text-gray-600 text-md">{{ item.program_studi ? item.program_studi.nama : '-' }}</td>
             <td class="p-4 border-b text-gray-600 text-md text-center">{{ item.kelas ? item.kelas.nama_kelas : '-' }}</td>
             <td class="p-4 border-b text-gray-600 text-md text-center">{{ item.semester }}</td>
-            <td class="p-4 border-b text-gray-600 text-md text-center">{{ item.angkatan }}</td>
+            <td class="p-4 border-b text-gray-600 text-md text-center">{{ item.periode ? item.periode.nama : '-' }}</td>
             <td class="p-4 border-b text-center">
               <span
                 class="inline-block px-2 py-1 rounded-full text-xs font-semibold"
@@ -112,8 +112,14 @@
           <app-input v-model="form.nim" placeholder="Contoh: 2021001" label="" />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Angkatan <span class="text-red-500">*</span></label>
-          <app-input v-model="form.angkatan" type="number" placeholder="Contoh: 2021" label="" />
+          <label class="block text-sm font-medium text-gray-700 mb-1">Periode <span class="text-red-500">*</span></label>
+          <select-auto-complete
+            v-model="form.periode_id"
+            :options="periodeOptions"
+            item-text="nama"
+            item-value="id"
+            placeholder="Pilih Periode..."
+          />
         </div>
         <div class="sm:col-span-2">
           <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap <span class="text-red-500">*</span></label>
@@ -228,7 +234,7 @@ export default {
         program_studi_id: "",
         kelas_id: "",
         semester: "",
-        angkatan: "",
+        periode_id: "",
         status: "",
       },
       prodiError: false,
@@ -264,7 +270,7 @@ export default {
         { text: "Program Studi", value: "prodi",   align: "start",  sortable: true  },
         { text: "Kelas",        value: "kelas",    align: "center", sortable: true  },
         { text: "Semester",     value: "semester", align: "center", sortable: false },
-        { text: "Angkatan",     value: "angkatan", align: "center", sortable: false },
+        { text: "Periode",      value: "periode",  align: "center", sortable: false },
         { text: "Status",       value: "status",   align: "center", sortable: false },
         { text: "Aksi",         value: "aksi",     align: "center", sortable: false },
       ],
@@ -288,6 +294,9 @@ export default {
     kelasList() {
       return this.$store.state.settings.kelasList;
     },
+    periodeOptions() {
+      return this.$store.state.masterData.periodeList;
+    },
     startingIndex() {
       return ((this.tableOptions.page ?? 1) - 1) * this.tableOptions.itemsPerPage;
     },
@@ -298,6 +307,7 @@ export default {
   mounted() {
     this.fetchData();
     this.fetchProgramStudi();
+    this.fetchPeriode();
   },
   watch: {
     search(val) {
@@ -346,6 +356,16 @@ export default {
         console.error("Gagal memuat data program studi:", e);
       }
     },
+    async fetchPeriode(query) {
+      try {
+        await this.$store.dispatch(DISPATCH.GET_PERIODE, {
+          search: query || undefined,
+          all: true,
+        });
+      } catch (e) {
+        console.error("Gagal memuat data periode:", e);
+      }
+    },
     handleSearchProdi(query) {
       clearTimeout(this._prodiSearchTimer);
       this._prodiSearchTimer = setTimeout(() => {
@@ -388,7 +408,7 @@ export default {
       this.isEditMode = false;
       this.editId = null;
       this.prodiError = false;
-      this.form = { nim: "", nama: "", program_studi_id: "", kelas_id: "", semester: "", angkatan: "", status: "" };
+      this.form = { nim: "", nama: "", program_studi_id: "", kelas_id: "", semester: "", periode_id: "", status: "" };
       this.$store.commit("settings/SET_KELAS", []); // Clear kelas list on add
       this.showModal = true;
     },
@@ -402,7 +422,7 @@ export default {
         program_studi_id: item.program_studi_id,
         kelas_id:         item.kelas_id,
         semester:         item.semester,
-        angkatan:         item.angkatan,
+        periode_id:       item.periode_id,
         status:           item.status,
       };
       this.fetchKelas(); // Load kelas list for this student's prodi
