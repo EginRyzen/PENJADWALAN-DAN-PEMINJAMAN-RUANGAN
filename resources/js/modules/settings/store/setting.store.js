@@ -10,6 +10,7 @@ const defaultState = () => ({
         total_elements: 0,
         total_elements_per_page: 10,
     },
+    sksSetting: null,
 });
 
 export const Store = {
@@ -29,8 +30,31 @@ export const Store = {
                 };
             }
         },
+        SET_SKS_SETTING(state, payload) {
+            state.sksSetting = payload;
+        },
     },
     actions: {
+        async [actions.GET_SKS_SETTING]({ commit }, params) {
+            try {
+                const response = await Api.get(apiUrl.SKS_SETTING, { params });
+                const data = response.data.result;
+                commit("SET_SKS_SETTING", data);
+                return data;
+            } catch (error) {
+                console.error("Error Fetching SKS Setting:", error);
+                throw error;
+            }
+        },
+        async [actions.UPDATE_SKS_SETTING]({ commit }, payload) {
+            try {
+                const response = await Api.put(`${apiUrl.SKS_SETTING}/${payload.id}`, payload);
+                return response.data;
+            } catch (error) {
+                console.error("Error Updating SKS Setting:", error);
+                throw error;
+            }
+        },
         async [actions.GET_KELAS]({ commit }, params) {
             try {
                 const response = await Api.get(apiUrl.KELAS, { params });

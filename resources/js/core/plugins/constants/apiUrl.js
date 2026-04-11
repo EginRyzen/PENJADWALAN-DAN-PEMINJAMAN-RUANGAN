@@ -13,6 +13,7 @@ const apiUrl = {
     // Master Data - Program Studi
     PROGRAM_STUDI: "/master-data/program-studi",
     KELAS: "/master-data/kelas",
+    SKS_SETTING: "/master-data/sks-setting",
     MATA_KULIAH: "/master-data/mata-kuliah",
     MAHASISWA: "/master-data/mahasiswa",
     DOSEN: "/master-data/dosen",
