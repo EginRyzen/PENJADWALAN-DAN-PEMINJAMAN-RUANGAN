@@ -150,6 +150,7 @@ const menus = ref([
       { label: "Kelas", path: "/app/pengaturan-kelas" },
       { label: "Ujian", path: "/app/pengaturan-ujian-ruangan" },
       { label: "Hari Libur", path: "/app/pengaturan-hari-libur" },
+      { label: "Periode", path: "/app/pengaturan-periode" },
     ],
   },
 ]);
