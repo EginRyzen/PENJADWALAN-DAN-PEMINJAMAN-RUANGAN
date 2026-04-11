@@ -20,6 +20,8 @@ class DataBaseBuildingRoom extends Model
         'room_status',
         'room_capacity',
         'room_purpose',
+        'can_ujian',
+        'can_pembelajaran',
     ];
 
     public function building()

@@ -19,7 +19,7 @@ class MasterDataMahasiswa extends Model
         'program_studi_id',
         'kelas_id',
         'semester',
-        'angkatan',
+        'periode_id',
         'status',
     ];
 
@@ -31,5 +31,10 @@ class MasterDataMahasiswa extends Model
     public function kelas()
     {
         return $this->belongsTo(MasterDataKelas::class, 'kelas_id');
+    }
+
+    public function periode()
+    {
+        return $this->belongsTo(MasterDataPeriode::class, 'periode_id');
     }
 }

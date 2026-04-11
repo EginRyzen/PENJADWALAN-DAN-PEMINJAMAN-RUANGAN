@@ -114,6 +114,8 @@ class DataBaseBuildingController extends Controller
                             'room_status'   => $roomData['room_status'],
                             'room_capacity' => $roomData['room_capacity'],
                             'room_purpose'  => $roomData['room_purpose'],
+                            'can_ujian'     => $roomData['can_ujian'],
+                            'can_pembelajaran' => $roomData['can_pembelajaran'],
                         ]);
 
                         if (!empty($roomData['facilities'])) {
@@ -225,6 +227,8 @@ class DataBaseBuildingController extends Controller
                                 'room_status'   => $roomData['room_status'],
                                 'room_capacity' => $roomData['room_capacity'],
                                 'room_purpose'  => $roomData['room_purpose'],
+                                'can_ujian'     => $roomData['can_ujian'],
+                                'can_pembelajaran' => $roomData['can_pembelajaran'],
                             ]
                         );
 

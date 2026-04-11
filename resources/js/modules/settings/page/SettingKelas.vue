@@ -56,7 +56,7 @@
             <td class="p-4 border-b text-gray-500 text-md">{{ startingIndex + index + 1 }}</td>
             <td class="p-4 border-b font-medium text-gray-700 text-md">{{ item.nama_kelas }}</td>
             <td class="p-4 border-b text-gray-600 text-md text-center">{{ item.program_studi ? item.program_studi.nama : '-' }}</td>
-            <td class="p-4 border-b text-gray-600 text-md text-center">{{ item.angkatan }}</td>
+            <td class="p-4 border-b text-gray-600 text-md text-center">{{ item.periode ? item.periode.nama : '-' }}</td>
             <td class="p-4 border-b text-center">
               <div class="flex items-center justify-center gap-4">
                 <span class="cursor-pointer text-yellow-400 hover:text-yellow-500 transition" @click="handleEdit(item)">
@@ -110,8 +110,14 @@
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Angkatan <span class="text-red-500">*</span></label>
-          <app-input v-model="form.angkatan" type="number" placeholder="Contoh: 2021" label="" />
+          <label class="block text-sm font-medium text-gray-700 mb-1">Periode <span class="text-red-500">*</span></label>
+          <select-auto-complete
+            v-model="form.periode_id"
+            :options="periodeOptions"
+            item-text="nama"
+            item-value="id"
+            placeholder="Pilih Periode..."
+          />
         </div>
       </div>
 
@@ -180,7 +186,7 @@ export default {
       form: {
         nama_kelas: "",
         program_studi_id: "",
-        angkatan: "",
+        periode_id: "",
       },
       // PopUp Confirm State
       showConfirmModal: false,
@@ -205,7 +211,7 @@ export default {
         { text: "No",           value: "no",               align: "start",  sortable: false },
         { text: "Nama Kelas",   value: "nama_kelas",       align: "start",  sortable: true  },
         { text: "Program Studi", value: "prodi",           align: "center", sortable: true  },
-        { text: "Angkatan",     value: "angkatan",         align: "center", sortable: true  },
+        { text: "Periode",       value: "periode",         align: "center", sortable: true  },
         { text: "Aksi",         value: "aksi",             align: "center", sortable: false },
       ],
       tableOptions: {
@@ -225,6 +231,9 @@ export default {
     programStudiOptions() {
       return this.$store.state.masterData.programStudiList;
     },
+    periodeOptions() {
+      return this.$store.state.masterData.periodeList;
+    },
     startingIndex() {
       return ((this.tableOptions.page ?? 1) - 1) * this.tableOptions.itemsPerPage;
     },
@@ -232,6 +241,7 @@ export default {
   mounted() {
     this.fetchData();
     this.fetchProgramStudi();
+    this.fetchPeriode();
   },
   watch: {
     search(val) {
@@ -280,6 +290,16 @@ export default {
         console.error("Gagal memuat data program studi:", e);
       }
     },
+    async fetchPeriode(query) {
+      try {
+        await this.$store.dispatch(DISPATCH.GET_PERIODE, {
+          search: query || undefined,
+          all: true,
+        });
+      } catch (e) {
+        console.error("Gagal memuat data periode:", e);
+      }
+    },
     handleSearchProdi(query) {
       clearTimeout(this._prodiSearchTimer);
       this._prodiSearchTimer = setTimeout(() => {
@@ -289,7 +309,7 @@ export default {
     handleTambah() {
       this.isEditMode = false;
       this.editId = null;
-      this.form = { nama_kelas: "", program_studi_id: "", angkatan: "" };
+      this.form = { nama_kelas: "", program_studi_id: "", periode_id: "" };
       this.showModal = true;
     },
     handleEdit(item) {
@@ -298,7 +318,7 @@ export default {
       this.form = {
         nama_kelas:       item.nama_kelas,
         program_studi_id: item.program_studi_id,
-        angkatan:         item.angkatan,
+        periode_id:       item.periode_id,
       };
       this.showModal = true;
     },

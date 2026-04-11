@@ -20,6 +20,8 @@ return new class extends Migration
             $table->enum('room_status', ['active', 'inactive'])->default('inactive');
             $table->integer('room_capacity')->default(0);
             $table->string('room_purpose', 50);
+            $table->boolean('can_ujian')->default(false);
+            $table->boolean('can_pembelajaran')->default(false);
             $table->timestamps();
         });
     }

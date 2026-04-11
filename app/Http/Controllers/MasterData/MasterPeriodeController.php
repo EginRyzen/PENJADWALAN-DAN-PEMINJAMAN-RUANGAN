@@ -4,12 +4,12 @@ namespace App\Http\Controllers\MasterData;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-
-use App\Http\Requests\StoreMasterDataKelas;
-use App\Models\MasterDataKelas;
+use App\Http\Requests\StoreMasterDataPeriode;
+use App\Models\MasterDataPeriode;
 use App\Traits\ApiResponse;
+use Illuminate\Support\Facades\DB;
 
-class MasterDataKelasController extends Controller
+class MasterPeriodeController extends Controller
 {
     use ApiResponse;
 
@@ -19,28 +19,17 @@ class MasterDataKelasController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = MasterDataKelas::with(['programStudi', 'periode']);
+            $query = MasterDataPeriode::query();
 
             if ($request->has('search') && !empty($request->query('search'))) {
                 $search = $request->query('search');
-                $query->where(function ($q) use ($search) {
-                    $q->where('nama_kelas', 'like', "%{$search}%");
-                });
-            }
-
-            if ($request->has('program_studi_id') && !empty($request->query('program_studi_id'))) {
-                $query->where('program_studi_id', $request->query('program_studi_id'));
-            }
-
-            if ($request->boolean('all')) {
-                $data = $query->orderBy('nama_kelas', 'asc')->get();
-                return $this->successResponse($data, 'Daftar kelas berhasil diambil');
+                $query->where('nama', 'like', "%{$search}%");
             }
 
             $size = $request->query('size', 10);
             $page = $request->query('page', 0);
 
-            $paginated = $query->orderBy('nama_kelas', 'asc')
+            $paginated = $query->orderBy('start_date', 'desc')
                 ->paginate($size, ['*'], 'page', $page + 1);
 
             $customResponse = [
@@ -52,7 +41,7 @@ class MasterDataKelasController extends Controller
                 'content'                 => $paginated->items(),
             ];
 
-            return $this->successResponse($customResponse, 'Daftar kelas berhasil diambil');
+            return $this->successResponse($customResponse, 'Daftar periode berhasil diambil');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
         }
@@ -61,13 +50,22 @@ class MasterDataKelasController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreMasterDataKelas $request)
+    public function store(StoreMasterDataPeriode $request)
     {
+        DB::beginTransaction();
         try {
-            $kelas = MasterDataKelas::create($request->validated());
+            $data = $request->validated();
 
-            return $this->successResponse($kelas->load(['programStudi', 'periode']), 'Kelas berhasil dibuat', 201, 'Created');
+            if ($data['status'] === 'Aktif') {
+                MasterDataPeriode::where('status', 'Aktif')->update(['status' => 'Non-Aktif']);
+            }
+
+            $periode = MasterDataPeriode::create($data);
+
+            DB::commit();
+            return $this->successResponse($periode, 'Periode akademik berhasil dibuat', 201, 'Created');
         } catch (\Exception $e) {
+            DB::rollBack();
             return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
         }
     }
@@ -78,13 +76,13 @@ class MasterDataKelasController extends Controller
     public function show(string $id)
     {
         try {
-            $kelas = MasterDataKelas::with(['programStudi', 'periode'])->find($id);
+            $periode = MasterDataPeriode::find($id);
 
-            if (!$kelas) {
-                return $this->errorResponse('Kelas tidak ditemukan', 404, 'Not Found');
+            if (!$periode) {
+                return $this->errorResponse('Periode tidak ditemukan', 404, 'Not Found');
             }
 
-            return $this->successResponse($kelas, 'Detail kelas berhasil diambil');
+            return $this->successResponse($periode, 'Detail periode berhasil diambil');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
         }
@@ -93,19 +91,28 @@ class MasterDataKelasController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(StoreMasterDataKelas $request, string $id)
+    public function update(StoreMasterDataPeriode $request, string $id)
     {
+        DB::beginTransaction();
         try {
-            $kelas = MasterDataKelas::find($id);
+            $periode = MasterDataPeriode::find($id);
 
-            if (!$kelas) {
-                return $this->errorResponse('Kelas tidak ditemukan', 404, 'Not Found');
+            if (!$periode) {
+                return $this->errorResponse('Periode tidak ditemukan', 404, 'Not Found');
             }
 
-            $kelas->update($request->validated());
+            $data = $request->validated();
 
-            return $this->successResponse($kelas->load(['programStudi', 'periode']), 'Kelas berhasil diperbarui');
+            if ($data['status'] === 'Aktif') {
+                MasterDataPeriode::where('status', 'Aktif')->where('id', '!=', $id)->update(['status' => 'Non-Aktif']);
+            }
+
+            $periode->update($data);
+
+            DB::commit();
+            return $this->successResponse($periode, 'Periode akademik berhasil diperbarui');
         } catch (\Exception $e) {
+            DB::rollBack();
             return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
         }
     }
@@ -116,15 +123,15 @@ class MasterDataKelasController extends Controller
     public function destroy(string $id)
     {
         try {
-            $kelas = MasterDataKelas::find($id);
+            $periode = MasterDataPeriode::find($id);
 
-            if (!$kelas) {
-                return $this->errorResponse('Kelas tidak ditemukan', 404, 'Not Found');
+            if (!$periode) {
+                return $this->errorResponse('Periode tidak ditemukan', 404, 'Not Found');
             }
 
-            $kelas->delete();
+            $periode->delete();
 
-            return $this->successResponse(null, 'Kelas berhasil dihapus');
+            return $this->successResponse(null, 'Periode akademik berhasil dihapus');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
         }

@@ -17,7 +17,9 @@ return new class extends Migration
             $table->foreignUuid('program_studi_id')
                   ->constrained('master_data_program_studis')
                   ->onDelete('cascade');
-            $table->integer('angkatan');
+            $table->foreignUuid('periode_id')
+                  ->constrained('master_data_periodes')
+                  ->onDelete('cascade');
             $table->timestamps();
         });
     }

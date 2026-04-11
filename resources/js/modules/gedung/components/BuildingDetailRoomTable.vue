@@ -25,6 +25,22 @@
         <td class="p-4 border-b border-gray-100 text-center">
           <span
             class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+            :class="row.can_ujian ? 'bg-teal-100 text-teal-700' : 'bg-gray-100 text-gray-500'"
+          >
+            {{ row.can_ujian ? 'Bisa' : 'Tidak' }}
+          </span>
+        </td>
+        <td class="p-4 border-b border-gray-100 text-center">
+          <span
+            class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
+            :class="row.can_pembelajaran ? 'bg-teal-100 text-teal-700' : 'bg-gray-100 text-gray-500'"
+          >
+            {{ row.can_pembelajaran ? 'Bisa' : 'Tidak' }}
+          </span>
+        </td>
+        <td class="p-4 border-b border-gray-100 text-center">
+          <span
+            class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider"
             :class="
               row.room_status === 'active'
                 ? 'bg-teal-100 text-teal-700'
@@ -64,6 +80,8 @@ export default {
         { text: "Kode", value: "room_code" },
         { text: "Kapasitas", value: "room_capacity", align: "center" },
         { text: "Peruntukan", value: "room_purpose" },
+        { text: "Ujian?", value: "can_ujian", align: "center" },
+        { text: "Pembelajaran?", value: "can_pembelajaran", align: "center" },
         { text: "Status", value: "room_status", align: "center" },
         { text: "Aksi", value: "aksi", align: "center", width: "w-20" },
       ],

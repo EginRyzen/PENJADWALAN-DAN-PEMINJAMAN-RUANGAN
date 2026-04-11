@@ -22,7 +22,7 @@ class StoreMasterDataKelas extends FormRequest
         return [
             'nama_kelas'       => 'required|string|max:100',
             'program_studi_id' => 'required|exists:master_data_program_studis,id',
-            'angkatan'         => 'required|integer',
+            'periode_id'       => 'required|exists:master_data_periodes,id',
         ];
     }
 
@@ -32,8 +32,8 @@ class StoreMasterDataKelas extends FormRequest
             'nama_kelas.required'       => 'Nama kelas wajib diisi.',
             'program_studi_id.required' => 'Program studi wajib dipilih.',
             'program_studi_id.exists'   => 'Program studi tidak valid.',
-            'angkatan.required'         => 'Angkatan wajib diisi.',
-            'angkatan.integer'          => 'Angkatan harus berupa angka.',
+            'periode_id.required'       => 'Periode wajib dipilih.',
+            'periode_id.exists'         => 'Periode tidak valid.',
         ];
     }
 }

@@ -31,6 +31,13 @@ const defaultState = () => ({
         total_elements: 0,
         total_elements_per_page: 10,
     },
+    periodeList: [],
+    periodePagination: {
+        current_page: 0,
+        total_pages: 0,
+        total_elements: 0,
+        total_elements_per_page: 10,
+    },
 });
 
 export const Store = {
@@ -82,6 +89,20 @@ export const Store = {
             } else {
                 state.dosenList = payload.content || [];
                 state.dosenPagination = {
+                    current_page: payload.current_page || 0,
+                    total_pages: payload.total_pages || 0,
+                    total_elements: payload.total_elements || 0,
+                    total_elements_per_page: payload.total_elements_per_page || 10,
+                };
+            }
+        },
+        SET_PERIODE(state, payload) {
+            if (!payload) return;
+            if (Array.isArray(payload)) {
+                state.periodeList = payload;
+            } else {
+                state.periodeList = payload.content || [];
+                state.periodePagination = {
                     current_page: payload.current_page || 0,
                     total_pages: payload.total_pages || 0,
                     total_elements: payload.total_elements || 0,
@@ -243,6 +264,52 @@ export const Store = {
                 return response.data;
             } catch (error) {
                 console.error("Error Deleting Dosen:", error);
+                throw error;
+            }
+        },
+        // Periode Actions
+        async [actions.GET_PERIODE]({ commit }, params) {
+            try {
+                // Debugging: Ensure apiUrl.PERIODE is defined
+                const url = apiUrl.PERIODE || "/master-data/periodes";
+                if (!apiUrl.PERIODE) console.warn("Warning: apiUrl.PERIODE is undefined, using fallback.");
+                
+                const response = await Api.get(url, { params });
+                const data = response.data.result;
+                commit("SET_PERIODE", data);
+                return data;
+            } catch (error) {
+                console.error("Error Fetching Periode:", error);
+                throw error;
+            }
+        },
+        async [actions.CREATE_PERIODE]({ commit }, payload) {
+            try {
+                const url = apiUrl.PERIODE || "/master-data/periodes";
+                const response = await Api.post(url, payload);
+                return response.data;
+            } catch (error) {
+                console.error("Error Creating Periode:", error);
+                throw error;
+            }
+        },
+        async [actions.UPDATE_PERIODE]({ commit }, payload) {
+            try {
+                const url = apiUrl.PERIODE || "/master-data/periodes";
+                const response = await Api.put(`${url}/${payload.id}`, payload);
+                return response.data;
+            } catch (error) {
+                console.error("Error Updating Periode:", error);
+                throw error;
+            }
+        },
+        async [actions.DELETE_PERIODE]({ commit }, id) {
+            try {
+                const url = apiUrl.PERIODE || "/master-data/periodes";
+                const response = await Api.delete(`${url}/${id}`);
+                return response.data;
+            } catch (error) {
+                console.error("Error Deleting Periode:", error);
                 throw error;
             }
         },

@@ -18,7 +18,7 @@ class MasterDataMahasiswaController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = MasterDataMahasiswa::with(['programStudi', 'kelas']);
+            $query = MasterDataMahasiswa::with(['programStudi', 'kelas', 'periode']);
 
             if ($request->has('search') && !empty($request->query('search'))) {
                 $search = $request->query('search');
@@ -75,7 +75,7 @@ class MasterDataMahasiswaController extends Controller
         try {
             $mahasiswa = MasterDataMahasiswa::create($request->validated());
 
-            return $this->successResponse($mahasiswa->load(['programStudi', 'kelas']), 'Mahasiswa berhasil dibuat', 201, 'Created');
+            return $this->successResponse($mahasiswa->load(['programStudi', 'kelas', 'periode']), 'Mahasiswa berhasil dibuat', 201, 'Created');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
         }
@@ -87,7 +87,7 @@ class MasterDataMahasiswaController extends Controller
     public function show($id)
     {
         try {
-            $mahasiswa = MasterDataMahasiswa::with(['programStudi', 'kelas'])->find($id);
+            $mahasiswa = MasterDataMahasiswa::with(['programStudi', 'kelas', 'periode'])->find($id);
 
             if (!$mahasiswa) {
                 return $this->errorResponse('Mahasiswa tidak ditemukan', 404, 'Not Found');
@@ -113,7 +113,7 @@ class MasterDataMahasiswaController extends Controller
 
             $mahasiswa->update($request->validated());
 
-            return $this->successResponse($mahasiswa->load(['programStudi', 'kelas']), 'Mahasiswa berhasil diperbarui');
+            return $this->successResponse($mahasiswa->load(['programStudi', 'kelas', 'periode']), 'Mahasiswa berhasil diperbarui');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
         }

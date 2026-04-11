@@ -127,7 +127,7 @@ const menus = ref([
           { label: "List Pengembalian", path: "/app/pengembalian-list" },
         ]
       },
-      { label: "Peminjaman Fasilitas", path: "/app/peminjaman-fasilitas" }
+      { label: "Penjadwalan", path: "/app/penjadwalan" },
     ],
   },
   {
@@ -149,6 +149,8 @@ const menus = ref([
     children: [
       { label: "Kelas", path: "/app/pengaturan-kelas" },
       { label: "Ujian", path: "/app/pengaturan-ujian-ruangan" },
+      { label: "Hari Libur", path: "/app/pengaturan-hari-libur" },
+      { label: "Periode", path: "/app/pengaturan-periode" },
     ],
   },
 ]);

@@ -15,7 +15,12 @@ class DataBaseBuildingRoomController extends Controller
      */
     public function index()
     {
-        //
+        try {
+            $rooms = DataBaseBuildingRoom::all();
+            return $this->successResponse($rooms, 'Daftar ruangan berhasil diambil');
+        } catch (\Exception $e) {
+            return $this->errorResponse($e->getMessage(), 500);
+        }
     }
 
     /**
