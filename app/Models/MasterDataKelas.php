@@ -7,20 +7,16 @@ use Illuminate\Database\Eloquent\Model;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 
-class MasterDataMahasiswa extends Model
+class MasterDataKelas extends Model
 {
     use HasFactory, HasUuids;
 
-    protected $table = 'master_data_mahasiswas';
+    protected $table = 'master_data_kelas';
 
     protected $fillable = [
-        'nim',
-        'nama',
+        'nama_kelas',
         'program_studi_id',
-        'kelas_id',
-        'semester',
         'angkatan',
-        'status',
     ];
 
     public function programStudi()
@@ -28,8 +24,8 @@ class MasterDataMahasiswa extends Model
         return $this->belongsTo(MasterDataProgramStudi::class, 'program_studi_id');
     }
 
-    public function kelas()
+    public function mahasiswas()
     {
-        return $this->belongsTo(MasterDataKelas::class, 'kelas_id');
+        return $this->hasMany(MasterDataMahasiswa::class, 'kelas_id');
     }
 }

@@ -12,6 +12,7 @@ const apiUrl = {
     GET_BUILDINGS_ONLY: "/building/buildings-simple",
     // Master Data - Program Studi
     PROGRAM_STUDI: "/master-data/program-studi",
+    KELAS: "/master-data/kelas",
     MATA_KULIAH: "/master-data/mata-kuliah",
     MAHASISWA: "/master-data/mahasiswa",
     DOSEN: "/master-data/dosen",

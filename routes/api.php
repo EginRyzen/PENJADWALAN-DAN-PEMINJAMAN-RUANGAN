@@ -6,6 +6,7 @@ use App\Http\Controllers\Building\DataBaseBuildingFacilityController;
 use App\Http\Controllers\Building\DataBaseBuildingRoomController;
 use App\Http\Controllers\DataDocumentController;
 use App\Http\Controllers\MasterData\MasterDataProgramStudiController;
+use App\Http\Controllers\MasterData\MasterDataKelasController;
 use App\Http\Controllers\MasterData\MasterDataMataKuliahController;
 use App\Http\Controllers\MasterData\MasterDataMahasiswaController;
 use App\Http\Controllers\MasterData\MasterDataDosenController;
@@ -45,6 +46,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
     Route::prefix('master-data')->group(function () {
         Route::apiResource('program-studi', MasterDataProgramStudiController::class);
+        Route::apiResource('kelas', MasterDataKelasController::class);
         Route::apiResource('mata-kuliah', MasterDataMataKuliahController::class);
         Route::apiResource('mahasiswa', MasterDataMahasiswaController::class);
         Route::apiResource('dosen', MasterDataDosenController::class);

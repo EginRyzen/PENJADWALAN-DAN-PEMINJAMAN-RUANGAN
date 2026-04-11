@@ -3,6 +3,7 @@ const namespaces = {
     AUTH: "auth/",
     GEDUNG: "gedung/",
     MASTER_DATA: "masterData/",
+    SETTINGS: "settings/",
 };
 
 export default {
@@ -22,6 +23,11 @@ export default {
     CREATE_PROGRAM_STUDI: namespaces.MASTER_DATA + ACTIONS.CREATE_PROGRAM_STUDI,
     UPDATE_PROGRAM_STUDI: namespaces.MASTER_DATA + ACTIONS.UPDATE_PROGRAM_STUDI,
     DELETE_PROGRAM_STUDI: namespaces.MASTER_DATA + ACTIONS.DELETE_PROGRAM_STUDI,
+    // Settings - Kelas
+    GET_KELAS: namespaces.SETTINGS + ACTIONS.GET_KELAS,
+    CREATE_KELAS: namespaces.SETTINGS + ACTIONS.CREATE_KELAS,
+    UPDATE_KELAS: namespaces.SETTINGS + ACTIONS.UPDATE_KELAS,
+    DELETE_KELAS: namespaces.SETTINGS + ACTIONS.DELETE_KELAS,
     // Master Data - Mata Kuliah
     GET_MATA_KULIAH: namespaces.MASTER_DATA + ACTIONS.GET_MATA_KULIAH,
     CREATE_MATA_KULIAH: namespaces.MASTER_DATA + ACTIONS.CREATE_MATA_KULIAH,

@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\MasterData;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\StoreMasterDataMahasiswa;
-use App\Models\MasterDataMahasiswa;
-use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 
-class MasterDataMahasiswaController extends Controller
+use App\Http\Requests\StoreMasterDataKelas;
+use App\Models\MasterDataKelas;
+use App\Traits\ApiResponse;
+
+class MasterDataKelasController extends Controller
 {
     use ApiResponse;
 
@@ -18,13 +19,12 @@ class MasterDataMahasiswaController extends Controller
     public function index(Request $request)
     {
         try {
-            $query = MasterDataMahasiswa::with(['programStudi', 'kelas']);
+            $query = MasterDataKelas::with('programStudi');
 
             if ($request->has('search') && !empty($request->query('search'))) {
                 $search = $request->query('search');
                 $query->where(function ($q) use ($search) {
-                    $q->where('nama', 'like', "%{$search}%")
-                      ->orWhere('nim', 'like', "%{$search}%");
+                    $q->where('nama_kelas', 'like', "%{$search}%");
                 });
             }
 
@@ -32,24 +32,15 @@ class MasterDataMahasiswaController extends Controller
                 $query->where('program_studi_id', $request->query('program_studi_id'));
             }
 
-            if ($request->has('kelas_id') && !empty($request->query('kelas_id'))) {
-                $query->where('kelas_id', $request->query('kelas_id'));
-            }
-
-            if ($request->has('status') && !empty($request->query('status'))) {
-                $query->where('status', $request->query('status'));
-            }
-
-            // Jika ada query param 'all', kembalikan semua tanpa pagination
             if ($request->boolean('all')) {
-                $data = $query->orderBy('nama', 'asc')->get();
-                return $this->successResponse($data, 'Daftar mahasiswa berhasil diambil');
+                $data = $query->orderBy('nama_kelas', 'asc')->get();
+                return $this->successResponse($data, 'Daftar kelas berhasil diambil');
             }
 
             $size = $request->query('size', 10);
             $page = $request->query('page', 0);
 
-            $paginated = $query->orderBy('nama', 'asc')
+            $paginated = $query->orderBy('nama_kelas', 'asc')
                 ->paginate($size, ['*'], 'page', $page + 1);
 
             $customResponse = [
@@ -61,7 +52,7 @@ class MasterDataMahasiswaController extends Controller
                 'content'                 => $paginated->items(),
             ];
 
-            return $this->successResponse($customResponse, 'Daftar mahasiswa berhasil diambil');
+            return $this->successResponse($customResponse, 'Daftar kelas berhasil diambil');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
         }
@@ -70,12 +61,12 @@ class MasterDataMahasiswaController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreMasterDataMahasiswa $request)
+    public function store(StoreMasterDataKelas $request)
     {
         try {
-            $mahasiswa = MasterDataMahasiswa::create($request->validated());
+            $kelas = MasterDataKelas::create($request->validated());
 
-            return $this->successResponse($mahasiswa->load(['programStudi', 'kelas']), 'Mahasiswa berhasil dibuat', 201, 'Created');
+            return $this->successResponse($kelas->load('programStudi'), 'Kelas berhasil dibuat', 201, 'Created');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
         }
@@ -84,16 +75,16 @@ class MasterDataMahasiswaController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show($id)
+    public function show(string $id)
     {
         try {
-            $mahasiswa = MasterDataMahasiswa::with(['programStudi', 'kelas'])->find($id);
+            $kelas = MasterDataKelas::with('programStudi')->find($id);
 
-            if (!$mahasiswa) {
-                return $this->errorResponse('Mahasiswa tidak ditemukan', 404, 'Not Found');
+            if (!$kelas) {
+                return $this->errorResponse('Kelas tidak ditemukan', 404, 'Not Found');
             }
 
-            return $this->successResponse($mahasiswa, 'Detail mahasiswa berhasil diambil');
+            return $this->successResponse($kelas, 'Detail kelas berhasil diambil');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
         }
@@ -102,18 +93,18 @@ class MasterDataMahasiswaController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(StoreMasterDataMahasiswa $request, $id)
+    public function update(StoreMasterDataKelas $request, string $id)
     {
         try {
-            $mahasiswa = MasterDataMahasiswa::find($id);
+            $kelas = MasterDataKelas::find($id);
 
-            if (!$mahasiswa) {
-                return $this->errorResponse('Mahasiswa tidak ditemukan', 404, 'Not Found');
+            if (!$kelas) {
+                return $this->errorResponse('Kelas tidak ditemukan', 404, 'Not Found');
             }
 
-            $mahasiswa->update($request->validated());
+            $kelas->update($request->validated());
 
-            return $this->successResponse($mahasiswa->load(['programStudi', 'kelas']), 'Mahasiswa berhasil diperbarui');
+            return $this->successResponse($kelas->load('programStudi'), 'Kelas berhasil diperbarui');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
         }
@@ -122,18 +113,18 @@ class MasterDataMahasiswaController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy($id)
+    public function destroy(string $id)
     {
         try {
-            $mahasiswa = MasterDataMahasiswa::find($id);
+            $kelas = MasterDataKelas::find($id);
 
-            if (!$mahasiswa) {
-                return $this->errorResponse('Mahasiswa tidak ditemukan', 404, 'Not Found');
+            if (!$kelas) {
+                return $this->errorResponse('Kelas tidak ditemukan', 404, 'Not Found');
             }
 
-            $mahasiswa->delete();
+            $kelas->delete();
 
-            return $this->successResponse(null, 'Mahasiswa berhasil dihapus');
+            return $this->successResponse(null, 'Kelas berhasil dihapus');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
         }

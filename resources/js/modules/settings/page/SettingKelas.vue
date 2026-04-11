@@ -5,14 +5,14 @@
 
     <div class="bg-white rounded-lg shadow-sm mt-5 p-6">
       <!-- Header -->
-      <h2 class="text-xl font-bold text-gray-800 mb-4">Daftar Mahasiswa</h2>
+      <h2 class="text-xl font-bold text-gray-800 mb-4">Pengaturan Kelas</h2>
 
       <!-- Search + Tambah sejajar -->
       <div class="flex items-center justify-between gap-3 mb-4">
         <div class="flex-1 max-w-sm">
           <app-input
             v-model="search"
-            placeholder="Cari mahasiswa..."
+            placeholder="Cari nama kelas..."
             label=""
           >
             <template #icon-left>
@@ -31,13 +31,13 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
           </template>
-          Tambah Mahasiswa
+          Tambah Kelas
         </button-app>
       </div>
 
       <!-- Table -->
       <table-app
-        :items="filteredData"
+        :items="kelasList"
         :headers="headers"
         :options="tableOptions"
         :server-side="true"
@@ -45,7 +45,7 @@
         :searchable="false"
         :show-pagination="true"
         :use-custom-row="true"
-        not-found-label="Tidak ada data mahasiswa."
+        not-found-label="Tidak ada data kelas."
       >
         <template #customrow="{ rows }">
           <tr
@@ -54,22 +54,9 @@
             class="bg-white hover:bg-gray-50 transition"
           >
             <td class="p-4 border-b text-gray-500 text-md">{{ startingIndex + index + 1 }}</td>
-            <td class="p-4 border-b font-medium text-gray-700 text-md">{{ item.nim }}</td>
-            <td class="p-4 border-b text-gray-700 text-md">{{ item.nama }}</td>
-            <td class="p-4 border-b text-gray-600 text-md">{{ item.program_studi ? item.program_studi.nama : '-' }}</td>
-            <td class="p-4 border-b text-gray-600 text-md text-center">{{ item.kelas ? item.kelas.nama_kelas : '-' }}</td>
-            <td class="p-4 border-b text-gray-600 text-md text-center">{{ item.semester }}</td>
+            <td class="p-4 border-b font-medium text-gray-700 text-md">{{ item.nama_kelas }}</td>
+            <td class="p-4 border-b text-gray-600 text-md text-center">{{ item.program_studi ? item.program_studi.nama : '-' }}</td>
             <td class="p-4 border-b text-gray-600 text-md text-center">{{ item.angkatan }}</td>
-            <td class="p-4 border-b text-center">
-              <span
-                class="inline-block px-2 py-1 rounded-full text-xs font-semibold"
-                :class="item.status === 'Aktif'
-                  ? 'bg-teal-100 text-teal-700'
-                  : 'bg-red-100 text-red-600'"
-              >
-                {{ item.status }}
-              </span>
-            </td>
             <td class="p-4 border-b text-center">
               <div class="flex items-center justify-center gap-4">
                 <span class="cursor-pointer text-yellow-400 hover:text-yellow-500 transition" @click="handleEdit(item)">
@@ -96,7 +83,7 @@
       <!-- Modal Header -->
       <div class="flex items-center justify-between px-6 pt-6 pb-4 border-b border-gray-100">
         <h3 class="text-lg font-bold text-gray-800">
-          {{ isEditMode ? 'Edit Mahasiswa' : 'Tambah Mahasiswa' }}
+          {{ isEditMode ? 'Edit Kelas' : 'Tambah Kelas' }}
         </h3>
         <span class="cursor-pointer text-gray-400 hover:text-gray-600 transition" @click="closeModal">
           <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -106,18 +93,10 @@
       </div>
 
       <!-- Form Fields -->
-      <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div class="px-6 py-5 grid grid-cols-1 gap-4">
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">NIM <span class="text-red-500">*</span></label>
-          <app-input v-model="form.nim" placeholder="Contoh: 2021001" label="" />
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Angkatan <span class="text-red-500">*</span></label>
-          <app-input v-model="form.angkatan" type="number" placeholder="Contoh: 2021" label="" />
-        </div>
-        <div class="sm:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap <span class="text-red-500">*</span></label>
-          <app-input v-model="form.nama" placeholder="Contoh: Budi Santoso" label="" />
+          <label class="block text-sm font-medium text-gray-700 mb-1">Nama Kelas <span class="text-red-500">*</span></label>
+          <app-input v-model="form.nama_kelas" placeholder="Contoh: IF-01" label="" />
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Program Studi <span class="text-red-500">*</span></label>
@@ -128,35 +107,11 @@
             item-value="id"
             placeholder="Pilih Program Studi..."
             @search="handleSearchProdi"
-            @update:modelValue="onProdiChange"
           />
         </div>
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Kelas <span class="text-red-500">*</span></label>
-          <select-auto-complete
-            v-model="form.kelas_id"
-            :options="kelasList"
-            item-text="nama_kelas"
-            item-value="id"
-            :placeholder="!form.program_studi_id ? 'Pilih Prodi terlebih dahulu' : 'Pilih Kelas...'"
-            @search="handleSearchKelas"
-            @click="checkProdi"
-          />
-          <p v-if="prodiError && !form.program_studi_id" class="text-xs text-red-500 mt-1">Pilih Program Studi terlebih dahulu!</p>
-        </div>
-        <div>
-          <label class="block text-sm font-medium text-gray-700 mb-1">Semester <span class="text-red-500">*</span></label>
-          <app-input v-model="form.semester" type="number" placeholder="Contoh: 3" label="" />
-        </div>
-        <div class="sm:col-span-2">
-          <label class="block text-sm font-medium text-gray-700 mb-1">Status <span class="text-red-500">*</span></label>
-          <select-auto-complete
-            v-model="form.status"
-            :options="statusOptions"
-            item-text="name"
-            item-value="name"
-            placeholder="Pilih Status..."
-          />
+          <label class="block text-sm font-medium text-gray-700 mb-1">Angkatan <span class="text-red-500">*</span></label>
+          <app-input v-model="form.angkatan" type="number" placeholder="Contoh: 2021" label="" />
         </div>
       </div>
 
@@ -204,7 +159,7 @@ import ModalPopUpSuccess from "@/core/components/ModalPopUpSuccess.vue";
 import DISPATCH from "@/core/plugins/constants/dispatches";
 
 export default {
-  name: "ListMahasiswa",
+  name: "SettingKelas",
   components: {
     BreadcrumbBima,
     ButtonApp,
@@ -223,21 +178,10 @@ export default {
       isSaving: false,
       editId: null,
       form: {
-        nim: "",
-        nama: "",
+        nama_kelas: "",
         program_studi_id: "",
-        kelas_id: "",
-        semester: "",
         angkatan: "",
-        status: "",
       },
-      prodiError: false,
-      statusOptions: [
-        { name: "Aktif" },
-        { name: "Non-Aktif" },
-        { name: "Cuti" },
-        { name: "Lulus" },
-      ],
       // PopUp Confirm State
       showConfirmModal: false,
       confirmData: {
@@ -254,19 +198,15 @@ export default {
         action: () => {},
       },
       breadcrumbItems: [
-        { text: "Master Data", link: "#" },
-        { text: "Mahasiswa", link: "/app/mahasiswa-list" },
+        { text: "Settings", link: "#" },
+        { text: "Kelas", link: "/app/pengaturan-kelas" },
       ],
       headers: [
-        { text: "No",           value: "no",       align: "start",  sortable: false },
-        { text: "NIM",          value: "nim",      align: "start",  sortable: true  },
-        { text: "Nama",         value: "nama",     align: "start",  sortable: true  },
-        { text: "Program Studi", value: "prodi",   align: "start",  sortable: true  },
-        { text: "Kelas",        value: "kelas",    align: "center", sortable: true  },
-        { text: "Semester",     value: "semester", align: "center", sortable: false },
-        { text: "Angkatan",     value: "angkatan", align: "center", sortable: false },
-        { text: "Status",       value: "status",   align: "center", sortable: false },
-        { text: "Aksi",         value: "aksi",     align: "center", sortable: false },
+        { text: "No",           value: "no",               align: "start",  sortable: false },
+        { text: "Nama Kelas",   value: "nama_kelas",       align: "start",  sortable: true  },
+        { text: "Program Studi", value: "prodi",           align: "center", sortable: true  },
+        { text: "Angkatan",     value: "angkatan",         align: "center", sortable: true  },
+        { text: "Aksi",         value: "aksi",             align: "center", sortable: false },
       ],
       tableOptions: {
         page: 1,
@@ -276,23 +216,17 @@ export default {
     };
   },
   computed: {
-    mahasiswaList() {
-      return this.$store.state.masterData.mahasiswaList;
+    kelasList() {
+      return this.$store.state.settings.kelasList;
     },
     pagination() {
-      return this.$store.state.masterData.mhsPagination;
+      return this.$store.state.settings.kelasPagination;
     },
     programStudiOptions() {
       return this.$store.state.masterData.programStudiList;
     },
-    kelasList() {
-      return this.$store.state.settings.kelasList;
-    },
     startingIndex() {
       return ((this.tableOptions.page ?? 1) - 1) * this.tableOptions.itemsPerPage;
-    },
-    filteredData() {
-      return this.mahasiswaList;
     },
   },
   mounted() {
@@ -320,7 +254,7 @@ export default {
     async fetchData() {
       this.$store.commit("SET_LOADING", true);
       try {
-        await this.$store.dispatch(DISPATCH.GET_MAHASISWA, {
+        await this.$store.dispatch(DISPATCH.GET_KELAS, {
           search: this.search || undefined,
           page: (this.tableOptions.page ?? 1) - 1,
           size: this.tableOptions.itemsPerPage,
@@ -330,7 +264,7 @@ export default {
           totalItems: this.pagination.total_elements,
         };
       } catch (e) {
-        console.error("Gagal memuat data mahasiswa:", e);
+        console.error("Gagal memuat data kelas:", e);
       } finally {
         this.$store.commit("SET_LOADING", false);
       }
@@ -352,73 +286,33 @@ export default {
         this.fetchProgramStudi(query);
       }, 500);
     },
-    async fetchKelas(query) {
-      if (!this.form.program_studi_id) return;
-      try {
-        await this.$store.dispatch(DISPATCH.GET_KELAS, {
-          search: query || undefined,
-          program_studi_id: this.form.program_studi_id,
-          all: true,
-        });
-      } catch (e) {
-        console.error("Gagal memuat data kelas:", e);
-      }
-    },
-    handleSearchKelas(query) {
-      if (!this.form.program_studi_id) {
-        this.prodiError = true;
-        return;
-      }
-      clearTimeout(this._kelasSearchTimer);
-      this._kelasSearchTimer = setTimeout(() => {
-        this.fetchKelas(query);
-      }, 500);
-    },
-    checkProdi() {
-      if (!this.form.program_studi_id) {
-        this.prodiError = true;
-      }
-    },
-    onProdiChange() {
-      this.form.kelas_id = "";
-      this.prodiError = false;
-      this.fetchKelas();
-    },
     handleTambah() {
       this.isEditMode = false;
       this.editId = null;
-      this.prodiError = false;
-      this.form = { nim: "", nama: "", program_studi_id: "", kelas_id: "", semester: "", angkatan: "", status: "" };
-      this.$store.commit("settings/SET_KELAS", []); // Clear kelas list on add
+      this.form = { nama_kelas: "", program_studi_id: "", angkatan: "" };
       this.showModal = true;
     },
     handleEdit(item) {
       this.isEditMode = true;
       this.editId = item.id;
-      this.prodiError = false;
       this.form = {
-        nim:              item.nim,
-        nama:             item.nama,
+        nama_kelas:       item.nama_kelas,
         program_studi_id: item.program_studi_id,
-        kelas_id:         item.kelas_id,
-        semester:         item.semester,
         angkatan:         item.angkatan,
-        status:           item.status,
       };
-      this.fetchKelas(); // Load kelas list for this student's prodi
       this.showModal = true;
     },
     async handleDelete(item) {
       this.confirmData = {
-        title: "Hapus Mahasiswa",
-        description: `Apakah Anda yakin ingin menghapus mahasiswa "${item.nama}"? Data yang dihapus tidak dapat dikembalikan.`,
+        title: "Hapus Kelas",
+        description: `Apakah Anda yakin ingin menghapus kelas "${item.nama_kelas}"? Data yang dihapus tidak dapat dikembalikan.`,
         action: async () => {
           this.$store.commit("SET_LOADING", true);
           try {
-            await this.$store.dispatch(DISPATCH.DELETE_MAHASISWA, item.id);
+            await this.$store.dispatch(DISPATCH.DELETE_KELAS, item.id);
             this.successData = {
               title: "Berhasil Dihapus",
-              description: `Mahasiswa "${item.nama}" telah berhasil dihapus dari sistem.`,
+              description: `Kelas "${item.nama_kelas}" telah berhasil dihapus dari sistem.`,
               buttonText: "Oke",
               action: () => this.fetchData(),
             };
@@ -440,11 +334,11 @@ export default {
         const payload = { ...this.form };
         let message = "";
         if (this.isEditMode) {
-          await this.$store.dispatch(DISPATCH.UPDATE_MAHASISWA, { id: this.editId, ...payload });
-          message = `Perubahan pada mahasiswa "${payload.nama}" berhasil disimpan.`;
+          await this.$store.dispatch(DISPATCH.UPDATE_KELAS, { id: this.editId, ...payload });
+          message = `Perubahan pada kelas "${payload.nama_kelas}" berhasil disimpan.`;
         } else {
-          await this.$store.dispatch(DISPATCH.CREATE_MAHASISWA, payload);
-          message = `Mahasiswa "${payload.nama}" berhasil ditambahkan ke sistem.`;
+          await this.$store.dispatch(DISPATCH.CREATE_KELAS, payload);
+          message = `Kelas "${payload.nama_kelas}" berhasil ditambahkan ke sistem.`;
         }
 
         this.closeModal();
