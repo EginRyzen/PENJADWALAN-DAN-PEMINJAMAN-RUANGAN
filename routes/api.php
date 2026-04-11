@@ -44,6 +44,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/buildings', [DataBaseBuildingController::class, 'index']);
         Route::apiResource('buildings', DataBaseBuildingController::class);
         Route::get('/rooms/{id}/facilities', [DataBaseBuildingRoomController::class, 'getFacilities']);
+        Route::apiResource('rooms', DataBaseBuildingRoomController::class);
         Route::apiResource('facilities', DataBaseBuildingFacilityController::class);
     });
     Route::prefix('master-data')->group(function () {

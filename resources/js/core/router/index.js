@@ -11,6 +11,7 @@ import gedungRoutes from '@/modules/gedung/router';
 import masterDataRoutes from '@/modules/master-data/router';
 import pengajuanRoutes from '@/modules/list-pengajuan/router';
 import settingsRoutes from '@/modules/settings/router';
+import penjadwalanRoutes from '@/modules/penjadwalan/router';
 
 const routes = [
     {
@@ -35,7 +36,8 @@ const routes = [
             ...gedungRoutes,
             ...masterDataRoutes,
             ...pengajuanRoutes,
-            ...settingsRoutes
+            ...settingsRoutes,
+            ...penjadwalanRoutes,
         ]
     }
 ];

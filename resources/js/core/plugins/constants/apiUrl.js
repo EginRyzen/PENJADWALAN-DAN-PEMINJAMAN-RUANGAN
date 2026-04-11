@@ -8,6 +8,7 @@ const apiUrl = {
     GET_GEDUNG: "/building/buildings",
     GET_DETAIL_GEDUNG: "/building/buildings",
     GET_ROOM_FACILITIES: "/building/rooms",
+    GET_ROOMS: "/building/rooms",
     UPLOAD_IMAGE: "/documents/upload",
     GET_BUILDINGS_ONLY: "/building/buildings-simple",
     // Master Data - Program Studi

@@ -8,6 +8,7 @@ export default {
     GET_GEDUNG_DATA: "getGedungData",
     GET_DETAIL_GEDUNG_DATA: "getDetailGedungData",
     GET_ROOM_FACILITIES: "getRoomFacilities",
+    GET_ROOMS: "getRooms",
     UPLOAD_IMAGE: "uploadImage",
     GET_BUILDINGS_ONLY: "getBuildingsOnly",
     // Master Data - Program Studi
