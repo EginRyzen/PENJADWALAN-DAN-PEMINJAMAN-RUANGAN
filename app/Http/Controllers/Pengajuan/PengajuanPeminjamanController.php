@@ -191,15 +191,28 @@ class PengajuanPeminjamanController extends Controller
                     ]);
                 }
 
-                // 8. Create History
+                // 8. Create Histories
+                // Entry 1: Created (Draft status)
                 PengajuanHistory::create([
                     'pengajuan_id' => $pengajuan->id,
                     'status_id' => $initialStep ? $initialStep->id : $pengajuan->current_status_id,
                     'user_id' => $user->id,
                     'aksi' => 'CREATED',
-                    'catatan' => 'Mengajukan peminjaman ruangan',
+                    'catatan' => 'Membuat draft pengajuan',
                     'sequence' => 1,
                 ]);
+
+                // Entry 2: Submitted (Current Status)
+                if ($nextStatus) {
+                    PengajuanHistory::create([
+                        'pengajuan_id' => $pengajuan->id,
+                        'status_id' => $pengajuan->current_status_id,
+                        'user_id' => $user->id,
+                        'aksi' => 'SUBMITTED',
+                        'catatan' => 'Mengajukan peminjaman ruangan',
+                        'sequence' => 2,
+                    ]);
+                }
 
                 return response()->json([
                     'message' => 'Pengajuan berhasil dibuat.',
@@ -236,7 +249,12 @@ class PengajuanPeminjamanController extends Controller
                 'status', 
                 'user', 
                 'dokumen_pendukung', 
-                'items.ruangan.building'
+                'items.ruangan.building',
+                'histories' => function($q) {
+                    $q->orderBy('sequence', 'asc');
+                },
+                'histories.user',
+                'histories.status.role'
             ])->findOrFail($id);
 
             return response()->json([

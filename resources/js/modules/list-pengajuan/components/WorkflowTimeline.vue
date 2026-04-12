@@ -41,7 +41,7 @@
                   {{ step.timestamp }}
                 </span>
                 <div class="flex items-start gap-2">
-                  <span class="min-w-[90px] md:min-w-[100px] text-slate-400 md:text-slate-500">{{ step.performerLabel }}</span>
+                  <span class="min-w-[100px] md:min-w-[130px] text-slate-400 md:text-slate-500">{{ step.performerLabel }}</span>
                   <span class="text-slate-700 flex-1">
                     <span class="hidden md:inline mr-2">:</span>
                     <span class="md:hidden">: </span>{{ step.performerName }}
@@ -53,10 +53,22 @@
               <div v-if="step.comment" class="flex flex-col md:flex-row md:items-start gap-1 md:gap-2">
                 <span class="hidden md:block md:min-w-[140px]"></span>
                 <div class="flex items-start gap-2">
-                  <span class="min-w-[90px] md:min-w-[100px] text-slate-400 md:text-slate-500">{{ step.commentLabel }}</span>
+                  <span class="min-w-[100px] md:min-w-[130px] text-slate-400 md:text-slate-500">{{ step.commentLabel }}</span>
                   <span class="text-slate-700 flex-1 italic md:not-italic">
                     <span class="hidden md:inline mr-2">:</span>
                     <span class="md:hidden">: </span>{{ step.comment }}
+                  </span>
+                </div>
+              </div>
+
+              <!-- Target Row (Diajukan kepada) -->
+              <div v-if="step.targetName" class="flex flex-col md:flex-row md:items-start gap-1 md:gap-2">
+                <span class="hidden md:block md:min-w-[140px]"></span>
+                <div class="flex items-start gap-2">
+                  <span class="min-w-[100px] md:min-w-[130px] text-slate-400 md:text-slate-500">Diajukan kepada</span>
+                  <span class="text-slate-700 flex-1 font-bold">
+                    <span class="hidden md:inline mr-2">:</span>
+                    <span class="md:hidden">: </span>{{ step.targetName }}
                   </span>
                 </div>
               </div>

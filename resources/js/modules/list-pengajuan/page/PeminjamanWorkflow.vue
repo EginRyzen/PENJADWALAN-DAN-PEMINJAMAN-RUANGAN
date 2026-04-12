@@ -65,59 +65,28 @@ export default {
       ],
       workflowSteps: [
         {
-          title: "BM Create CM",
+          title: "DRAFT_PENGAJUAN",
           status: "success",
           timestamp: "18/09/2024 20:25:30",
           performerLabel: "Dibuat oleh",
           performerName: "mb_bm_mb - BMnya MB"
         },
         {
-          title: "Waiting For Approval 1",
+          title: "VERIFIKASI_TU",
           status: "pending",
           timestamp: "18/09/2024 20:25:30",
           performerLabel: "Diajukan oleh",
-          performerName: "mb_bm_mb - BMnya MB"
+          performerName: "mb_bm_mb - BMnya MB",
+          targetName: "tu_peminjaman - TU Peminjaman"
         },
         {
-          title: "Correction",
-          status: "correction",
-          timestamp: "18/09/2024 20:43:58",
-          performerLabel: "Dikoreksi oleh",
-          performerName: "opr_kcu_0009 - OPR KCU",
-          commentLabel: "Alasan",
-          comment: "Coba cek di gudang siapa tau ada"
-        },
-        {
-          title: "Waiting For Approval 1",
-          status: "pending",
-          timestamp: "18/09/2024 21:26:33",
-          performerLabel: "Diajukan oleh",
-          performerName: "mb_bm_mb - BMnya MB"
-        },
-        {
-          title: "Approved",
+          title: "DISETUJUI",
           status: "success",
           timestamp: "18/09/2024 21:27:58",
           performerLabel: "Disetujui oleh",
-          performerName: "opr_kcu_0009 - OPR KCU",
+          performerName: "tu_peminjaman - TU Peminjaman",
           commentLabel: "Komentar",
-          comment: "Baik, lanjutkan"
-        },
-        {
-          title: "Waiting For Approval 2",
-          status: "pending",
-          timestamp: "18/09/2024 21:27:58",
-          performerLabel: "Diajukan oleh",
-          performerName: "opr_kcu_0009 - OPR KCU"
-        },
-        {
-          title: "Correction",
-          status: "correction",
-          timestamp: "19/09/2024 10:15:20",
-          performerLabel: "Dikoreksi oleh",
-          performerName: "mgr_pms_001 - Manager PMS",
-          commentLabel: "Alasan",
-          comment: "Dokumen bukti peminjaman belum lengkap."
+          comment: "Baik, ruangan tersedia dan bisa digunakan."
         }
       ]
     };
