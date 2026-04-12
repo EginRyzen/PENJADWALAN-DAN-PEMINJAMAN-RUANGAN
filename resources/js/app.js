@@ -10,8 +10,8 @@ import GlobalLoader from '@/core/components/GlobalLoader.vue';
 import { library } from '@fortawesome/fontawesome-svg-core';
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome';
 
-import { faSearch, faBell, faCog, faHome, faPlus, faDownload, faArrowLeft, faExclamationCircle, faExclamationTriangle, faTrashAlt, faEye, faTimes, faCloudUploadAlt, faImage, faEdit, faCheck, faCalendar, faClock, faUpload } from '@fortawesome/free-solid-svg-icons';
-library.add(faSearch, faBell, faCog, faHome, faPlus, faDownload, faArrowLeft, faExclamationCircle, faExclamationTriangle, faTrashAlt, faEye, faTimes, faCloudUploadAlt, faImage, faEdit, faCheck, faCalendar, faClock, faUpload);
+import { faSearch, faBell, faCog, faHome, faPlus, faDownload, faArrowLeft, faExclamationCircle, faExclamationTriangle, faTrashAlt, faEye, faTimes, faCloudUploadAlt, faImage, faEdit, faCheck, faCalendar, faClock, faUpload, faTimesCircle, faCheckCircle } from '@fortawesome/free-solid-svg-icons';
+library.add(faSearch, faBell, faCog, faHome, faPlus, faDownload, faArrowLeft, faExclamationCircle, faExclamationTriangle, faTrashAlt, faEye, faTimes, faCloudUploadAlt, faImage, faEdit, faCheck, faCalendar, faClock, faUpload, faTimesCircle, faCheckCircle);
 
 import { setupCalendar } from 'v-calendar';
 

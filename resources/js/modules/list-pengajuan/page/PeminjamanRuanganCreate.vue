@@ -1,17 +1,28 @@
 <template>
-  <div class="h-full bg-gray-50">
-    <breadcrumb :items="breadcrumbs"></breadcrumb>
+  <div class="h-full bg-slate-50 min-h-screen font-display">
+    <div class="max-w-full mx-auto px-4 md:px-8 pt-6 pb-2">
+      <breadcrumb :items="breadcrumbs" class="hidden md:block"></breadcrumb>
+    </div>
 
-    <div class="max-w-full mx-auto mt-6 px-4 md:px-8 pb-16">
+    <div class="max-w-full mx-auto px-4 md:px-8 pb-16">
+      <!-- Mobile Back Button (Shifted up to Navbar area) -->
+      <div class="block md:hidden -mt-10 mb-6">
+        <div
+          @click="goBack"
+          class="inline-flex items-center cursor-pointer text-teal-600 font-bold bg-white/50 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-teal-50"
+        >
+          <font-awesome-icon icon="arrow-left" class="mr-2" />
+          Kembali
+        </div>
+      </div>
+
       <!-- Header Section -->
       <div class="relative flex flex-col md:flex-row items-center justify-center mb-10 gap-4">
-        <!-- Back Button - Absolute on desktop to keep title centered, relative on mobile -->
-        <div class="md:absolute md:left-0">
+        <!-- Back Button - Desktop Only -->
+        <div class="hidden md:block md:absolute md:left-0">
           <div
-            color="teal"
-            type="tertiary"
             @click="goBack"
-            class="text-teal-600 font-semibold flex items-center cursor-pointer"
+            class="text-teal-600 font-semibold flex items-center cursor-pointer hover:text-teal-700 transition-colors"
           >
             <font-awesome-icon icon="arrow-left" class="mr-2" />
             Kembali
@@ -460,7 +471,7 @@ export default {
   data() {
     return {
       breadcrumbs: [
-        { text: "Gedung", link: "/app/gedung" },
+        { text: "Gedung", link: "#" },
         { text: "List Peminjaman Ruangan", link: "/app/list-peminjaman-ruangan" },
         { text: "Buat Pengajuan Peminjaman", link: "#"},
       ],

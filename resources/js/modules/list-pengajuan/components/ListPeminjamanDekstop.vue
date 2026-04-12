@@ -145,12 +145,16 @@
         </template>
 
         <template #no_pengajuan="{ slotProps }">
-          <router-link
-            to="#"
-            class="font-semibold text-blue-500 hover:underline"
+          <router-link 
+            v-if="slotProps.data.id"
+            :to="{ name: 'peminjaman.workflow', params: { id: slotProps.data.id } }" 
+            class="text-blue-600 hover:text-blue-800 hover:underline transition-all font-bold"
           >
             {{ slotProps.data.no_pengajuan }}
           </router-link>
+          <span v-else class="font-semibold text-gray-400 italic">
+            {{ slotProps.data.no_pengajuan }}
+          </span>
         </template>
 
         <template #ruangan="{ slotProps }">
@@ -182,14 +186,16 @@
           </span>
         </template>
 
-        <template #aksi>
+        <template #aksi="{ slotProps }">
           <div class="flex justify-center w-full">
-            <button
-              class="text-gray-400 hover:text-orange-500 transition-colors mr-2 text-lg"
-              title="Edit"
-            >
-              <font-awesome-icon icon="edit" />
-            </button>
+            <router-link :to="{ name: 'peminjaman.detail', params: { id: slotProps.data.id } }">
+              <button
+                class="text-gray-400 hover:text-orange-500 transition-colors mr-2 text-lg"
+                title="Edit"
+              >
+                <font-awesome-icon icon="edit" />
+              </button>
+            </router-link>
           </div>
         </template>
       </table-app>
