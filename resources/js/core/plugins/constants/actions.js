@@ -54,4 +54,5 @@ export default {
     DELETE_HARI_LIBUR: "deleteHariLibur",
     SUBMIT_PENGAJUAN: "submitPengajuan",
     GET_LIST_PENGAJUAN: "getListPengajuan",
+    GET_DETAIL_PENGAJUAN: "getDetailPengajuan",
 }

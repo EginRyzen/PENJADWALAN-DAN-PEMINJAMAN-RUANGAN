@@ -171,6 +171,7 @@
                 </button>
                 <button 
                   class="w-10 h-10 rounded-lg bg-indigo-400 hover:bg-indigo-500 text-white shadow-md shadow-indigo-500/10 flex items-center justify-center transition-all"
+                  @click="downloadPdf"
                   title="Unduh"
                 >
                   <font-awesome-icon icon="download" />
@@ -183,7 +184,7 @@
       </div>
 
       <!-- Action Buttons -->
-      <div v-if="isPending" class="flex flex-col md:flex-row justify-center items-center gap-4 pb-10">
+      <div class="flex flex-col md:flex-row justify-center items-center gap-4 pb-10">
         <button 
           @click="showActionModal('tolak')"
           class="w-full md:w-56 h-12 rounded-xl border-2 border-red-500 text-red-500 font-bold hover:bg-red-50 transition-all flex justify-center items-center gap-2 shadow-lg shadow-red-500/5 active:scale-95"
@@ -219,6 +220,7 @@
 import Breadcrumb from "@/core/components/Breadcrumb.vue";
 import DetailHeader from "../components/DetailHeader.vue";
 import ConfirmModal from "@/core/components/ConfirmModal.vue";
+import DISPATCH from "@/core/plugins/constants/dispatches";
 import moment from "moment";
 
 export default {
@@ -251,7 +253,7 @@ export default {
         created_at: "",
         user: { 
           name: "-",
-          role: { name: "Pengaju" }
+          username: "-"
         },
         status: { nama_status: "" },
         items: [],
@@ -264,10 +266,6 @@ export default {
     };
   },
   computed: {
-    isPending() {
-      const status = this.form.status?.nama_status?.toLowerCase() || "";
-      return status.includes("menunggu") || status === "pending";
-    },
     formatDateRange() {
       if (!this.form.tanggal_start || !this.form.tanggal_end) return "-";
       return `${moment(this.form.tanggal_start).format("DD/MM/YYYY")} - ${moment(this.form.tanggal_end).format("DD/MM/YYYY")}`;
@@ -323,30 +321,46 @@ export default {
       this.$store.commit("SET_LOADING", true);
       
       try {
-        await new Promise(resolve => setTimeout(resolve, 800));
+        const result = await this.$store.dispatch(DISPATCH.GET_DETAIL_PENGAJUAN, id);
         
-        const pengajuans = this.$store.state.listPengajuan.pengajuans;
-        const detail = pengajuans.find(p => p.id === id) || pengajuans[0];
-        
-        if (detail) {
+        if (result) {
+          // Group items by building
+          const rawItems = result.items || [];
+          const buildingGroups = {};
+
+          rawItems.forEach(item => {
+            const building = item.ruangan?.building;
+            if (!building) return;
+
+            if (!buildingGroups[building.id]) {
+              buildingGroups[building.id] = {
+                building_name: building.building_code || building.name,
+                selected_rooms: []
+              };
+            }
+
+            buildingGroups[building.id].selected_rooms.push({
+              id: item.ruangan.id,
+              name: item.ruangan.room_name
+            });
+          });
+
           this.form = {
             ...this.form,
-            ...detail,
-            unit_name: "KCU SMP 2 - Kanwil 10",
-            created_at: detail.created_at || moment().subtract(2, 'days').format(),
+            ...result,
+            unit_name: "Layanan Peminjaman Ruangan",
+            tanggal_start: result.tanggal_start_peminjaman,
+            tanggal_end: result.tanggal_end_peminjaman,
+            keterangan: result.alasan,
+            file_name: result.dokumen_pendukung?.file_name || "",
+            file_url: result.dokumen_pendukung?.file_path ? `/storage/${result.dokumen_pendukung.file_path}` : "",
+            created_at: result.created_at,
             user: { 
-              ...detail.user,
-              role: { name: "BMnya MB" } 
+              ...result.user,
+              role: result.user?.role || { name: "Pengaju" }
             },
-            items: [
-              {
-                building_name: "Gedung Rektorat",
-                selected_rooms: [
-                  { id: 1, name: "Aula Utama" },
-                  { id: 2, name: "Ruang Rapat 1" }
-                ]
-              }
-            ]
+            status: result.status || { nama_status: "" },
+            items: Object.values(buildingGroups)
           };
         }
       } catch (error) {
@@ -359,7 +373,23 @@ export default {
       this.$router.push({ name: 'peminjaman.list' });
     },
     viewUploadedPdf() {
-      alert("Simulasi: Membuka dokumen PDF...");
+      if (!this.form.file_url) {
+        alert("File tidak tersedia");
+        return;
+      }
+      window.open(this.form.file_url, '_blank');
+    },
+    downloadPdf() {
+      if (!this.form.file_url) {
+        alert("File tidak tersedia");
+        return;
+      }
+      const link = document.createElement('a');
+      link.href = this.form.file_url;
+      link.download = this.form.file_name || 'dokumen_peminjaman.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     },
     showActionModal(type) {
       this.actionModal.type = type;
@@ -395,21 +425,46 @@ export default {
     },
     getStatusStyle(status) {
       if (!status) return {};
-      const s = status.toLowerCase();
+      const s = status.toUpperCase();
 
-      if (s.includes("menunggu")) {
+      // Drafts (Gray/Slate)
+      if (s.includes("DRAFT")) {
         return {
-          backgroundColor: "#fff7ed",
-          color: "#ea580c",
-          borderColor: "#ffedd5",
+          backgroundColor: "#f1f5f9",
+          color: "#475569",
+          borderColor: "#e2e8f0",
         };
-      } else if (s.includes("completed") || s.includes("selesai")) {
+      }
+      
+      // Approved / Final (Teal/Emerald)
+      if (s === "DISETUJUI" || s.includes("PENGESAHAN") || s.includes("COMPLETED")) {
         return {
           backgroundColor: "#f0fdfa",
           color: "#0d9488",
           borderColor: "#ccfbf1",
         };
-      } else if (s.includes("koreksi") || s.includes("tolak") || s.includes("rejected")) {
+      }
+
+      // Verification / Process (Amber/Orange)
+      if (
+        s.includes("VERIFIKASI") || 
+        s.includes("VALIDASI") || 
+        s.includes("PENGECEKAN") || 
+        s.includes("PERSIAPAN") || 
+        s.includes("MENUNGGU") ||
+        s === "VALIDASI_KEMAHASISWAAN" ||
+        s === "PENGECEKAN_RUANG_TU" ||
+        s === "PERSIAPAN_SARPRAS"
+      ) {
+        return {
+          backgroundColor: "#fff7ed",
+          color: "#ea580c",
+          borderColor: "#ffedd5",
+        };
+      }
+
+      // Rejected / Correction (Red)
+      if (s.includes("KOREKSI") || s.includes("TOLAK") || s.includes("REJECTED")) {
         return {
           backgroundColor: "#fef2f2",
           color: "#dc2626",

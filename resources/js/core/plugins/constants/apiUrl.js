@@ -22,5 +22,6 @@ const apiUrl = {
     PERIODE: "/master-data/periodes",
     HARI_LIBUR: "/master-data/hari-libur",
     SUBMIT_PENGAJUAN: "/pengajuan/peminjaman",
+    GET_DETAIL_PENGAJUAN: "/pengajuan/peminjaman",
 };
 export default apiUrl;

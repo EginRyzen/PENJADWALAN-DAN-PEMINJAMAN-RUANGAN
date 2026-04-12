@@ -231,7 +231,20 @@ class PengajuanPeminjamanController extends Controller
      */
     public function show(string $id)
     {
-        //
+        try {
+            $data = PengajuanRuangan::with([
+                'status', 
+                'user', 
+                'dokumen_pendukung', 
+                'items.ruangan.building'
+            ])->findOrFail($id);
+
+            return response()->json([
+                'result' => $data
+            ]);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal mengambil detail pengajuan: ' . $e->getMessage()], 404);
+        }
     }
 
     /**

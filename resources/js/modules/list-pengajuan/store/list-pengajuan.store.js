@@ -47,6 +47,16 @@ export const Store = {
       }
     },
 
+    async [actions.GET_DETAIL_PENGAJUAN]({ commit }, id) {
+      try {
+        const response = await Api.get(`${apiUrl.GET_DETAIL_PENGAJUAN}/${id}`);
+        return response.data.result;
+      } catch (error) {
+        console.error('Error fetching pengajuan detail:', error);
+        throw error;
+      }
+    },
+
     async [actions.SUBMIT_PENGAJUAN]({ commit }, payload) {
       try {
         const formData = new FormData();

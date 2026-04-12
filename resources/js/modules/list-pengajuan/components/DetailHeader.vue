@@ -40,8 +40,8 @@
         <p class="text-xs font-bold text-slate-400 uppercase tracking-tighter">Diajukan Oleh</p>
         <div class="flex flex-col">
           <span class="text-sm font-bold text-slate-700 leading-tight">{{ form.user?.name || "-" }}</span>
-          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-0.5" v-if="form.user?.role?.name">
-            {{ form.user.role.name }}
+          <span class="text-[10px] font-bold text-slate-500 tracking-widest mt-0.5" v-if="form.user?.role?.name">
+            {{ form.user.username }}
           </span>
         </div>
       </div>
