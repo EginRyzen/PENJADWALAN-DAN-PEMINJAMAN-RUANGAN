@@ -23,5 +23,6 @@ const apiUrl = {
     HARI_LIBUR: "/master-data/hari-libur",
     SUBMIT_PENGAJUAN: "/pengajuan/peminjaman",
     GET_DETAIL_PENGAJUAN: "/pengajuan/peminjaman",
+    GET_WORKFLOW_HISTORY: "/pengajuan/peminjaman",
 };
 export default apiUrl;

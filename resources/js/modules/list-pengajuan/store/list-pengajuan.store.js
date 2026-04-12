@@ -7,6 +7,7 @@ export const Store = {
   namespaced: true,
   state: {
     pengajuans: [],
+    workflow_history: [],
     pagination: {
       current_page: 0,
       total_elements: 0,
@@ -16,6 +17,9 @@ export const Store = {
   mutations: {
     SET_PENGAJUANS(state, data) {
       state.pengajuans = data;
+    },
+    SET_WORKFLOW_HISTORY(state, data) {
+      state.workflow_history = data;
     },
     SET_PAGINATION(state, data) {
       state.pagination = {
@@ -53,6 +57,18 @@ export const Store = {
         return response.data.result;
       } catch (error) {
         console.error('Error fetching pengajuan detail:', error);
+        throw error;
+      }
+    },
+    
+    async [actions.GET_WORKFLOW_HISTORY]({ commit }, id) {
+      try {
+        const response = await Api.get(`${apiUrl.GET_WORKFLOW_HISTORY}/${id}/workflow`);
+        const result = response.data.result;
+        commit('SET_WORKFLOW_HISTORY', result);
+        return result;
+      } catch (error) {
+        console.error('Error fetching workflow history:', error);
         throw error;
       }
     },

@@ -66,7 +66,7 @@
                 <span class="hidden md:block md:min-w-[140px]"></span>
                 <div class="flex items-start gap-2">
                   <span class="min-w-[100px] md:min-w-[130px] text-slate-400 md:text-slate-500">Diajukan kepada</span>
-                  <span class="text-slate-700 flex-1 font-bold">
+                  <span class="text-slate-700 flex-1 font-semibold">
                     <span class="hidden md:inline mr-2">:</span>
                     <span class="md:hidden">: </span>{{ step.targetName }}
                   </span>

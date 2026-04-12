@@ -6,6 +6,7 @@ use App\Http\Controllers\Building\DataBaseBuildingFacilityController;
 use App\Http\Controllers\Building\DataBaseBuildingRoomController;
 use App\Http\Controllers\DataDocumentController;
 use App\Http\Controllers\Pengajuan\PengajuanPeminjamanController;
+use App\Http\Controllers\Pengajuan\PengajuanWorkflowController;
 use App\Http\Controllers\MasterData\MasterDataProgramStudiController;
 use App\Http\Controllers\MasterData\MasterDataKelasController;
 use App\Http\Controllers\MasterData\MasterDataMataKuliahController;
@@ -67,5 +68,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/peminjaman', [PengajuanPeminjamanController::class, 'index']);
         Route::post('/peminjaman', [PengajuanPeminjamanController::class, 'store']);
         Route::get('/peminjaman/{id}', [PengajuanPeminjamanController::class, 'show']);
+        Route::get('/peminjaman/{id}/workflow', [PengajuanWorkflowController::class, 'index']);
     });
 });

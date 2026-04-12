@@ -198,7 +198,7 @@ class PengajuanPeminjamanController extends Controller
                     'status_id' => $initialStep ? $initialStep->id : $pengajuan->current_status_id,
                     'user_id' => $user->id,
                     'aksi' => 'CREATED',
-                    'catatan' => 'Membuat draft pengajuan',
+                    // 'catatan' => 'Membuat draft pengajuan',
                     'sequence' => 1,
                 ]);
 
@@ -209,7 +209,7 @@ class PengajuanPeminjamanController extends Controller
                         'status_id' => $pengajuan->current_status_id,
                         'user_id' => $user->id,
                         'aksi' => 'SUBMITTED',
-                        'catatan' => 'Mengajukan peminjaman ruangan',
+                        // 'catatan' => 'Mengajukan peminjaman ruangan',
                         'sequence' => 2,
                     ]);
                 }
