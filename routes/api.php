@@ -5,6 +5,8 @@ use App\Http\Controllers\Building\DataBaseBuildingController;
 use App\Http\Controllers\Building\DataBaseBuildingFacilityController;
 use App\Http\Controllers\Building\DataBaseBuildingRoomController;
 use App\Http\Controllers\DataDocumentController;
+use App\Http\Controllers\Pengajuan\PengajuanPeminjamanController;
+use App\Http\Controllers\Pengajuan\PengajuanWorkflowController;
 use App\Http\Controllers\MasterData\MasterDataProgramStudiController;
 use App\Http\Controllers\MasterData\MasterDataKelasController;
 use App\Http\Controllers\MasterData\MasterDataMataKuliahController;
@@ -13,6 +15,7 @@ use App\Http\Controllers\MasterData\MasterDataDosenController;
 use App\Http\Controllers\MasterData\MasterSksSettingController;
 use App\Http\Controllers\MasterData\MasterOperasionalScheduleController;
 use App\Http\Controllers\MasterData\MasterPeriodeController;
+use App\Http\Controllers\MasterData\MasterDataHariLiburController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -56,7 +59,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('dosen', MasterDataDosenController::class);
         Route::apiResource('sks-setting', MasterSksSettingController::class);
         Route::apiResource('periodes', MasterPeriodeController::class);
+        Route::apiResource('hari-libur', MasterDataHariLiburController::class);
         Route::post('operasional-schedule/bulk-update', [MasterOperasionalScheduleController::class, 'bulkUpdate']);
         Route::apiResource('operasional-schedule', MasterOperasionalScheduleController::class);
+    });
+
+    Route::prefix('pengajuan')->group(function () {
+        Route::get('/peminjaman', [PengajuanPeminjamanController::class, 'index']);
+        Route::post('/peminjaman', [PengajuanPeminjamanController::class, 'store']);
+        Route::get('/peminjaman/{id}', [PengajuanPeminjamanController::class, 'show']);
+        Route::get('/peminjaman/{id}/workflow', [PengajuanWorkflowController::class, 'index']);
     });
 });

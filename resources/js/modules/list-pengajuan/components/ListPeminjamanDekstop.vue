@@ -145,12 +145,16 @@
         </template>
 
         <template #no_pengajuan="{ slotProps }">
-          <router-link
-            to="#"
-            class="font-semibold text-blue-500 hover:underline"
+          <router-link 
+            v-if="slotProps.data.id"
+            :to="{ name: 'peminjaman.workflow', params: { id: slotProps.data.id } }" 
+            class="text-blue-600 hover:text-blue-800 hover:underline transition-all font-bold"
           >
             {{ slotProps.data.no_pengajuan }}
           </router-link>
+          <span v-else class="font-semibold text-gray-400 italic">
+            {{ slotProps.data.no_pengajuan }}
+          </span>
         </template>
 
         <template #ruangan="{ slotProps }">
@@ -162,9 +166,22 @@
         </template>
 
         <template #tipe_pengajuan="{ slotProps }">
-          <span class="text-xs font-semibold text-gray-600">
+          <span class="text-[11px] font-bold text-teal-600 bg-teal-50 px-2 py-0.5 rounded-full border border-teal-100">
             {{ slotProps.data.tipe_pengajuan }}
           </span>
+        </template>
+
+        <template #waktu_peminjaman="{ slotProps }">
+          <div class="flex flex-col text-[11px] leading-tight min-w-[140px]">
+            <div class="flex items-center gap-2 font-bold text-gray-700">
+              <font-awesome-icon icon="calendar-alt" class="text-teal-500 w-3" />
+              <span>{{ formatShortDate(slotProps.data.tanggal_start_peminjaman) }} - {{ formatShortDate(slotProps.data.tanggal_end_peminjaman) }}</span>
+            </div>
+            <div class="flex items-center gap-2 text-gray-500 mt-1 font-medium">
+              <font-awesome-icon icon="clock" class="text-teal-500 w-3" />
+              <span>{{ slotProps.data.jam_mulai }} - {{ slotProps.data.jam_selesai }}</span>
+            </div>
+          </div>
         </template>
 
         <template #created_at="{ slotProps }">
@@ -182,14 +199,16 @@
           </span>
         </template>
 
-        <template #aksi>
+        <template #aksi="{ slotProps }">
           <div class="flex justify-center w-full">
-            <button
-              class="text-gray-400 hover:text-orange-500 transition-colors mr-2 text-lg"
-              title="Edit"
-            >
-              <font-awesome-icon icon="edit" />
-            </button>
+            <router-link :to="{ name: 'peminjaman.detail', params: { id: slotProps.data.id } }">
+              <button
+                class="text-gray-400 hover:text-orange-500 transition-colors mr-2 text-lg"
+                title="Edit"
+              >
+                <font-awesome-icon icon="edit" />
+              </button>
+            </router-link>
           </div>
         </template>
       </table-app>
@@ -245,6 +264,7 @@ export default {
         { text: "Ruangan", value: "ruangan", align: "start" },
         { text: "Peminjam", value: "user", align: "start" },
         { text: "Tipe", value: "tipe_pengajuan", align: "start" },
+        { text: "Waktu Peminjaman", value: "waktu_peminjaman", align: "start" },
         { text: "Waktu Pembuatan", value: "created_at", align: "start" },
         { text: "Status", value: "status", align: "start" },
         { text: "Aksi", value: "aksi", align: "center" },
@@ -279,12 +299,12 @@ export default {
         const params = {
           ...this.params,
           search: this.searchQuery,
-          tipe: this.filterTipe.join(","),
-          buildings: this.filterGedung.join(","),
+          tipe: this.filterTipe.map(t => t.id).join(","),
+          buildings: this.filterGedung.map(b => b.id).join(","),
           start_date: this.filter.tanggal_mulai,
           end_date: this.filter.tanggal_selesai,
         };
-        await this.$store.dispatch("listPengajuan/getPengajuanData", params);
+        await this.$store.dispatch(DISPATCH.GET_LIST_PENGAJUAN, params);
         this.$store.commit("SET_LOADING", false);
       } catch (error) {
         this.$store.commit("SET_LOADING", false);
@@ -347,37 +367,57 @@ export default {
     },
     getStatusStyle(status) {
       if (!status) return {};
-      const s = status.toLowerCase();
+      const s = status.toUpperCase();
 
-      if (s.includes("menunggu")) {
+      // Drafts (Gray/Slate)
+      if (s.includes("DRAFT")) {
         return {
-          backgroundColor: "#ffe6b6",
-          color: "#f48c06",
-          borderColor: "rgba(244, 140, 6, 0.2)",
+          backgroundColor: "#f1f5f9",
+          color: "#475569",
+          borderColor: "#e2e8f0",
         };
-      } else if (s.includes("completed")) {
+      }
+      
+      // Approved / Final (Teal/Emerald)
+      if (s === "DISETUJUI" || s.includes("PENGESAHAN") || s.includes("COMPLETED")) {
         return {
-          backgroundColor: "#c0f7f2",
-          color: "#46bebb",
-          borderColor: "rgba(70, 190, 187, 0.2)",
+          backgroundColor: "#f0fdfa",
+          color: "#0d9488",
+          borderColor: "#ccfbf1",
         };
-      } else if (s.includes("koreksi") || s.includes("tolak") || s.includes("rejected")) {
+      }
+
+      // Verification / Process (Amber/Orange)
+      if (s.includes("VERIFIKASI") || s.includes("VALIDASI") || s.includes("PENGECEKAN") || s.includes("PERSIAPAN") || s.includes("MENUNGGU")) {
         return {
-          backgroundColor: "#ffb3ad",
-          color: "#900b09",
-          borderColor: "rgba(144, 11, 9, 0.2)",
+          backgroundColor: "#fff7ed",
+          color: "#ea580c",
+          borderColor: "#ffedd5",
+        };
+      }
+
+      // Rejected / Correction (Red)
+      if (s.includes("KOREKSI") || s.includes("TOLAK") || s.includes("REJECTED")) {
+        return {
+          backgroundColor: "#fef2f2",
+          color: "#dc2626",
+          borderColor: "#fee2e2",
         };
       }
 
       return {
-        backgroundColor: "#f3f4f6", // Default gray
-        color: "#374151",
-        borderColor: "rgba(55, 65, 81, 0.1)",
+        backgroundColor: "#f9fafb",
+        color: "#4b5563",
+        borderColor: "#f3f4f6",
       };
     },
     formatDateData(date) {
       if (!date) return "-";
       return moment(date).format("DD/MM/YYYY HH:mm");
+    },
+    formatShortDate(date) {
+      if (!date) return "-";
+      return moment(date).format("DD/MM/YYYY");
     },
   },
   mounted() {

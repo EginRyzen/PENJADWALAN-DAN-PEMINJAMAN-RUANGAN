@@ -47,4 +47,13 @@ export default {
     CREATE_PERIODE: "createPeriode",
     UPDATE_PERIODE: "updatePeriode",
     DELETE_PERIODE: "deletePeriode",
+    // Master Data - Hari Libur
+    GET_HARI_LIBUR: "getHariLibur",
+    CREATE_HARI_LIBUR: "createHariLibur",
+    UPDATE_HARI_LIBUR: "updateHariLibur",
+    DELETE_HARI_LIBUR: "deleteHariLibur",
+    SUBMIT_PENGAJUAN: "submitPengajuan",
+    GET_LIST_PENGAJUAN: "getListPengajuan",
+    GET_DETAIL_PENGAJUAN: "getDetailPengajuan",
+    GET_WORKFLOW_HISTORY: "getWorkflowHistory",
 }

@@ -1,67 +1,25 @@
+import apiUrl from "@/core/plugins/constants/apiUrl";
+import actions from "@/core/plugins/constants/actions";
+import Api from "@/core/services/Api";
 import axios from 'axios';
 
 export const Store = {
   namespaced: true,
   state: {
-    pengajuans: [
-      {
-        id: "1",
-        no_pengajuan: "BLDG01-2026-RM101-001",
-        tipe_pengajuan: "PEMBELAJARAN",
-        ruangan: { room_name: "Lab Komputer 1" },
-        user: { name: "Ahmad Dahlan" },
-        status: { nama_status: "Menunggu Persetujuan Kaprodi" },
-      },
-      {
-        id: "2",
-        no_pengajuan: "BLDG01-2026-RM102-002",
-        tipe_pengajuan: "EVENT",
-        ruangan: { room_name: "Aula Serbaguna" },
-        user: { name: "Siti Aminah" },
-        status: { nama_status: "Completed" },
-      },
-      {
-        id: "3",
-        no_pengajuan: "BLDG02-2026-RM201-003",
-        tipe_pengajuan: "PEMBELAJARAN",
-        ruangan: { room_name: "Ruang Kelas 201" },
-        user: { name: "Budi Santoso" },
-        status: { nama_status: "Menunggu Persetujuan Kaprodi" },
-      },
-      {
-        id: "4",
-        no_pengajuan: "BLDG02-2026-RM205-004",
-        tipe_pengajuan: "EVENT",
-        ruangan: { room_name: "Meeting Room" },
-        user: { name: "Dewi Lestari" },
-        status: { nama_status: "Completed" },
-      },
-      {
-        id: "5",
-        no_pengajuan: "BLDG03-2026-RM301-005",
-        tipe_pengajuan: "PEMBELAJARAN",
-        ruangan: { room_name: "Laboratorium Fisika" },
-        user: { name: "Eko Prasetyo" },
-        status: { nama_status: "Koreksi" },
-      },
-      {
-        id: "6",
-        no_pengajuan: "BLDG03-2026-RM302-006",
-        tipe_pengajuan: "EVENT",
-        ruangan: { room_name: "Gedung Olahraga" },
-        user: { name: "Farida Utami" },
-        status: { nama_status: "Rejected" },
-      },
-    ],
+    pengajuans: [],
+    workflow_history: [],
     pagination: {
       current_page: 0,
-      total_elements: 6,
+      total_elements: 0,
       total_elements_per_page: 10,
     },
   },
   mutations: {
     SET_PENGAJUANS(state, data) {
       state.pengajuans = data;
+    },
+    SET_WORKFLOW_HISTORY(state, data) {
+      state.workflow_history = data;
     },
     SET_PAGINATION(state, data) {
       state.pagination = {
@@ -72,42 +30,99 @@ export const Store = {
     },
   },
   actions: {
-    async getPengajuanData({ commit, state }, params) {
+    async [actions.GET_LIST_PENGAJUAN]({ commit, state }, payload = {}) {
       try {
-        // Mocking API delay
-        await new Promise(resolve => setTimeout(resolve, 500));
+        const { isAppend, ...params } = payload;
         
-        // Filtering logic for mock data
-        let filtered = [...state.pengajuans];
-        
-        if (params.search) {
-          filtered = filtered.filter(item => 
-            item.no_pengajuan.toLowerCase().includes(params.search.toLowerCase())
-          );
+        const response = await Api.get(apiUrl.SUBMIT_PENGAJUAN, { params });
+        const { result, pagination } = response.data;
+
+        if (isAppend) {
+          commit('SET_PENGAJUANS', [...state.pengajuans, ...result]);
+        } else {
+          commit('SET_PENGAJUANS', result);
         }
         
-        if (params.tipe) {
-          const tipeList = params.tipe.split(',');
-          filtered = filtered.filter(item => tipeList.includes(item.tipe_pengajuan));
-        }
-
-        // We don't commit back to state to keep the master dummy data intact,
-        // unless we want to simulate actual state update for this "view".
-        // For hardcoded dummy data in FE, we just let the state hold it and 
-        // if we want to simulate filtering, we could return it or update state.
-        
-        // Let's update state to simulate a real fetch
-        commit('SET_PENGAJUANS', filtered);
-        commit('SET_PAGINATION', {
-          current_page: params.page || 0,
-          total_elements: filtered.length,
-          total_elements_per_page: params.size || 10,
-        });
-
+        commit('SET_PAGINATION', pagination);
+        return result;
       } catch (error) {
         console.error('Error fetching pengajuan data:', error);
         throw error;
       }
     },
+
+    async [actions.GET_DETAIL_PENGAJUAN]({ commit }, id) {
+      try {
+        const response = await Api.get(`${apiUrl.GET_DETAIL_PENGAJUAN}/${id}`);
+        return response.data.result;
+      } catch (error) {
+        console.error('Error fetching pengajuan detail:', error);
+        throw error;
+      }
+    },
+    
+    async [actions.GET_WORKFLOW_HISTORY]({ commit }, id) {
+      try {
+        const response = await Api.get(`${apiUrl.GET_WORKFLOW_HISTORY}/${id}/workflow`);
+        const result = response.data.result;
+        commit('SET_WORKFLOW_HISTORY', result);
+        return result;
+      } catch (error) {
+        console.error('Error fetching workflow history:', error);
+        throw error;
+      }
+    },
+
+    async [actions.SUBMIT_PENGAJUAN]({ commit }, payload) {
+      try {
+        const formData = new FormData();
+        
+        // Append all form fields to FormData
+        formData.append('tipe_pengajuan', payload.tipe_pengajuan);
+        formData.append('tanggal_start', payload.tanggal_start);
+        formData.append('tanggal_end', payload.tanggal_end);
+        formData.append('jam_mulai', payload.jam_mulai);
+        formData.append('jam_selesai', payload.jam_selesai);
+        formData.append('alasan', payload.alasan);
+        
+        // Append all_room_ids as array elements
+        payload.all_room_ids.forEach((id, index) => {
+          formData.append(`all_room_ids[${index}]`, id);
+        });
+
+        // Add items structure if backend needs it (Gedung mapping)
+        payload.items.forEach((item, index) => {
+          formData.append(`items[${index}][building_id]`, item.building_id);
+        });
+
+        // Append file if exists
+        if (payload.file_raw) {
+          formData.append('file_raw', payload.file_raw);
+        }
+
+        const response = await Api.post(apiUrl.SUBMIT_PENGAJUAN, payload);
+
+        return response.data;
+      } catch (error) {
+        console.error('Error submitting pengajuan:', error);
+        throw error;
+      }
+    },
+
+    async [actions.UPLOAD_IMAGE]({ commit }, file) {
+      try {
+        const formData = new FormData();
+        formData.append("file", file);
+
+        const response = await Api.post(apiUrl.UPLOAD_IMAGE, formData, {
+          headers: { "Content-Type": "multipart/form-data" },
+        });
+        return response.data.result;
+      } catch (error) {
+        console.error("Error Uploading Document:", error);
+        throw error;
+      }
+    },
   },
 };
+

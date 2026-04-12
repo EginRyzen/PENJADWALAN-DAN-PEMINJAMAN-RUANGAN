@@ -20,5 +20,9 @@ const apiUrl = {
     MAHASISWA: "/master-data/mahasiswa",
     DOSEN: "/master-data/dosen",
     PERIODE: "/master-data/periodes",
+    HARI_LIBUR: "/master-data/hari-libur",
+    SUBMIT_PENGAJUAN: "/pengajuan/peminjaman",
+    GET_DETAIL_PENGAJUAN: "/pengajuan/peminjaman",
+    GET_WORKFLOW_HISTORY: "/pengajuan/peminjaman",
 };
 export default apiUrl;

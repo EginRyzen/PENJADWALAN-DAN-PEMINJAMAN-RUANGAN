@@ -1,17 +1,28 @@
 <template>
-  <div class="h-full bg-gray-50">
-    <breadcrumb :items="breadcrumbs"></breadcrumb>
+  <div class="h-full bg-slate-50 min-h-screen font-display">
+    <div class="max-w-full mx-auto px-4 md:px-8 pt-6 pb-2">
+      <breadcrumb :items="breadcrumbs" class="hidden md:block"></breadcrumb>
+    </div>
 
-    <div class="max-w-full mx-auto mt-6 px-4 md:px-8 pb-16">
+    <div class="max-w-full mx-auto px-4 md:px-8 pb-16">
+      <!-- Mobile Back Button (Shifted up to Navbar area) -->
+      <div class="block md:hidden -mt-10 mb-6">
+        <div
+          @click="goBack"
+          class="inline-flex items-center cursor-pointer text-teal-600 font-bold bg-white/50 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-teal-50"
+        >
+          <font-awesome-icon icon="arrow-left" class="mr-2" />
+          Kembali
+        </div>
+      </div>
+
       <!-- Header Section -->
       <div class="relative flex flex-col md:flex-row items-center justify-center mb-10 gap-4">
-        <!-- Back Button - Absolute on desktop to keep title centered, relative on mobile -->
-        <div class="md:absolute md:left-0">
+        <!-- Back Button - Desktop Only -->
+        <div class="hidden md:block md:absolute md:left-0">
           <div
-            color="teal"
-            type="tertiary"
             @click="goBack"
-            class="text-teal-600 font-semibold flex items-center cursor-pointer"
+            class="text-teal-600 font-semibold flex items-center cursor-pointer hover:text-teal-700 transition-colors"
           >
             <font-awesome-icon icon="arrow-left" class="mr-2" />
             Kembali
@@ -25,6 +36,23 @@
           </h1>
         </div>
       </div>
+
+      <!-- Success Modal -->
+      <modal-pop-up-success
+        v-model="showSuccessModal"
+        title="Pengajuan Berhasil"
+        description="Pengajuan peminjaman ruangan Anda telah berhasil dikirim dan akan segera diproses."
+        button-text="Oke, Mengerti"
+        @close-action="goBack"
+      />
+
+      <!-- Error Modal -->
+      <modal-pop-up-error
+        v-model="showErrorModal"
+        title="Pengajuan Gagal"
+        :description="errorMessage"
+        button-text="Perbaiki Data"
+      />
 
       <div class="grid grid-cols-1 gap-8">
         <!-- Main Form Card -->
@@ -218,7 +246,7 @@
                 </label>
 
                 <p v-if="form.uploadError" class="text-xs text-red-500 mt-1 font-medium">
-                  File gagal terunggah, Format file harus PDF
+                  {{ form.uploadErrorMessage || 'File gagal terunggah, Format file harus PDF' }}
                 </p>
               </div>
             </div>
@@ -439,6 +467,8 @@ import ModalDatePicker from "@/core/components/ModalDatePicker.vue";
 import ModalDatePickerMobile from "@/core/components/ModalDatePickerMobile.vue";
 import TimePickerScroll from "@/core/components/TimePickerScroll.vue";
 import ModalApp from "@/core/components/Modal.vue";
+import ModalPopUpSuccess from "@/core/components/ModalPopUpSuccess.vue";
+import ModalPopUpError from "@/core/components/ModalPopUpError.vue";
 import DISPATCH from "@/core/plugins/constants/dispatches";
 import moment from "moment";
 
@@ -456,11 +486,16 @@ export default {
     ModalDatePickerMobile,
     TimePickerScroll,
     ModalApp,
+    ModalPopUpSuccess,
+    ModalPopUpError,
   },
   data() {
     return {
+      showSuccessModal: false,
+      showErrorModal: false,
+      errorMessage: "",
       breadcrumbs: [
-        { text: "Gedung", link: "/app/gedung" },
+        { text: "Gedung", link: "#" },
         { text: "List Peminjaman Ruangan", link: "/app/list-peminjaman-ruangan" },
         { text: "Buat Pengajuan Peminjaman", link: "#"},
       ],
@@ -492,6 +527,7 @@ export default {
         created_at: "",
         created_by_name: "",
         uploadError: false,
+        uploadErrorMessage: "",
         items: [
           {
             building_id: null,
@@ -509,6 +545,7 @@ export default {
         jam_selesai: "",
         items: [],
       },
+      loading: false,
     };
   },
   mounted() {
@@ -627,8 +664,14 @@ export default {
       const file = e.target.files[0];
       if (!file) return;
 
+      // Reset error state
+      this.form.uploadError = false;
+      this.form.uploadErrorMessage = "";
+
+      // Check file type
       if (file.type !== "application/pdf") {
         this.form.uploadError = true;
+        this.form.uploadErrorMessage = "Format file harus PDF";
         this.form.file_name = "";
         this.form.file_raw = null;
         this.form.file_url = "";
@@ -636,7 +679,17 @@ export default {
         return;
       }
 
-      this.form.uploadError = false;
+      // Check file size (5MB = 5120 KB)
+      if (file.size > 5120 * 1024) {
+        this.form.uploadError = true;
+        this.form.uploadErrorMessage = "ukuran file terlalu besar yaa";
+        this.form.file_name = "";
+        this.form.file_raw = null;
+        this.form.file_url = "";
+        e.target.value = null; // reset input
+        return;
+      }
+
       this.form.file_name = file.name;
       this.form.file_raw = file;
       this.form.file_url = URL.createObjectURL(file);
@@ -708,21 +761,80 @@ export default {
 
       return isValid;
     },
-    submitForm() {
+    async submitForm() {
       if (!this.validateForm()) {
         return;
       }
 
-      // Logic for submission will go here
-      const payload = {
-         ...this.form,
-         // Flatten selection if backend expects a list of room IDs
-         all_room_ids: this.form.items.flatMap(item => item.selected_rooms.map(r => r.id))
-      };
-      
-      console.log("Submitting Form Payload:", payload);
-      alert("Pengajuan berhasil disimpan (Simulasi)");
-      this.goBack();
+      try {
+        this.$store.commit("SET_LOADING", true);
+        this.$store.commit("SET_LOADING_MESSAGE", "Sedang memproses pengajuan...");
+        
+        let dokumenId = null;
+
+        // Step 1: Upload document if exists
+        if (this.form.file_raw) {
+          try {
+            const uploadResult = await this.$store.dispatch(DISPATCH.UPLOAD_IMAGE, this.form.file_raw);
+            dokumenId = uploadResult.id;
+          } catch (uploadError) {
+            const errorData = uploadError.response?.data;
+            const serverMessage = errorData?.message;
+            const fileError = errorData?.errors?.file?.[0];
+            
+            if (
+              (serverMessage && serverMessage.includes("5120 kilobytes")) || 
+              (fileError && fileError.includes("5120 kilobytes"))
+            ) {
+              this.errorMessage = "ukuran file terlalu besar yaa";
+            } else {
+              this.errorMessage = "Gagal mengunggah dokumen pendukung. Silakan periksa koneksi atau format file.";
+            }
+            
+            this.showErrorModal = true;
+            return;
+          }
+        }
+
+        // Step 2: Submit Pengajuan
+        const payload = {
+          tipe_pengajuan: this.form.tipe_pengajuan,
+          tanggal_start: this.form.tanggal_start,
+          tanggal_end: this.form.tanggal_end,
+          jam_mulai: this.form.jam_mulai,
+          jam_selesai: this.form.jam_selesai,
+          alasan: this.form.keterangan,
+          items: this.form.items.map(item => ({
+            building_id: item.building_id
+          })),
+          all_room_ids: this.form.items.flatMap(item => item.selected_rooms.map(r => r.id)),
+          dokumen_pendukung_id: dokumenId
+        };
+
+        const response = await this.$store.dispatch(DISPATCH.SUBMIT_PENGAJUAN, payload);
+
+        this.showSuccessModal = true;
+      } catch (error) {
+        console.error("Submission failed:", error);
+        
+        // Handle specific error structure from server
+        const errorData = error.response?.data;
+        const serverMessage = errorData?.message;
+        const fileError = errorData?.errors?.file?.[0];
+        
+        if (
+          (serverMessage && serverMessage.includes("5120 kilobytes")) || 
+          (fileError && fileError.includes("5120 kilobytes"))
+        ) {
+          this.errorMessage = "ukuran file terlalu besar yaa";
+        } else {
+          this.errorMessage = serverMessage || "Gagal mengirim pengajuan. Pastikan semua data benar atau ruangan tersedia pada waktu tersebut.";
+        }
+        
+        this.showErrorModal = true;
+      } finally {
+        this.$store.commit("SET_LOADING", false);
+      }
     }
   },
 };

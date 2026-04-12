@@ -9,7 +9,7 @@
 
     <!-- Mobile View placeholder -->
     <div v-else class="mt-10 p-4 bg-white rounded-lg shadow">
-      <p class="text-center text-gray-500">Tampilan Mobile Sedang Dalam Pengembangan</p>
+      <list-peminjaman-mobile />
     </div>
   </div>
 </template>
@@ -18,6 +18,7 @@
 import Breadcrumb from "@/core/components/Breadcrumb.vue";
 import ButtonApp from "@/core/components/Button.vue";
 import ListPeminjamanDekstop from "../components/ListPeminjamanDekstop.vue";
+import ListPeminjamanMobile from "../components/ListPeminjamanMobile.vue";
 
 export default {
   name: "PeminjamanRuanganList",
@@ -25,14 +26,14 @@ export default {
     Breadcrumb,
     ButtonApp,
     ListPeminjamanDekstop,
+    ListPeminjamanMobile,
   },
   data() {
     return {
       isMobile: false,
       breadcrumbs: [
         { text: "Gedung", link: "#" },
-        { text: "Peminjaman Ruangan", link: "#" },
-        { text: "List Peminjaman", link: "/app/list-peminjaman-ruangan" },
+        { text: "List Peminjaman Ruangan", link: "/app/list-peminjaman-ruangan" },
       ],
     };
   },

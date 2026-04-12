@@ -29,4 +29,9 @@ class MasterDataPeriode extends Model
         return $this->hasMany(MasterDataMahasiswa::class, 'periode_id');
     }
 
+    public function hariLiburs()
+    {
+        return $this->hasMany(MasterDataHariLibur::class, 'periode_id');
+    }
+
 }

@@ -50,7 +50,7 @@
       {{ getHolidayReason(modelValue) }}
     </div>
 
-    <!-- Calendar Dropdown Popup — uses fixed positioning to avoid overflow clip -->
+    <!-- Calendar Dropdown Popup -->
     <Transition name="picker-drop">
       <div
         v-if="isOpen"
@@ -122,6 +122,8 @@
 </template>
 
 <script>
+import DISPATCHES from '@/core/plugins/constants/dispatches.js';
+
 export default {
   name: 'TealDatePicker',
   props: {
@@ -130,7 +132,7 @@ export default {
     placeholder:   { type: String, default: 'Pilih tanggal...' },
     required:      { type: Boolean, default: false },
     minDate:       { type: String, default: '' },   // 'YYYY-MM-DD'
-    hariLiburList: { type: Array, default: () => [] }, // [{ tanggal, keterangan, tipe }]
+    hariLiburList: { type: Array, default: () => [] }, // Prop list (optional if store integrated)
     disableWeekend:{ type: Boolean, default: false },
   },
   emits: ['update:modelValue', 'change'],
@@ -146,6 +148,21 @@ export default {
     };
   },
   computed: {
+    // Merged list from props and settings store
+    computedHariLiburList() {
+      const storeList = this.$store.state.settings?.hariLiburList || [];
+      // Combine and unique by tanggal
+      const combined = [...this.hariLiburList, ...storeList];
+      const unique = [];
+      const map = new Map();
+      for (const item of combined) {
+        if (!map.has(item.tanggal)) {
+          map.set(item.tanggal, true);
+          unique.push(item);
+        }
+      }
+      return unique;
+    },
     monthYearLabel() {
       return new Date(this.viewYear, this.viewMonth, 1)
         .toLocaleDateString('id-ID', { month: 'long', year: 'numeric' });
@@ -154,9 +171,7 @@ export default {
       return new Date(this.viewYear, this.viewMonth + 1, 0).getDate();
     },
     leadingBlanks() {
-      // Monday = 0, ..., Sunday = 6
       const day = new Date(this.viewYear, this.viewMonth, 1).getDay();
-      // getDay(): 0=Sun, 1=Mon,...6=Sat → convert to Mon-start
       return day === 0 ? 6 : day - 1;
     },
     todayStr() {
@@ -166,27 +181,37 @@ export default {
   },
   mounted() {
     document.addEventListener('click', this.handleOutsideClick);
-    // If modelValue exists, initialize view to that month
     if (this.modelValue) {
       const d = new Date(this.modelValue + 'T00:00:00');
       this.viewYear = d.getFullYear();
       this.viewMonth = d.getMonth();
     }
+
+    // Auto fetch holidays if store is empty
+    this.checkAndFetchHolidays();
   },
   beforeUnmount() {
     document.removeEventListener('click', this.handleOutsideClick);
   },
   methods: {
+    async checkAndFetchHolidays() {
+      if ((this.$store.state.settings?.hariLiburList || []).length === 0) {
+        try {
+          // Fetch with large size to get all holidays
+          await this.$store.dispatch(DISPATCHES.GET_HARI_LIBUR, { size: 500 });
+        } catch (error) {
+          console.error("TealDatePicker: Gagal mengambil data hari libur otomatis", error);
+        }
+      }
+    },
     togglePicker() {
       this.isOpen = !this.isOpen;
       if (this.isOpen) {
         this.$nextTick(() => {
-          // Calculate drop position from trigger button
           const btn = this.$refs.wrapper?.querySelector('button');
           if (btn) {
             const rect = btn.getBoundingClientRect();
             this.dropTop = rect.bottom + 6;
-            // Keep within viewport
             const dropWidth = 300;
             const vpWidth = window.innerWidth;
             this.dropLeft = rect.left + dropWidth > vpWidth
@@ -215,7 +240,6 @@ export default {
     isDisabledDay(day) {
       const ds = this.dayStr(day);
       if (this.minDate && ds < this.minDate) return true;
-      if (this.isHoliday(ds)) return true;
       if (this.disableWeekend) {
         const dow = new Date(ds + 'T00:00:00').getDay();
         if (dow === 0 || dow === 6) return true;
@@ -223,14 +247,14 @@ export default {
       return false;
     },
     isHoliday(dateStr) {
-      return this.hariLiburList.some(h => h.tanggal === dateStr);
+      return this.computedHariLiburList.some(h => h.tanggal === dateStr);
     },
     getHolidayReason(dateStr) {
-      const h = this.hariLiburList.find(h => h.tanggal === dateStr);
+      const h = this.computedHariLiburList.find(h => h.tanggal === dateStr);
       return h ? `${h.keterangan} (${h.tipe === 'nasional' ? 'Libur Nasional' : 'Libur Kampus'})` : '';
     },
     getHolidayType(day) {
-      const h = this.hariLiburList.find(h => h.tanggal === this.dayStr(day));
+      const h = this.computedHariLiburList.find(h => h.tanggal === this.dayStr(day));
       return h ? h.tipe : null;
     },
     isSunday(day) {
@@ -241,23 +265,26 @@ export default {
       const isSelected = this.modelValue === ds;
       const isToday = this.todayStr === ds;
       const isDisabled = this.isDisabledDay(day);
-      const holiday = this.hariLiburList.find(h => h.tanggal === ds);
+      const holiday = this.computedHariLiburList.find(h => h.tanggal === ds);
       const isSunday = new Date(ds + 'T00:00:00').getDay() === 0;
 
       if (isDisabled) {
-        if (holiday?.tipe === 'nasional') return 'bg-red-50 text-red-300 cursor-not-allowed';
-        if (holiday?.tipe === 'kampus') return 'bg-orange-50 text-orange-300 cursor-not-allowed';
         return 'text-gray-300 cursor-not-allowed';
       }
       if (isSelected) return 'bg-teal-500 text-white font-bold shadow-sm shadow-teal-200';
       if (isToday) return 'border-2 border-teal-400 text-teal-600 font-bold hover:bg-teal-50';
+      
+      // Holiday styling (but selectable)
+      if (holiday?.tipe === 'nasional') return 'bg-red-50 text-red-600 font-bold hover:bg-red-100';
+      if (holiday?.tipe === 'kampus') return 'bg-orange-50 text-orange-600 font-bold hover:bg-orange-100';
+      
       if (isSunday) return 'text-red-400 hover:bg-red-50';
       return 'text-gray-700 hover:bg-teal-50 hover:text-teal-700';
     },
     getDayTooltip(day) {
       const ds = this.dayStr(day);
-      const h = this.hariLiburList.find(h => h.tanggal === ds);
-      if (h) return `${h.keterangan} — Tidak dapat dipilih`;
+      const h = this.computedHariLiburList.find(h => h.tanggal === ds);
+      if (h) return `${h.keterangan}`;
       return '';
     },
     selectDay(day) {
@@ -291,7 +318,6 @@ export default {
 </script>
 
 <style scoped>
-/* Dropdown open/close animation */
 .picker-drop-enter-active, .picker-drop-leave-active {
   transition: all 0.18s cubic-bezier(0.4, 0, 0.2, 1);
 }

@@ -12,6 +12,7 @@ const defaultState = () => ({
     },
     sksSetting: null,
     operasionalScheduleList: [],
+    hariLiburList: [],
 });
 
 export const Store = {
@@ -36,6 +37,13 @@ export const Store = {
         },
         SET_OPERASIONAL_SCHEDULE(state, payload) {
             state.operasionalScheduleList = payload;
+        },
+        SET_HARI_LIBUR(state, payload) {
+            if (Array.isArray(payload)) {
+                state.hariLiburList = payload;
+            } else {
+                state.hariLiburList = payload.content || [];
+            }
         },
     },
     actions: {
@@ -118,6 +126,44 @@ export const Store = {
                 return response.data;
             } catch (error) {
                 console.error("Error Deleting Kelas:", error);
+                throw error;
+            }
+        },
+        async [actions.GET_HARI_LIBUR]({ commit }, params) {
+            try {
+                const response = await Api.get(apiUrl.HARI_LIBUR, { params });
+                const data = response.data.result;
+                commit("SET_HARI_LIBUR", data);
+                return data;
+            } catch (error) {
+                console.error("Error Fetching Hari Libur:", error);
+                throw error;
+            }
+        },
+        async [actions.CREATE_HARI_LIBUR]({ commit }, payload) {
+            try {
+                const response = await Api.post(apiUrl.HARI_LIBUR, payload);
+                return response.data;
+            } catch (error) {
+                console.error("Error Creating Hari Libur:", error);
+                throw error;
+            }
+        },
+        async [actions.UPDATE_HARI_LIBUR]({ commit }, payload) {
+            try {
+                const response = await Api.put(`${apiUrl.HARI_LIBUR}/${payload.id}`, payload);
+                return response.data;
+            } catch (error) {
+                console.error("Error Updating Hari Libur:", error);
+                throw error;
+            }
+        },
+        async [actions.DELETE_HARI_LIBUR]({ commit }, id) {
+            try {
+                const response = await Api.delete(`${apiUrl.HARI_LIBUR}/${id}`);
+                return response.data;
+            } catch (error) {
+                console.error("Error Deleting Hari Libur:", error);
                 throw error;
             }
         },
