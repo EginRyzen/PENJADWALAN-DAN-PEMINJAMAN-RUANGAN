@@ -4,6 +4,7 @@ const namespaces = {
     GEDUNG: "gedung/",
     MASTER_DATA: "masterData/",
     SETTINGS: "settings/",
+    LIST_PENGAJUAN: "listPengajuan/",
 };
 
 export default {
@@ -60,4 +61,7 @@ export default {
     CREATE_HARI_LIBUR: namespaces.SETTINGS + ACTIONS.CREATE_HARI_LIBUR,
     UPDATE_HARI_LIBUR: namespaces.SETTINGS + ACTIONS.UPDATE_HARI_LIBUR,
     DELETE_HARI_LIBUR: namespaces.SETTINGS + ACTIONS.DELETE_HARI_LIBUR,
+    // List Pengajuan
+    SUBMIT_PENGAJUAN: namespaces.LIST_PENGAJUAN + ACTIONS.SUBMIT_PENGAJUAN,
+    GET_LIST_PENGAJUAN: namespaces.LIST_PENGAJUAN + ACTIONS.GET_LIST_PENGAJUAN,
 };

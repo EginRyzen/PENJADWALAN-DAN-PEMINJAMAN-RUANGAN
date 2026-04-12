@@ -5,6 +5,7 @@ use App\Http\Controllers\Building\DataBaseBuildingController;
 use App\Http\Controllers\Building\DataBaseBuildingFacilityController;
 use App\Http\Controllers\Building\DataBaseBuildingRoomController;
 use App\Http\Controllers\DataDocumentController;
+use App\Http\Controllers\Pengajuan\PengajuanPeminjamanController;
 use App\Http\Controllers\MasterData\MasterDataProgramStudiController;
 use App\Http\Controllers\MasterData\MasterDataKelasController;
 use App\Http\Controllers\MasterData\MasterDataMataKuliahController;
@@ -60,5 +61,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('hari-libur', MasterDataHariLiburController::class);
         Route::post('operasional-schedule/bulk-update', [MasterOperasionalScheduleController::class, 'bulkUpdate']);
         Route::apiResource('operasional-schedule', MasterOperasionalScheduleController::class);
+    });
+
+    Route::prefix('pengajuan')->group(function () {
+        Route::get('/peminjaman', [PengajuanPeminjamanController::class, 'index']);
+        Route::post('/peminjaman', [PengajuanPeminjamanController::class, 'store']);
     });
 });

@@ -52,4 +52,6 @@ export default {
     CREATE_HARI_LIBUR: "createHariLibur",
     UPDATE_HARI_LIBUR: "updateHariLibur",
     DELETE_HARI_LIBUR: "deleteHariLibur",
+    SUBMIT_PENGAJUAN: "submitPengajuan",
+    GET_LIST_PENGAJUAN: "getListPengajuan",
 }
