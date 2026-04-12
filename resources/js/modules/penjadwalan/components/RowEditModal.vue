@@ -135,7 +135,7 @@
 
 <script>
 import ModalApp from '@/core/components/Modal.vue';
-import TealDatePicker from './TealDatePicker.vue';
+import TealDatePicker from '@/core/components/TealDatePicker.vue';
 import TimeInput from '../../settings/components/TimeInput.vue';
 import SelectAutoComplete from "@/core/components/SelectAutoComplete.vue";
 import DISPATCH from "@/core/plugins/constants/dispatches";

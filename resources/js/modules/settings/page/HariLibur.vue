@@ -92,12 +92,22 @@
             <!-- Submit Button -->
             <button
               @click="handleTambah"
-              class="w-full flex items-center justify-center gap-2 py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-red-200 mt-2"
+              :disabled="isSaving"
+              class="w-full h-11 flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 disabled:opacity-50 disabled:cursor-not-allowed text-white text-sm font-bold rounded-xl transition-all duration-200 shadow-sm hover:shadow-md hover:shadow-red-200 mt-2"
             >
-              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
-              </svg>
-              Tambah Hari Libur
+              <template v-if="isSaving">
+                <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                Menyimpan...
+              </template>
+              <template v-else>
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/>
+                </svg>
+                Tambah Hari Libur
+              </template>
             </button>
           </div>
         </div>
@@ -233,12 +243,19 @@
       </div>
     </div>
 
-    <!-- Confirm Delete Modal -->
     <modal-pop-up-confirm
       v-model="showConfirm"
       title="Hapus Hari Libur?"
       :description="`Apakah Anda yakin ingin menghapus hari libur '${deletingItem ? deletingItem.keterangan : ''}' pada tanggal ${deletingItem ? formatTanggal(deletingItem.tanggal) : ''}?`"
       @confirm="confirmHapus"
+    />
+
+    <!-- Success Modal -->
+    <modal-pop-up-success
+      v-model="showSuccess"
+      :title="successData.title"
+      :description="successData.description"
+      @close-action="showSuccess = false"
     />
   </div>
 </template>
@@ -246,11 +263,13 @@
 <script>
 import BreadcrumbBima     from '@/core/components/Breadcrumb.vue';
 import ModalPopUpConfirm  from '@/core/components/ModalPopUpConfirm.vue';
-import TealDatePicker     from '@/modules/penjadwalan/components/TealDatePicker.vue';
+import ModalPopUpSuccess  from '@/core/components/ModalPopUpSuccess.vue';
+import TealDatePicker     from '@/core/components/TealDatePicker.vue';
+import DISPATCHES         from '@/core/plugins/constants/dispatches.js';
 
 export default {
   name: 'HariLibur',
-  components: { BreadcrumbBima, ModalPopUpConfirm, TealDatePicker },
+  components: { BreadcrumbBima, ModalPopUpConfirm, ModalPopUpSuccess, TealDatePicker },
   data() {
     const currentYear = new Date().getFullYear();
     return {
@@ -260,7 +279,13 @@ export default {
       form: { tanggal: '', keterangan: '', tipe: 'nasional' },
       formError: '',
       showConfirm: false,
+      showSuccess: false,
+      isSaving: false,
       deletingItem: null,
+      successData: {
+        title: 'Berhasil!',
+        description: 'Data hari libur telah berhasil diproses.',
+      },
       breadcrumbItems: [
         { text: 'Settings', link: '#' },
         { text: 'Hari Libur & Tanggal Merah', link: '/app/pengaturan-hari-libur' },
@@ -269,7 +294,7 @@ export default {
   },
   computed: {
     hariLiburList() {
-      return this.$store.state.penjadwalan?.hariLiburList || [];
+      return this.$store.state.settings?.hariLiburList || [];
     },
     filteredLibur() {
       return this.hariLiburList
@@ -282,8 +307,23 @@ export default {
         .sort((a, b) => a.tanggal.localeCompare(b.tanggal));
     },
   },
+  mounted() {
+    this.fetchHariLibur();
+  },
   methods: {
-    handleTambah() {
+    async fetchHariLibur() {
+      this.$store.commit('SET_LOADING', true);
+      try {
+        await this.$store.dispatch(DISPATCHES.GET_HARI_LIBUR, {
+          size: 500, // Ambil banyak agar kalender terisi
+        });
+      } catch (error) {
+        console.error('Gagal mengambil data hari libur:', error);
+      } finally {
+        this.$store.commit('SET_LOADING', false);
+      }
+    },
+    async handleTambah() {
       this.formError = '';
       if (!this.form.tanggal) { this.formError = 'Tanggal wajib diisi.'; return; }
       if (!this.form.keterangan.trim()) { this.formError = 'Keterangan wajib diisi.'; return; }
@@ -291,17 +331,45 @@ export default {
       const exists = this.hariLiburList.some(h => h.tanggal === this.form.tanggal);
       if (exists) { this.formError = 'Tanggal ini sudah terdaftar sebagai hari libur.'; return; }
 
-      this.$store.dispatch('penjadwalan/addHariLibur', { ...this.form });
-      this.form = { tanggal: '', keterangan: '', tipe: 'nasional' };
+      this.isSaving = true;
+      this.$store.commit('SET_LOADING', true);
+      try {
+        await this.$store.dispatch(DISPATCHES.CREATE_HARI_LIBUR, { ...this.form });
+        this.successData = {
+          title: 'Berhasil Ditambahkan',
+          description: `Hari libur '${this.form.keterangan}' pada tanggal ${this.formatTanggal(this.form.tanggal)} telah disimpan.`,
+        };
+        this.form = { tanggal: '', keterangan: '', tipe: 'nasional' };
+        this.showSuccess = true;
+        this.fetchHariLibur(); // Refresh list
+      } catch (error) {
+        this.formError = error.response?.data?.message || 'Gagal menambahkan hari libur.';
+      } finally {
+        this.isSaving = false;
+        this.$store.commit('SET_LOADING', false);
+      }
     },
     handleHapus(item) {
       this.deletingItem = item;
       this.showConfirm = true;
     },
-    confirmHapus() {
+    async confirmHapus() {
       if (this.deletingItem) {
-        this.$store.dispatch('penjadwalan/removeHariLibur', this.deletingItem.id);
-        this.deletingItem = null;
+        this.$store.commit('SET_LOADING', true);
+        try {
+          await this.$store.dispatch(DISPATCHES.DELETE_HARI_LIBUR, this.deletingItem.id);
+          this.successData = {
+            title: 'Berhasil Dihapus',
+            description: `Hari libur '${this.deletingItem.keterangan}' telah dihapus dari sistem.`,
+          };
+          this.deletingItem = null;
+          this.showSuccess = true;
+          this.fetchHariLibur(); // Refresh list
+        } catch (error) {
+          console.error('Gagal menghapus hari libur:', error);
+        } finally {
+          this.$store.commit('SET_LOADING', false);
+        }
       }
     },
     formatTanggal(d) {

@@ -206,7 +206,7 @@ import AppInput from "@/core/components/AppInput.vue";
 import ModalApp from "@/core/components/Modal.vue";
 import ModalPopUpConfirm from "@/core/components/ModalPopUpConfirm.vue";
 import ModalPopUpSuccess from "@/core/components/ModalPopUpSuccess.vue";
-import TealDatePicker from "@/modules/penjadwalan/components/TealDatePicker.vue";
+import TealDatePicker from "@/core/components/TealDatePicker.vue";
 import DISPATCH from "@/core/plugins/constants/dispatches";
 import TableApp from "@/core/components/Table.vue";
 

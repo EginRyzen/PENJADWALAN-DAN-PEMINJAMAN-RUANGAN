@@ -101,7 +101,7 @@
 </template>
 
 <script>
-import TealDatePicker from './TealDatePicker.vue';
+import TealDatePicker from '@/core/components/TealDatePicker.vue';
 
 export default {
   name: 'FilterPanel',

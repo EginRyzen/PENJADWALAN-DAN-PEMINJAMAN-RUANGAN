@@ -13,6 +13,7 @@ use App\Http\Controllers\MasterData\MasterDataDosenController;
 use App\Http\Controllers\MasterData\MasterSksSettingController;
 use App\Http\Controllers\MasterData\MasterOperasionalScheduleController;
 use App\Http\Controllers\MasterData\MasterPeriodeController;
+use App\Http\Controllers\MasterData\MasterDataHariLiburController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -56,6 +57,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('dosen', MasterDataDosenController::class);
         Route::apiResource('sks-setting', MasterSksSettingController::class);
         Route::apiResource('periodes', MasterPeriodeController::class);
+        Route::apiResource('hari-libur', MasterDataHariLiburController::class);
         Route::post('operasional-schedule/bulk-update', [MasterOperasionalScheduleController::class, 'bulkUpdate']);
         Route::apiResource('operasional-schedule', MasterOperasionalScheduleController::class);
     });

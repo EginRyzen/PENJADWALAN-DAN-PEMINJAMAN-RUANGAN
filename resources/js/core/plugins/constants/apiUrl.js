@@ -20,5 +20,6 @@ const apiUrl = {
     MAHASISWA: "/master-data/mahasiswa",
     DOSEN: "/master-data/dosen",
     PERIODE: "/master-data/periodes",
+    HARI_LIBUR: "/master-data/hari-libur",
 };
 export default apiUrl;
