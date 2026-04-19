@@ -73,7 +73,7 @@ const penjadwalanStore = {
     state: {
         // Konteks filter (sebelum generate)
         context: {
-            type: 'uts',
+            type: 'uas',
             start_date: '',
             prodi_id: null,
             kelas: null,

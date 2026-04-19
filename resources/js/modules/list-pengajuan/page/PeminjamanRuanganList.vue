@@ -1,14 +1,17 @@
 <template>
   <div class="h-full">
-    <breadcrumb :items="breadcrumbs"></breadcrumb>
+    <!-- Desktop: show breadcrumb -->
+    <div class="hidden md:block">
+      <breadcrumb :items="breadcrumbs"></breadcrumb>
+    </div>
     
     <!-- Desktop View -->
     <div v-if="!isMobile" class="mt-10">
       <list-peminjaman-dekstop />
     </div>
 
-    <!-- Mobile View placeholder -->
-    <div v-else class="mt-10 p-4 bg-white rounded-lg shadow">
+    <!-- Mobile View: full screen, no wrapper padding -->
+    <div v-else class="h-full">
       <list-peminjaman-mobile />
     </div>
   </div>

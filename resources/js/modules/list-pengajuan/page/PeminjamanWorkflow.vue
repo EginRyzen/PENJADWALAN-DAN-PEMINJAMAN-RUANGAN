@@ -10,13 +10,13 @@
       <div class="flex items-center justify-between md:hidden mb-8">
         <div
           @click="goBack"
-          class="flex items-center justify-center cursor-pointer text-teal-600 bg-white shadow-sm border border-teal-50 w-10 h-10 rounded-xl"
+          class="inline-flex items-center gap-2 cursor-pointer text-teal-600 bg-white shadow-sm border border-teal-100 px-3 py-2 rounded-xl font-semibold text-sm"
         >
-          <font-awesome-icon icon="arrow-left" class="mr-2" />
+          <font-awesome-icon icon="arrow-left" />
           Kembali
         </div>
         <h1 class="text-xl font-semibold text-gray-900">Workflow</h1>
-        <div class="w-10"></div> <!-- Spacer for centering -->
+        <div class="w-20"></div> <!-- Spacer for centering -->
       </div>
 
       <!-- Desktop Header Section -->

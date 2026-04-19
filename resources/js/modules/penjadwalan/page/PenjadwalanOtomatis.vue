@@ -1,7 +1,7 @@
 <template>
   <div class="p-4 md:p-6 pb-24">
-    <!-- Breadcrumb -->
-    <breadcrumb-bima :items="breadcrumbItems" class="mb-5" />
+    <!-- Breadcrumb (Hidden on Mobile) -->
+    <breadcrumb-bima :items="breadcrumbItems" class="hidden md:block mb-5" />
 
     <!-- Page Title -->
     <div class="flex items-center gap-3 mb-6">
@@ -155,7 +155,7 @@ export default {
       breadcrumbItems: [
         { text: 'Dashboard', link: '#' },
         { text: 'Penjadwalan', link: '#' },
-        { text: 'Ujian Tengah Semester (UTS)', link: '/app/penjadwalan' },
+        { text: 'Penjadwalan Otomatis', link: '/app/penjadwalan' },
       ],
     };
   },

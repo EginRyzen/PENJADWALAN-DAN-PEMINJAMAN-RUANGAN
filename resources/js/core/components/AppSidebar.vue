@@ -20,6 +20,7 @@
 
       <div class="flex flex-col items-center justify-center flex-1 space-y-4">
         <button
+          @click="goToHome"
           class="p-2 shadow-md text-teal-400 transition-colors duration-200 rounded-md bg-indigo-50 hover:text-teal-100 hover:bg-indigo-100 dark:hover:text-light dark:hover:bg-teal-500 dark:bg-dark focus:outline-none focus:bg-indigo-100 dark:focus:bg-teal-600 focus:ring-teal-800"
         >
           <span class="sr-only">Open Home</span>
@@ -31,21 +32,6 @@
         >
           <span class="sr-only">Open Notifications</span>
           <font-awesome-icon icon="bell" class="w-8 h-8" />
-        </button>
-        <button
-          @click="goToSearch"
-          class="p-2 shadow-md text-teal-400 transition-colors duration-200 rounded-md bg-indigo-50 hover:text-teal-400 hover:bg-indigo-100 dark:hover:text-light dark:hover:bg-teal-500 dark:bg-dark focus:outline-none focus:bg-indigo-100 dark:focus:bg-teal-600 focus:ring-teal-800"
-        >
-          <span class="sr-only">Open Search</span>
-          <font-awesome-icon icon="search" class="w-8 h-8" />
-        </button>
-
-        <button
-          @click="$emit('open-settings')"
-         class="p-2 shadow-md text-teal-400 transition-colors duration-200 rounded-md bg-indigo-50 hover:text-teal-400 hover:bg-indigo-100 dark:hover:text-light dark:hover:bg-teal-500 dark:bg-dark focus:outline-none focus:bg-indigo-100 dark:focus:bg-teal-600 focus:ring-teal-800"
-        >
-          <span class="sr-only">Open Settings</span>
-          <font-awesome-icon icon="cog" class="w-8 h-8" />
         </button>
       </div>
 
@@ -114,17 +100,12 @@ const goToNotifications = () => {
   router.push("/notifications");
 };
 
-const goToSearch = () => {
-  router.push("/search");
-};
-
-const logout = () => {
-  console.log("Logging out...");
-  router.push("/");
+const goToHome = () => {
+  router.push("/app/dashboard");
 };
 
 const vClickOutside = {
-  mounted(el, binding) {
+  mounted(el, binding) {  
     el.clickOutsideEvent = function (event) {
       if (!(el === event.target || el.contains(event.target))) {
         binding.value(event, el);

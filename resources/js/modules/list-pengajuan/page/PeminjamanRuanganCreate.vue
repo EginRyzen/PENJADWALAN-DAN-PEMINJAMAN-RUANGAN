@@ -5,21 +5,24 @@
     </div>
 
     <div class="max-w-full mx-auto px-4 md:px-8 pb-16">
-      <!-- Mobile Back Button (Shifted up to Navbar area) -->
-      <div class="block md:hidden -mt-10 mb-6">
+
+      <!-- Mobile Header Row (Back button + Title) -->
+      <div class="flex items-center justify-between md:hidden mb-8">
         <div
           @click="goBack"
-          class="inline-flex items-center cursor-pointer text-teal-600 font-bold bg-white/50 backdrop-blur-sm px-4 py-2 rounded-full shadow-sm border border-teal-50"
+          class="inline-flex items-center gap-2 cursor-pointer text-teal-600 bg-white shadow-sm border border-teal-100 px-3 py-2 rounded-xl font-semibold text-sm"
         >
-          <font-awesome-icon icon="arrow-left" class="mr-2" />
+          <font-awesome-icon icon="arrow-left" />
           Kembali
         </div>
+        <h1 class="text-xl font-semibold text-gray-900">Buat Peminjaman</h1>
+        <div class="w-20"></div> <!-- Spacer for centering -->
       </div>
 
-      <!-- Header Section -->
-      <div class="relative flex flex-col md:flex-row items-center justify-center mb-10 gap-4">
+      <!-- Header Section - Desktop Only -->
+      <div class="hidden md:flex relative flex-row items-center justify-center mb-10 gap-4">
         <!-- Back Button - Desktop Only -->
-        <div class="hidden md:block md:absolute md:left-0">
+        <div class="absolute left-0">
           <div
             @click="goBack"
             class="text-teal-600 font-semibold flex items-center cursor-pointer hover:text-teal-700 transition-colors"
@@ -31,7 +34,7 @@
         
         <!-- Centered Title -->
         <div class="text-center">
-          <h1 class="text-2xl md:text-3xl font-extrabold text-gray-900 tracking-tight">
+          <h1 class="text-2xl md:text-3xl font-semibold text-gray-900 tracking-tight">
             Buat Peminjaman Ruangan
           </h1>
         </div>

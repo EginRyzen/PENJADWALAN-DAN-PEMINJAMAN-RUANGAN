@@ -18,7 +18,7 @@
         <label class="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Tipe Ujian</label>
         <div class="flex rounded-lg border border-gray-200 overflow-hidden h-11">
           <button
-            v-for="t in ['uts', 'uas', 'pembelajaran']"
+            v-for="t in ['uas', 'pembelajaran', 'uts']"
             :key="t"
             @click="setType(t)"
             class="flex-1 text-[10px] sm:text-sm font-bold transition-all duration-200"
@@ -115,7 +115,7 @@ export default {
     return {
       today: new Date().toISOString().split('T')[0],
       context: {
-        type:       'uts',
+        type:       'uas',
         start_date: '',
         periode:    '',
       },

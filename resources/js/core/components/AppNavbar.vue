@@ -1,6 +1,6 @@
 <template>
   <nav class="relative app-teal z-50">
-    <div class="mx-auto px-2 sm:px-6 lg:px-8">
+    <div class="px-0 sm:px-6 lg:px-8">
       <div class="relative flex h-16 items-center justify-between">
         <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
           <div class="hidden md:block">
@@ -113,10 +113,6 @@ onUnmounted(() => {
 
 const menus = ref([
   {
-    label: "Dashboard",
-    path: "/app/dashboard",
-  },
-  {
     label: "Gedung",
     children: [
       { label: "Profil Gedung", path: "/app/gedung-list" },
@@ -142,12 +138,12 @@ const menus = ref([
       },
       { label: "Mahasiswa", path: "/app/mahasiswa-list" },
       { label: "Dosen", path: "/app/dosen-list" },
+      { label: "Kelas", path: "/app/pengaturan-kelas" },
     ],
   },
   {
     label: "Settings",
     children: [
-      { label: "Kelas", path: "/app/pengaturan-kelas" },
       { label: "Ujian", path: "/app/pengaturan-ujian-ruangan" },
       { label: "Hari Libur", path: "/app/pengaturan-hari-libur" },
       { label: "Periode", path: "/app/pengaturan-periode" },
