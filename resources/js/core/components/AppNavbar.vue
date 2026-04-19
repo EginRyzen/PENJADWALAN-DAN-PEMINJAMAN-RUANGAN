@@ -144,9 +144,17 @@ const menus = ref([
   {
     label: "Settings",
     children: [
+      {
+        label: "Manajemen Menus",
+        children: [
+          { label: "Manajemen Menu", path: "/app/pengaturan-menu" },
+          { label: "Hak Akses Menu", path: "/app/pengaturan-role-menu" },
+        ]
+      },
       { label: "Ujian", path: "/app/pengaturan-ujian-ruangan" },
       { label: "Hari Libur", path: "/app/pengaturan-hari-libur" },
       { label: "Periode", path: "/app/pengaturan-periode" },
+
     ],
   },
 ]);

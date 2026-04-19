@@ -52,6 +52,14 @@ export default {
     CREATE_HARI_LIBUR: "createHariLibur",
     UPDATE_HARI_LIBUR: "updateHariLibur",
     DELETE_HARI_LIBUR: "deleteHariLibur",
+    // Master Data - Menus
+    GET_MENUS: "getMenus",
+    CREATE_MENU: "createMenu",
+    UPDATE_MENU: "updateMenu",
+    DELETE_MENU: "deleteMenu",
+    // Master Data - Role Menus
+    GET_ROLE_MENUS: "getRoleMenus",
+    UPDATE_ROLE_MENUS: "updateRoleMenus",
     SUBMIT_PENGAJUAN: "submitPengajuan",
     GET_LIST_PENGAJUAN: "getListPengajuan",
     GET_DETAIL_PENGAJUAN: "getDetailPengajuan",

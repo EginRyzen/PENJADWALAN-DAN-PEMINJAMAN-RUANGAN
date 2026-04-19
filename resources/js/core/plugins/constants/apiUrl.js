@@ -21,6 +21,8 @@ const apiUrl = {
     DOSEN: "/master-data/dosen",
     PERIODE: "/master-data/periodes",
     HARI_LIBUR: "/master-data/hari-libur",
+    MENU: "/master-data/menus",
+    ROLE_MENU: "/master-data/role-menus",
     SUBMIT_PENGAJUAN: "/pengajuan/peminjaman",
     GET_DETAIL_PENGAJUAN: "/pengajuan/peminjaman",
     GET_WORKFLOW_HISTORY: "/pengajuan/peminjaman",

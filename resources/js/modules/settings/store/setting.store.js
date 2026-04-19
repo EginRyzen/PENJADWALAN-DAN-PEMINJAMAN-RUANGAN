@@ -13,6 +13,8 @@ const defaultState = () => ({
     sksSetting: null,
     operasionalScheduleList: [],
     hariLiburList: [],
+    menuList: [],
+    roleMenuList: [],
 });
 
 export const Store = {
@@ -44,6 +46,12 @@ export const Store = {
             } else {
                 state.hariLiburList = payload.content || [];
             }
+        },
+        SET_MENUS(state, payload) {
+            state.menuList = payload;
+        },
+        SET_ROLE_MENUS(state, payload) {
+            state.roleMenuList = payload;
         },
     },
     actions: {
@@ -164,6 +172,64 @@ export const Store = {
                 return response.data;
             } catch (error) {
                 console.error("Error Deleting Hari Libur:", error);
+                throw error;
+            }
+        },
+        async [actions.GET_MENUS]({ commit }, params) {
+            try {
+                const response = await Api.get(apiUrl.MENU, { params });
+                const data = response.data.result;
+                commit("SET_MENUS", data);
+                return data;
+            } catch (error) {
+                console.error("Error Fetching Menus:", error);
+                throw error;
+            }
+        },
+        async [actions.CREATE_MENU]({ commit }, payload) {
+            try {
+                const response = await Api.post(apiUrl.MENU, payload);
+                return response.data;
+            } catch (error) {
+                console.error("Error Creating Menu:", error);
+                throw error;
+            }
+        },
+        async [actions.UPDATE_MENU]({ commit }, payload) {
+            try {
+                const response = await Api.put(`${apiUrl.MENU}/${payload.id}`, payload);
+                return response.data;
+            } catch (error) {
+                console.error("Error Updating Menu:", error);
+                throw error;
+            }
+        },
+        async [actions.DELETE_MENU]({ commit }, id) {
+            try {
+                const response = await Api.delete(`${apiUrl.MENU}/${id}`);
+                return response.data;
+            } catch (error) {
+                console.error("Error Deleting Menu:", error);
+                throw error;
+            }
+        },
+        async [actions.GET_ROLE_MENUS]({ commit }, params) {
+            try {
+                const response = await Api.get(apiUrl.ROLE_MENU, { params });
+                const data = response.data.result;
+                commit("SET_ROLE_MENUS", data);
+                return data;
+            } catch (error) {
+                console.error("Error Fetching Role Menus:", error);
+                throw error;
+            }
+        },
+        async [actions.UPDATE_ROLE_MENUS]({ commit }, payload) {
+            try {
+                const response = await Api.post(apiUrl.ROLE_MENU, payload);
+                return response.data;
+            } catch (error) {
+                console.error("Error Updating Role Menus:", error);
                 throw error;
             }
         },
