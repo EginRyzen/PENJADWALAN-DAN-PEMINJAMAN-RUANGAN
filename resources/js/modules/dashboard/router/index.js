@@ -8,12 +8,12 @@ const routes = [
         component: Dashboard,
         meta: { title: 'Dashboard' }
     },
-    // {
-    //     path: '/work-order/create',
-    //     name: 'work-order.create',
-    //     component: WorkOrderCreate,
-    //     meta: { title: 'Buat Work Order' }
-    // }
+    {
+        path: '/notifications',
+        name: 'notifications',
+        component: () => import('../pages/NotificationList.vue'),
+        meta: { title: 'Notifikasi' }
+    },
 ];
 
 export default routes;

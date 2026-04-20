@@ -14,6 +14,24 @@
         <span class="bottom-nav-label">Dashboard</span>
       </router-link>
 
+      <!-- Notifikasi -->
+      <router-link
+        to="/notifications"
+        class="bottom-nav-item"
+        :class="isActive('/notifications') ? 'active' : ''"
+      >
+        <div class="bottom-nav-icon-wrap relative" :class="isActive('/notifications') ? 'active' : ''">
+          <font-awesome-icon icon="bell" class="bottom-nav-icon" />
+          <span 
+            v-if="unreadCount > 0"
+            class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[9px] font-bold flex items-center justify-center rounded-full border border-white shadow-sm"
+          >
+            {{ unreadCount > 9 ? '9+' : unreadCount }}
+          </span>
+        </div>
+        <span class="bottom-nav-label">Notifikasi</span>
+      </router-link>
+
       <!-- Dynamic Menus (Level 1) -->
       <template v-for="menu in filteredMenus" :key="menu.id">
         <button
@@ -146,7 +164,10 @@ onMounted(() => {
   if (store.state.auth.appMenuList.length === 0) {
     store.dispatch(DISPATCHES.GET_APP_MENU);
   }
+  store.dispatch(DISPATCHES.GET_UNREAD_NOTIFICATION_COUNT);
 });
+
+const unreadCount = computed(() => store.state.dashboard?.unreadCount || 0);
 
 const filteredMenus = computed(() => {
   // Only show Level 1 menus that are marked for mobile

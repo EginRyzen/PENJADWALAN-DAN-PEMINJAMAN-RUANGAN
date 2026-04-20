@@ -6,7 +6,7 @@
           <div class="hidden md:block">
             <div class="flex space-x-4">
               <template v-for="(menu, index) in menus" :key="index">
-                <!-- Dropdown Menu -->
+                <!-- ... existing menu logic ... -->
                 <div v-if="menu.children && menu.children.length > 0" class="relative group" @mouseenter="handleMouseEnter(index)"
                   @mouseleave="handleMouseLeave()">
                   <button @click="toggleDropdown(index)"
@@ -70,13 +70,29 @@
 
                 <!-- Regular Link -->
                 <router-link v-else :to="menu.menu_id_alias"
-                  class="rounded-md px-3 py-2 text-md font-medium text-gray-200 hover:text-white"
-                  :class="{ 'text-white': menu.menu_id_alias === '/app/dashboard' }">
+                   class="rounded-md px-3 py-2 text-md font-medium text-gray-200 hover:text-white"
+                   :class="{ 'text-white': menu.menu_id_alias === '/app/dashboard' }">
                   {{ menu.menu_name }}
                 </router-link>
               </template>
             </div>
           </div>
+        </div>
+
+        <!-- Right Side: Notifications -->
+        <div class="hidden md:flex items-center gap-4">
+          <router-link 
+            to="/notifications" 
+            class="relative p-2 text-gray-200 hover:text-white transition-colors"
+          >
+            <font-awesome-icon icon="bell" class="text-xl" />
+            <span 
+              v-if="unreadCount > 0"
+              class="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-teal-600"
+            >
+              {{ unreadCount > 9 ? '9+' : unreadCount }}
+            </span>
+          </router-link>
         </div>
       </div>
     </div>
@@ -109,6 +125,7 @@ const closeAllDropdowns = (e) => {
 onMounted(() => {
   document.addEventListener('click', closeAllDropdowns);
   fetchMenus();
+  store.dispatch(DISPATCHES.GET_UNREAD_NOTIFICATION_COUNT);
 });
 
 onUnmounted(() => {
@@ -133,6 +150,8 @@ const menus = computed(() => {
   };
   return [dashboard, ...rawMenus];
 });
+
+const unreadCount = computed(() => store.state.dashboard?.unreadCount || 0);
 
 const handleMouseEnter = (index) => {
   if (isPinned.value) {
