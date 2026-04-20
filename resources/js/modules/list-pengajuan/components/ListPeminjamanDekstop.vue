@@ -139,6 +139,7 @@
         :searchable="false"
         server-side
         @pageChange="handlePageChange"
+        @update:options="handleOptionsChange"
       >
         <template #no="{ slotProps }">
           {{ slotProps.index + 1 }}
@@ -328,6 +329,13 @@ export default {
     handlePageChange(page) {
       this.params.page = page - 1;
       this.fetchData();
+    },
+    handleOptionsChange(options) {
+      if (this.params.size !== options.itemsPerPage) {
+        this.params.size = options.itemsPerPage;
+        this.params.page = 0;
+        this.fetchData();
+      }
     },
     handleReset() {
       this.searchQuery = "";

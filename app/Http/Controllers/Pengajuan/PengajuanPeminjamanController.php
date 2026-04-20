@@ -58,7 +58,8 @@ class PengajuanPeminjamanController extends Controller
             }
 
             $size = $request->size ?? 10;
-            $data = $query->orderBy('created_at', 'desc')->paginate($size);
+            $page = $request->page !== null ? ((int) $request->page) + 1 : 1;
+            $data = $query->orderBy('created_at', 'desc')->paginate($size, ['*'], 'page', $page);
 
             // Map data untuk menambahkan properti 'ruangan' di level atas (mengambil item pertama)
             // Ini mempermudah integrasi dengan komponen UI yang ada
