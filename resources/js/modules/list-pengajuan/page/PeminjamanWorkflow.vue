@@ -103,9 +103,11 @@ export default {
         let targetName = null;
         if (item.aksi === 'SUBMITTED' && item.status?.role) {
           const roleName = item.status.role.name_role;
-          const targetUser = item.status.role.users?.[0]; // Taking the first user for now
-          if (targetUser) {
-            targetName = `${targetUser.username} - ${roleName}`;
+          const users = item.status.role.users || [];
+          
+          if (users.length > 0) {
+            const userNames = users.map(u => u.name).join(', ');
+            targetName = `${userNames} (${roleName})`;
           } else {
             targetName = roleName;
           }
