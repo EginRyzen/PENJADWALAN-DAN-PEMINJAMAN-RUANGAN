@@ -60,6 +60,7 @@ export default {
     // Master Data - Role Menus
     GET_ROLE_MENUS: "getRoleMenus",
     UPDATE_ROLE_MENUS: "updateRoleMenus",
+    GET_APP_MENU: "getAppMenu",
     SUBMIT_PENGAJUAN: "submitPengajuan",
     GET_LIST_PENGAJUAN: "getListPengajuan",
     GET_DETAIL_PENGAJUAN: "getDetailPengajuan",

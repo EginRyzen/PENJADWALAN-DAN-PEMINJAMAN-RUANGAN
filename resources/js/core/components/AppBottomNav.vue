@@ -2,7 +2,6 @@
   <!-- Mobile Bottom Navigation Bar (md:hidden) -->
   <nav class="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-white border-t border-gray-100 shadow-[0_-4px_20px_rgba(0,0,0,0.06)]">
     <div class="flex items-end justify-around px-2 pt-2 pb-safe">
-
       <!-- Dashboard -->
       <router-link
         to="/app/dashboard"
@@ -15,43 +14,31 @@
         <span class="bottom-nav-label">Dashboard</span>
       </router-link>
 
-      <!-- Notifikasi -->
-      <router-link
-        to="/notifications"
-        class="bottom-nav-item"
-        :class="isActive('/notifications') ? 'active' : ''"
-      >
-        <div class="bottom-nav-icon-wrap" :class="isActive('/notifications') ? 'active' : ''">
-          <font-awesome-icon icon="bell" class="bottom-nav-icon" />
-        </div>
-        <span class="bottom-nav-label">Notifikasi</span>
-      </router-link>
+      <!-- Dynamic Menus (Level 1) -->
+      <template v-for="menu in filteredMenus" :key="menu.id">
+        <button
+          @click="toggleDrawer(menu)"
+          class="bottom-nav-item"
+          :class="isActiveGroup(menu) ? 'active' : ''"
+        >
+          <div class="bottom-nav-icon-wrap" :class="isActiveGroup(menu) ? 'active' : ''">
+            <font-awesome-icon :icon="getMenuIcon(menu.menu_code)" class="bottom-nav-icon" />
+          </div>
+          <span class="bottom-nav-label">{{ menu.menu_name }}</span>
+        </button>
+      </template>
 
-      <!-- Gedung (with sub-menu drawer) -->
-      <button
-        @click="toggleDrawer('gedung')"
-        class="bottom-nav-item"
-        :class="isActiveGroup(['/app/gedung-list', '/app/list-peminjaman-ruangan', '/app/pengembalian-list', '/app/penjadwalan']) ? 'active' : ''"
-      >
-        <div class="bottom-nav-icon-wrap" :class="isActiveGroup(['/app/gedung-list', '/app/list-peminjaman-ruangan', '/app/pengembalian-list', '/app/penjadwalan']) ? 'active' : ''">
-          <font-awesome-icon icon="building" class="bottom-nav-icon" />
-        </div>
-        <span class="bottom-nav-label">Gedung</span>
-      </button>
-
-
-
-      <!-- Profile / Logout -->
+      <!-- Profile -->
       <button
         @click="toggleDrawer('profile')"
         class="bottom-nav-item"
+        :class="activeDrawer === 'profile' ? 'active' : ''"
       >
-        <div class="bottom-nav-icon-wrap">
+        <div class="bottom-nav-icon-wrap" :class="activeDrawer === 'profile' ? 'active' : ''">
           <font-awesome-icon icon="user-circle" class="bottom-nav-icon" />
         </div>
         <span class="bottom-nav-label">Profil</span>
       </button>
-
     </div>
 
     <!-- Sub-menu Backdrop -->
@@ -79,22 +66,41 @@
           {{ drawerTitle }}
         </p>
 
-        <!-- Gedung Menu -->
-        <template v-if="activeDrawer === 'gedung'">
+        <!-- Dynamic Menu Drawer -->
+        <template v-if="typeof activeDrawer === 'object'">
+          <div class="grid grid-cols-1 gap-1">
+            <template v-for="(child, childIndex) in activeDrawer.children" :key="child.id">
+              <!-- If child has children (Level 3) -->
+              <div v-if="child.children && child.children.length > 0" class="mb-2">
+                <p class="text-[10px] font-bold text-gray-400 px-4 py-2 uppercase tracking-tight">{{ child.menu_name }}</p>
+                <router-link
+                  v-for="grandchild in child.children"
+                  :key="grandchild.id"
+                  :to="grandchild.menu_id_alias"
+                  class="drawer-item ml-4"
+                  @click="closeDrawer"
+                >
+                  <div class="drawer-icon-wrap bg-teal-50">
+                    <font-awesome-icon icon="chevron-right" class="text-teal-500 text-[10px]" />
+                  </div>
+                  <span>{{ grandchild.menu_name }}</span>
+                </router-link>
+              </div>
 
-          <router-link to="/app/list-peminjaman-ruangan" class="drawer-item" @click="closeDrawer">
-            <div class="drawer-icon-wrap bg-blue-50">
-              <font-awesome-icon icon="clipboard-list" class="text-blue-500" />
-            </div>
-            <span>List Peminjaman</span>
-          </router-link>
-
-          <router-link to="/app/penjadwalan" class="drawer-item" @click="closeDrawer">
-            <div class="drawer-icon-wrap bg-purple-50">
-              <font-awesome-icon icon="calendar-alt" class="text-purple-500" />
-            </div>
-            <span>Penjadwalan</span>
-          </router-link>
+              <!-- Regular Level 2 link -->
+              <router-link
+                v-else
+                :to="child.menu_id_alias"
+                class="drawer-item"
+                @click="closeDrawer"
+              >
+                <div class="drawer-icon-wrap" :class="getDrawerIconBg(childIndex)">
+                  <font-awesome-icon :icon="getMenuIcon(child.menu_code)" :class="getDrawerIconColor(childIndex)" />
+                </div>
+                <span>{{ child.menu_name }}</span>
+              </router-link>
+            </template>
+          </div>
         </template>
 
 
@@ -125,33 +131,78 @@
 </template>
 
 <script setup>
-import { ref, computed } from "vue";
+import { ref, computed, onMounted } from "vue";
 import { useRoute, useRouter } from "vue-router";
+import { useStore } from "vuex";
+import DISPATCHES from "@/core/plugins/constants/dispatches";
 
 const route = useRoute();
 const router = useRouter();
+const store = useStore();
 
 const activeDrawer = ref(null);
 
-const drawerTitles = {
-  gedung: "Gedung",
-  masterdata: "Master Data",
-  settings: "Pengaturan",
-  profile: "Akun Saya",
-};
+onMounted(() => {
+  if (store.state.auth.appMenuList.length === 0) {
+    store.dispatch(DISPATCHES.GET_APP_MENU);
+  }
+});
 
-const drawerTitle = computed(() => drawerTitles[activeDrawer.value] || "");
+const filteredMenus = computed(() => {
+  // Only show Level 1 menus that are marked for mobile
+  return store.state.auth.appMenuList || [];
+});
+
+const drawerTitle = computed(() => {
+  if (typeof activeDrawer.value === 'object') {
+    return activeDrawer.value.menu_name;
+  }
+  if (activeDrawer.value === 'profile') return "Akun Saya";
+  return "";
+});
 
 const isActive = (path) => route.path === path;
 
-const isActiveGroup = (paths) => paths.some((p) => route.path.startsWith(p));
+const isActiveGroup = (menu) => {
+  if (!menu.children) return isActive(menu.menu_id_alias);
+  const checkChildren = (list) => {
+    return list.some(item => {
+      if (isActive(item.menu_id_alias)) return true;
+      if (item.children) return checkChildren(item.children);
+      return false;
+    });
+  };
+  return checkChildren(menu.children);
+};
 
-const toggleDrawer = (name) => {
-  activeDrawer.value = activeDrawer.value === name ? null : name;
+const toggleDrawer = (val) => {
+  activeDrawer.value = activeDrawer.value === val ? null : val;
 };
 
 const closeDrawer = () => {
   activeDrawer.value = null;
+};
+
+const getMenuIcon = (code) => {
+  const icons = {
+    'GEDUNG': 'building',
+    'MASTER': 'database',
+    'SETTING': 'cog',
+    'PINJAM': 'clipboard-list',
+    'KEMBALI': 'undo',
+    'JADWAL': 'calendar-alt',
+  };
+  return icons[code] || 'th-large';
+};
+
+const getDrawerIconBg = (index) => {
+  const colors = ['bg-blue-50', 'bg-purple-50', 'bg-orange-50', 'bg-pink-50', 'bg-teal-50'];
+  return colors[index % colors.length];
+};
+
+const getDrawerIconColor = (index) => {
+  const colors = ['text-blue-500', 'text-purple-500', 'text-orange-500', 'text-pink-500', 'text-teal-500'];
+  return colors[index % colors.length];
 };
 
 const userName = computed(() => {
