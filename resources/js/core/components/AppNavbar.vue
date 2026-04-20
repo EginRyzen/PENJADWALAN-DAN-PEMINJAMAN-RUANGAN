@@ -1,17 +1,17 @@
 <template>
   <nav class="relative app-teal z-50">
-    <div class="mx-auto px-2 sm:px-6 lg:px-8">
+    <div class="px-0 sm:px-6 lg:px-8">
       <div class="relative flex h-16 items-center justify-between">
         <div class="flex flex-1 items-center justify-center sm:items-stretch sm:justify-start">
           <div class="hidden md:block">
             <div class="flex space-x-4">
               <template v-for="(menu, index) in menus" :key="index">
-                <!-- Dropdown Menu -->
-                <div v-if="menu.children" class="relative group" @mouseenter="handleMouseEnter(index)"
+                <!-- ... existing menu logic ... -->
+                <div v-if="menu.children && menu.children.length > 0" class="relative group" @mouseenter="handleMouseEnter(index)"
                   @mouseleave="handleMouseLeave()">
                   <button @click="toggleDropdown(index)"
                     class="flex items-center gap-1 rounded-md px-3 py-2 text-md font-medium text-gray-200 hover:text-white transition">
-                    {{ menu.label }}
+                    {{ menu.menu_name }}
                     <svg class="w-4 h-4 transition-transform duration-200"
                       :class="{ 'rotate-180': activeDropdown === index }" fill="none" viewBox="0 0 24 24"
                       stroke="currentColor">
@@ -28,11 +28,11 @@
 
                       <template v-for="(child, childIndex) in menu.children" :key="childIndex">
                         <!-- Submenu / Secondary Dropdown -->
-                        <div v-if="child.children" class="relative" @mouseenter="handleSubMouseEnter(childIndex)"
+                        <div v-if="child.children && child.children.length > 0" class="relative" @mouseenter="handleSubMouseEnter(childIndex)"
                           @mouseleave="handleSubMouseLeave()">
                           <button @click.prevent="toggleSubDropdown(childIndex)"
                             class="w-full flex items-center justify-between px-4 py-2 text-md font-medium text-gray-500 hover:bg-indigo-50">
-                            {{ child.label }}
+                            {{ child.child_menu_name || child.menu_name }}
                             <svg class="w-4 h-4 transition-transform duration-200 -rotate-90" fill="none"
                               viewBox="0 0 24 24" stroke="currentColor">
                               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -49,18 +49,18 @@
                             <div v-if="activeSubDropdown === childIndex"
                               class="absolute left-full top-0 ml-1 w-56 rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50 border border-gray-100">
                               <router-link v-for="(grandchild, gcIndex) in child.children" :key="gcIndex"
-                                :to="grandchild.path"
+                                :to="grandchild.menu_id_alias"
                                 class="block px-4 py-2 text-md font-medium text-gray-500 hover:bg-indigo-50">
-                                {{ grandchild.label }}
+                                {{ grandchild.menu_name }}
                               </router-link>
                             </div>
                           </transition>
                         </div>
 
                         <!-- Regular Child Link -->
-                        <router-link v-else :to="child.path"
+                        <router-link v-else :to="child.menu_id_alias"
                           class="block px-4 py-2 text-md font-medium text-gray-500 hover:bg-indigo-50">
-                          {{ child.label }}
+                          {{ child.menu_name }}
                         </router-link>
                       </template>
 
@@ -69,14 +69,30 @@
                 </div>
 
                 <!-- Regular Link -->
-                <router-link v-else :to="menu.path"
-                  class="rounded-md px-3 py-2 text-md font-medium text-gray-200 hover:text-white"
-                  :class="{ 'text-white': menu.path === '/app/dashboard' }">
-                  {{ menu.label }}
+                <router-link v-else :to="menu.menu_id_alias"
+                   class="rounded-md px-3 py-2 text-md font-medium text-gray-200 hover:text-white"
+                   :class="{ 'text-white': menu.menu_id_alias === '/app/dashboard' }">
+                  {{ menu.menu_name }}
                 </router-link>
               </template>
             </div>
           </div>
+        </div>
+
+        <!-- Right Side: Notifications -->
+        <div class="hidden md:flex items-center gap-4">
+          <router-link 
+            to="/notifications" 
+            class="relative p-2 text-gray-200 hover:text-white transition-colors"
+          >
+            <font-awesome-icon icon="bell" class="text-xl" />
+            <span 
+              v-if="unreadCount > 0"
+              class="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-teal-600"
+            >
+              {{ unreadCount > 9 ? '9+' : unreadCount }}
+            </span>
+          </router-link>
         </div>
       </div>
     </div>
@@ -84,8 +100,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from "vue";
+import { ref, onMounted, onUnmounted, computed } from "vue";
+import { useStore } from "vuex";
+import DISPATCHES from "@/core/plugins/constants/dispatches";
 
+const store = useStore();
 const activeDropdown = ref(null);
 const activeSubDropdown = ref(null);
 const isPinned = ref(false);
@@ -105,55 +124,34 @@ const closeAllDropdowns = (e) => {
 
 onMounted(() => {
   document.addEventListener('click', closeAllDropdowns);
+  fetchMenus();
+  store.dispatch(DISPATCHES.GET_UNREAD_NOTIFICATION_COUNT);
 });
 
 onUnmounted(() => {
   document.removeEventListener('click', closeAllDropdowns);
 });
 
-const menus = ref([
-  {
-    label: "Dashboard",
-    path: "/app/dashboard",
-  },
-  {
-    label: "Gedung",
-    children: [
-      { label: "Profil Gedung", path: "/app/gedung-list" },
-      {
-        label: "Peminjaman Gedung",
-        children: [
-          { label: "List Peminjaman", path: "/app/list-peminjaman-ruangan" },
-          { label: "List Pengembalian", path: "/app/pengembalian-list" },
-        ]
-      },
-      { label: "Penjadwalan", path: "/app/penjadwalan" },
-    ],
-  },
-  {
-    label: "Master Data",
-    children: [
-      {
-        label: "General",
-        children: [
-          { label: "Mata Kuliah", path: "/app/mata-kuliah" },
-          { label: "Program Studi", path: "/app/program-studi" },
-        ]
-      },
-      { label: "Mahasiswa", path: "/app/mahasiswa-list" },
-      { label: "Dosen", path: "/app/dosen-list" },
-    ],
-  },
-  {
-    label: "Settings",
-    children: [
-      { label: "Kelas", path: "/app/pengaturan-kelas" },
-      { label: "Ujian", path: "/app/pengaturan-ujian-ruangan" },
-      { label: "Hari Libur", path: "/app/pengaturan-hari-libur" },
-      { label: "Periode", path: "/app/pengaturan-periode" },
-    ],
-  },
-]);
+const fetchMenus = async () => {
+  try {
+    await store.dispatch(DISPATCHES.GET_APP_MENU);
+  } catch (error) {
+    console.error("Failed to fetch app menu:", error);
+  }
+};
+
+const menus = computed(() => {
+  const rawMenus = store.state.auth.appMenuList || [];
+  // Dashboard is always first and not coming from dynamic menu usually
+  const dashboard = {
+    menu_name: "Dashboard",
+    menu_id_alias: "/app/dashboard",
+    children: []
+  };
+  return [dashboard, ...rawMenus];
+});
+
+const unreadCount = computed(() => store.state.dashboard?.unreadCount || 0);
 
 const handleMouseEnter = (index) => {
   if (isPinned.value) {
@@ -208,4 +206,4 @@ const toggleSubDropdown = (childIndex) => {
     isPinned.value = true;
   }
 };
-</script>
+</script>

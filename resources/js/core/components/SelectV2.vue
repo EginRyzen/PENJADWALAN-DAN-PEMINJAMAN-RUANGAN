@@ -342,7 +342,7 @@ export default {
   watch: {
     value: {
       handler: function () {
-        this.all = this.value.length === this.options.length && this.multiple;
+        this.all = (this.value && Array.isArray(this.value) && this.value.length === this.options.length) && this.multiple;
         if (this.onMobileAutoApply) {
           this.bottomSheetValues = [...this.value];
         }

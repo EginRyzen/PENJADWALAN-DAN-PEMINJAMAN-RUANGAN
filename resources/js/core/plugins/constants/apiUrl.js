@@ -21,8 +21,15 @@ const apiUrl = {
     DOSEN: "/master-data/dosen",
     PERIODE: "/master-data/periodes",
     HARI_LIBUR: "/master-data/hari-libur",
+    MENU: "/master-data/menus",
+    ROLE_MENU: "/master-data/role-menus",
+    APP_MENU: "/app-menu",
     SUBMIT_PENGAJUAN: "/pengajuan/peminjaman",
     GET_DETAIL_PENGAJUAN: "/pengajuan/peminjaman",
     GET_WORKFLOW_HISTORY: "/pengajuan/peminjaman",
+    NOTIFICATIONS: "/notifications",
+    NOTIFICATION_UNREAD_COUNT: "/notifications/unread-count",
+    MARK_ALL_NOTIFICATIONS_READ: "/notifications/mark-all-read",
+    MARK_NOTIFICATION_READ: "/notifications",
 };
 export default apiUrl;

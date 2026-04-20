@@ -183,7 +183,7 @@ export default {
       records: [],
       search: "",
       pageIndex: 0,
-      pageCount: this.options.itemsPerPage || 10,
+      pageCount: (this.options && this.options.itemsPerPage) || 10,
       currentPage: 1,
       totalPage: 0,
       totalRecords: 0,

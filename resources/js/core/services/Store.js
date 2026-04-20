@@ -5,6 +5,7 @@ import { Store as masterData } from '@/modules/master-data/store/master-data.sto
 import { Store as listPengajuan } from '@/modules/list-pengajuan/store/list-pengajuan.store';
 import { Store as settings } from '@/modules/settings/store/setting.store';
 import penjadwalan from '@/modules/penjadwalan/store/penjadwalan.store';
+import { Store as dashboard } from '@/modules/dashboard/store/store.dashboard';
 import LOADING_MESSAGE from '@/core/plugins/constants/loadingMessage';
 
 export default createStore({
@@ -30,5 +31,6 @@ export default createStore({
     listPengajuan,
     settings,
     penjadwalan,
+    dashboard,
   }
 });

@@ -43,6 +43,16 @@ class User extends Authenticatable
         return $this->hasMany(PengajuanHistory::class, 'user_id');
     }
 
+    public function notifications()
+    {
+        return $this->hasMany(Notification::class, 'notifiable_id');
+    }
+
+    public function unreadNotifications()
+    {
+        return $this->morphMany(Notification::class, 'notifiable')->whereNull('read_at');
+    }
+
     /**
      * The attributes that should be hidden for serialization.
      *

@@ -6,6 +6,7 @@ import LOADING_MESSAGE from "@/core/plugins/constants/loadingMessage";
 const defaultState = () => ({
     user: null,
     token: localStorage.getItem("token") || null,
+    appMenuList: [],
 });
 
 export const Store = {
@@ -18,6 +19,9 @@ export const Store = {
         },
         SET_USER(state, user) {
             state.user = user;
+        },
+        SET_APP_MENU(state, payload) {
+            state.appMenuList = payload;
         },
         RESET_AUTH(state) {
             Object.assign(state, defaultState());
@@ -57,7 +61,7 @@ export const Store = {
             }
         },
 
-        async [actions.GET_USER_PROFILE]({ commit }) {
+        async [actions.GET_USER_PROFILE]({ commit, dispatch }) {
             try {
                 const response = await Api.get(apiUrl.USER_PROFILE);
                 const userData =
@@ -69,11 +73,25 @@ export const Store = {
                     JSON.stringify(userData.roles),
                 );
 
+                // Fetch app menu after profile is loaded
+                await dispatch(actions.GET_APP_MENU);
+
                 return response.data;
             } catch (error) {
                 if (error.response?.status === 401) {
                     commit("RESET_AUTH");
                 }
+                throw error;
+            }
+        },
+        async [actions.GET_APP_MENU]({ commit }) {
+            try {
+                const response = await Api.get(apiUrl.APP_MENU);
+                const data = response.data.result;
+                commit("SET_APP_MENU", data);
+                return data;
+            } catch (error) {
+                console.error("Error Fetching App Menu:", error);
                 throw error;
             }
         },

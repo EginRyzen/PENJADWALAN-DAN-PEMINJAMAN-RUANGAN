@@ -16,6 +16,9 @@ use App\Http\Controllers\MasterData\MasterSksSettingController;
 use App\Http\Controllers\MasterData\MasterOperasionalScheduleController;
 use App\Http\Controllers\MasterData\MasterPeriodeController;
 use App\Http\Controllers\MasterData\MasterDataHariLiburController;
+use App\Http\Controllers\MasterData\MenuController;
+use App\Http\Controllers\MasterData\RoleMenuController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +40,15 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user/profile', [AuthController::class, 'me']);
     Route::get('/user', function (Request $request) {
         return $request->user();
+    });
+    Route::get('app-menu', [MenuController::class, 'appMenu']);
+
+    // Notifications
+    Route::prefix('notifications')->group(function () {
+        Route::get('/', [NotificationController::class, 'index']);
+        Route::get('/unread-count', [NotificationController::class, 'unreadCount']);
+        Route::post('/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+        Route::post('/{id}/mark-read', [NotificationController::class, 'markAsRead']);
     });
 
     Route::prefix('documents')->group(function () {
@@ -60,6 +72,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('sks-setting', MasterSksSettingController::class);
         Route::apiResource('periodes', MasterPeriodeController::class);
         Route::apiResource('hari-libur', MasterDataHariLiburController::class);
+        Route::apiResource('menus', MenuController::class);
+        Route::apiResource('role-menus', RoleMenuController::class);
         Route::post('operasional-schedule/bulk-update', [MasterOperasionalScheduleController::class, 'bulkUpdate']);
         Route::apiResource('operasional-schedule', MasterOperasionalScheduleController::class);
     });

@@ -1,5 +1,5 @@
 <template>
-  <div class="mobile-container pb-20">
+  <div class="mobile-container pb-20" ref="mobileContainer">
     <!-- Header Section -->
     <div class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-100 p-4 shadow-sm">
       <div class="flex justify-between items-center mb-4">
@@ -292,11 +292,24 @@ export default {
   mounted() {
     this.fetchData();
     this.fetchBuildingOptions();
-    window.addEventListener("scroll", this.handleScroll);
+    this.$nextTick(() => {
+      // Attach scroll to the parent scrollable container (from MasterLayout)
+      const scrollEl = this.$el.closest('.overflow-y-auto');
+      if (scrollEl) {
+        this._scrollEl = scrollEl;
+        scrollEl.addEventListener("scroll", this.handleScroll);
+      } else {
+        window.addEventListener("scroll", this.handleScroll);
+      }
+    });
     window.addEventListener("resize", this.onResize);
   },
   beforeDestroy() {
-    window.removeEventListener("scroll", this.handleScroll);
+    if (this._scrollEl) {
+      this._scrollEl.removeEventListener("scroll", this.handleScroll);
+    } else {
+      window.removeEventListener("scroll", this.handleScroll);
+    }
     window.removeEventListener("resize", this.onResize);
   },
   computed: {
@@ -370,9 +383,10 @@ export default {
     },
     handleScroll() {
       // Check if user is near bottom (within 100px)
-      const scrollHeight = document.documentElement.scrollHeight;
-      const scrollTop = document.documentElement.scrollTop;
-      const clientHeight = document.documentElement.clientHeight;
+      const el = this._scrollEl || document.documentElement;
+      const scrollHeight = el.scrollHeight;
+      const scrollTop = el.scrollTop;
+      const clientHeight = el.clientHeight;
 
       if (scrollTop + clientHeight >= scrollHeight - 100) {
         if (!this.loading && this.pengajuans.length < this.pagination.total_elements) {
@@ -485,10 +499,10 @@ export default {
 
 <style scoped>
 .mobile-container {
-  max-width: 100%;
+  width: 100%;
   overflow-x: hidden;
   background-color: #fcfcfc;
-  min-height: 100vh;
+  min-height: 100%;
 }
 
 .card-item {
