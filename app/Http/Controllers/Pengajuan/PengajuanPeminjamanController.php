@@ -11,8 +11,11 @@ use App\Models\PengajuanHistory;
 use App\Models\PengajuanRuangan;
 use App\Models\PengajuanRuanganItem;
 use App\Models\WorkflowStep;
+use App\Models\User;
+use App\Notifications\NewPengajuanNotification;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
@@ -55,7 +58,8 @@ class PengajuanPeminjamanController extends Controller
             }
 
             $size = $request->size ?? 10;
-            $data = $query->orderBy('created_at', 'desc')->paginate($size);
+            $page = $request->page !== null ? ((int) $request->page) + 1 : 1;
+            $data = $query->orderBy('created_at', 'desc')->paginate($size, ['*'], 'page', $page);
 
             // Map data untuk menambahkan properti 'ruangan' di level atas (mengambil item pertama)
             // Ini mempermudah integrasi dengan komponen UI yang ada
@@ -212,6 +216,28 @@ class PengajuanPeminjamanController extends Controller
                         // 'catatan' => 'Mengajukan peminjaman ruangan',
                         'sequence' => 2,
                     ]);
+                }
+
+                // 9. Send Notification to next approvers based on workflow
+                if ($nextStatus && $nextStatus->role) {
+                    try {
+                        // Ambil semua user yang memiliki role dari status berikutnya
+                        $nextApprovers = $nextStatus->role->users;
+
+                        if ($nextApprovers && $nextApprovers->count() > 0) {
+                            foreach ($nextApprovers as $approver) {
+                                try {
+                                    $approver->notify(new NewPengajuanNotification($pengajuan, $user));
+                                } catch (\Exception $e) {
+                                    // Log error khusus untuk user ini agar tidak menghentikan notifikasi ke user lain
+                                    logger()->error('Gagal mengirim notifikasi ke: ' . $approver->email . ' Error: ' . $e->getMessage());
+                                }
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        logger()->error('Notification Error: ' . $e->getMessage());
+                        // Don't throw error, allow booking to succeed even if notification fails
+                    }
                 }
 
                 return response()->json([
