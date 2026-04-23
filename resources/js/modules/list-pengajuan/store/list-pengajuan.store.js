@@ -109,6 +109,16 @@ export const Store = {
       }
     },
 
+    async [actions.APPROVE_PENGAJUAN]({ commit }, payload) {
+      try {
+        const response = await Api.post(apiUrl.APPROVE_PENGAJUAN, payload);
+        return response.data;
+      } catch (error) {
+        console.error('Error approving pengajuan:', error);
+        throw error;
+      }
+    },
+
     async [actions.UPLOAD_IMAGE]({ commit }, file) {
       try {
         const formData = new FormData();

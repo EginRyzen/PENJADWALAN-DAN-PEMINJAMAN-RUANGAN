@@ -82,6 +82,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/peminjaman', [PengajuanPeminjamanController::class, 'index']);
         Route::post('/peminjaman', [PengajuanPeminjamanController::class, 'store']);
         Route::get('/peminjaman/{id}', [PengajuanPeminjamanController::class, 'show']);
+        Route::post('/approve', [PengajuanPeminjamanController::class, 'approve']);
         Route::get('/peminjaman/{id}/workflow', [PengajuanWorkflowController::class, 'index']);
     });
 });

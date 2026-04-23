@@ -69,4 +69,5 @@ export default {
     GET_LIST_PENGAJUAN: "getListPengajuan",
     GET_DETAIL_PENGAJUAN: "getDetailPengajuan",
     GET_WORKFLOW_HISTORY: "getWorkflowHistory",
+    APPROVE_PENGAJUAN: "approvePengajuan",
 }

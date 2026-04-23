@@ -292,6 +292,116 @@ class PengajuanPeminjamanController extends Controller
     }
 
     /**
+     * Approve a pengajuan.
+     */
+    public function approve(Request $request)
+    {
+        try {
+            $request->validate([
+                'pengajuan_id' => 'required|uuid',
+                'catatan' => 'nullable|string'
+            ]);
+
+            return DB::transaction(function () use ($request) {
+                $user = auth()->user();
+                $pengajuan = PengajuanRuangan::with(['status.role', 'user'])->findOrFail($request->pengajuan_id);
+                $currentStatus = $pengajuan->status;
+
+                if (!$currentStatus) {
+                    return response()->json(['message' => 'Status pengajuan tidak ditemukan.'], 404);
+                }
+
+                // 1. Otorisasi Fleksibel
+                // Pastikan role user yang login mencakup role yang ditugaskan untuk status ini
+                $requiredRole = $currentStatus->role ? $currentStatus->role->name_role : null;
+                $userRoles = $user->roles->pluck('name_role')->toArray();
+
+                if (!$requiredRole || !in_array($requiredRole, $userRoles)) {
+                    return response()->json(['message' => 'Anda tidak berwenang melakukan approve pada tahap ini.'], 403);
+                }
+
+                // 2. Tentukan status selanjutnya (Logic Spesifik & Dinamis)
+                $nextStatus = null;
+                
+                // KASUS SPESIFIK: Tipe PEMBELAJARAN, Role TENAGA_TU, dan Status VERIFIKASI_TU
+                if ($pengajuan->tipe_pengajuan === 'PEMBELAJARAN' && $currentStatus->nama_status === 'VERIFIKASI_TU' && $requiredRole === 'TENAGA_TU') {
+                    // Lompat ke status final
+                    $nextStatus = WorkflowStep::where('tipe_pengajuan', 'PEMBELAJARAN')
+                        ->where(function($q) {
+                            $q->where('nama_status', 'COMPLETED')
+                              ->orWhere('nama_status', 'DISETUJUI')
+                              ->orWhere('is_final', true);
+                        })->first();
+                } else {
+                    // KASUS NORMAL: Ambil urutan langkah selanjutnya dari Workflow
+                    $nextStatus = WorkflowStep::where('tipe_pengajuan', $pengajuan->tipe_pengajuan)
+                        ->where('urutan', '>', $currentStatus->urutan)
+                        ->orderBy('urutan', 'asc')
+                        ->first();
+                }
+
+                if (!$nextStatus) {
+                    return response()->json(['message' => 'Workflow selanjutnya tidak ditemukan atau pengajuan sudah final.'], 400);
+                }
+
+                // 3. Update Status Pengajuan
+                $pengajuan->current_status_id = $nextStatus->id;
+                $pengajuan->save();
+
+                $isFinal = $nextStatus->is_final || in_array($nextStatus->nama_status, ['COMPLETED', 'DISETUJUI']);
+
+                // 4. Catat Sejarah Approval (History)
+                $lastSequence = PengajuanHistory::where('pengajuan_id', $pengajuan->id)->max('sequence') ?? 0;
+                
+                // Record action dari user yang meng-approve
+                PengajuanHistory::create([
+                    'pengajuan_id' => $pengajuan->id,
+                    'status_id' => $nextStatus->id,
+                    'user_id' => $user->id,
+                    'aksi' => $isFinal ? 'COMPLETED' : 'APPROVE',
+                    'catatan' => $request->catatan,
+                    'sequence' => $lastSequence + 1,
+                ]);
+
+                // 5. Sistem Notifikasi
+                if ($isFinal) {
+                    // Kirim Notifikasi Selesai ke Pembuat Pengajuan
+                    $requester = $pengajuan->user;
+                    if ($requester) {
+                        try {
+                            $requester->notify(new \App\Notifications\PengajuanCompletedNotification($pengajuan));
+                        } catch (\Exception $e) {
+                            logger()->error('Notification Error (Completed): ' . $e->getMessage());
+                        }
+                    }
+                } else {
+                    // Kirim Notifikasi ke Approver Selanjutnya
+                    if ($nextStatus->role) {
+                        $nextApprovers = $nextStatus->role->users;
+                        if ($nextApprovers && $nextApprovers->count() > 0) {
+                            foreach ($nextApprovers as $approver) {
+                                try {
+                                    $approver->notify(new NewPengajuanNotification($pengajuan, $user));
+                                } catch (\Exception $e) {
+                                    logger()->error('Notification Error (Next Approver): ' . $e->getMessage());
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return response()->json([
+                    'message' => 'Pengajuan berhasil di-approve.',
+                    'data' => $pengajuan
+                ]);
+            });
+        } catch (\Exception $e) {
+            logger()->error('Approve Error: ' . $e->getMessage());
+            return response()->json(['message' => 'Terjadi kesalahan saat memproses approval.'], 500);
+        }
+    }
+
+    /**
      * Show the form for editing the specified resource.
      */
     public function edit(string $id)

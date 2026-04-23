@@ -109,7 +109,7 @@
             </div>
           </button>
         </div>
-        <router-link :to="{ name: 'peminjaman.create' }">
+        <router-link v-if="canCreatePengajuan" :to="{ name: 'peminjaman.create' }">
           <button-app
             color="teal"
             size="sm"
@@ -273,6 +273,27 @@ export default {
     };
   },
   computed: {
+    canCreatePengajuan() {
+      // Coba ambil dari Vuex state terlebih dahulu
+      const user = this.$store.state.auth.user;
+      let roles = [];
+
+      if (user && user.roles) {
+        roles = user.roles;
+      } else {
+        // Fallback: Ambil dari localStorage jika user belum ter-load dari API akibat refresh
+        const savedRoles = localStorage.getItem('user_roles');
+        if (savedRoles) {
+          try {
+            roles = JSON.parse(savedRoles);
+          } catch (e) {
+            roles = [];
+          }
+        }
+      }
+
+      return roles.includes('MAHASISWA') || roles.includes('DOSEN');
+    },
     pengajuans() {
       return this.$store.state.listPengajuan.pengajuans;
     },

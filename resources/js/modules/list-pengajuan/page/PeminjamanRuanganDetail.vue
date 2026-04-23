@@ -186,7 +186,7 @@
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex flex-col md:flex-row justify-center items-center gap-4 pb-10">
+      <div v-if="showActionButtons" class="flex flex-col md:flex-row justify-center items-center gap-4 pb-10">
         <button 
           @click="showActionModal('tolak')"
           class="w-full md:w-56 h-12 rounded-xl border-2 border-red-500 text-red-500 font-bold hover:bg-red-50 transition-all flex justify-center items-center gap-2 shadow-lg shadow-red-500/5 active:scale-95"
@@ -214,6 +214,27 @@
         @close="actionModal.show = false"
         @confirm="handleModalConfirm"
       />
+
+      <!-- Success Modal -->
+      <dialog :class="['modal modal-bottom sm:modal-middle z-[9999]', { 'modal-open': successModal.show }]">
+        <div class="modal-box bg-white text-center rounded-3xl p-8 shadow-2xl relative overflow-hidden">
+          <!-- Decorative Glow -->
+          <div class="absolute -top-10 -right-10 w-32 h-32 bg-teal-50 rounded-full blur-3xl opacity-50"></div>
+          
+          <div class="flex justify-center mb-6 text-[#2DD4BF] relative animate-bounce">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24 drop-shadow-lg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <h3 class="font-extrabold text-3xl mb-2 text-slate-800 tracking-tight">Berhasil!</h3>
+          <p class="py-2 text-slate-500 font-medium">Pengajuan telah berhasil disetujui.</p>
+          <div class="modal-action justify-center mt-8">
+            <button class="h-12 w-full rounded-xl font-extrabold text-sm transition-all text-white bg-[#2DD4BF] hover:bg-[#26bba8] active:scale-95 shadow-lg shadow-teal-500/20" @click="closeSuccessModal">
+              Tutup & Kembali
+            </button>
+          </div>
+        </div>
+      </dialog>
     </div>
   </div>
 </template>
@@ -264,6 +285,9 @@ export default {
         show: false,
         type: "",
         config: {}
+      },
+      successModal: {
+        show: false
       }
     };
   },
@@ -271,6 +295,31 @@ export default {
     formatDateRange() {
       if (!this.form.tanggal_start || !this.form.tanggal_end) return "-";
       return `${moment(this.form.tanggal_start).format("DD/MM/YYYY")} - ${moment(this.form.tanggal_end).format("DD/MM/YYYY")}`;
+    },
+    showActionButtons() {
+      // 1. Periksa apakah status pengajuan saat ini adalah VERIFIKASI_TU
+      const isStatusVerifikasi = this.form.status?.nama_status === 'VERIFIKASI_TU';
+      
+      // 2. Periksa apakah user yang sedang login memiliki role TENAGA_TU
+      const user = this.$store.state.auth.user;
+      let roles = [];
+      if (user && user.roles) {
+        roles = user.roles;
+      } else {
+        const savedRoles = localStorage.getItem('user_roles');
+        if (savedRoles) {
+          try {
+            roles = JSON.parse(savedRoles);
+          } catch (e) {
+            roles = [];
+          }
+        }
+      }
+      
+      const isTenagaTU = roles.includes('TENAGA_TU');
+
+      // Tampilkan tombol HANYA JIKA kedua kondisi terpenuhi
+      return isStatusVerifikasi && isTenagaTU;
     }
   },
   mounted() {
@@ -404,25 +453,35 @@ export default {
       }
       this.actionModal.show = true;
     },
-    handleModalConfirm(comment) {
+    async handleModalConfirm(comment) {
       const action = this.actionModal.type;
-      let newStatus = "";
       
-      switch(action) {
-        case 'setuju':
-          newStatus = "Completed";
-          break;
-        case 'tolak':
-          newStatus = "Rejected";
-          break;
-        case 'koreksi':
-          newStatus = "Koreksi";
-          break;
-      }
-
-      this.form.status.nama_status = newStatus;
+      this.$store.commit("SET_LOADING", true);
       this.actionModal.show = false;
-      alert(`Pengajuan berhasil di-${action === 'setuju' ? 'selesaikan' : action}${comment ? ' dengan alasan: ' + comment : ''}`);
+
+      try {
+        if (action === 'setuju') {
+          // Panggil API endpoint untuk Approve
+          await this.$store.dispatch(DISPATCH.APPROVE_PENGAJUAN, {
+            pengajuan_id: this.form.id,
+            catatan: comment || ''
+          });
+          
+          // Tampilkan Modal Success
+          this.successModal.show = true;
+        } else {
+          // Untuk Tolak dan Koreksi (Belum ada endpoint backend-nya di scope ini)
+          alert(`Fitur ${action} sedang dalam tahap pengembangan.`);
+        }
+      } catch (error) {
+        // Error sudah ditangani secara global oleh interceptor Api.js (muncul sebagai Toast popup)
+        console.error("Proses approval gagal:", error);
+      } finally {
+        this.$store.commit("SET_LOADING", false);
+      }
+    },
+    closeSuccessModal() {
+      this.successModal.show = false;
       this.goBack();
     },
     getStatusStyle(status) {
