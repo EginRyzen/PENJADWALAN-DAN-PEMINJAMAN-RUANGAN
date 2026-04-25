@@ -70,4 +70,12 @@ export default {
     GET_DETAIL_PENGAJUAN: "getDetailPengajuan",
     GET_WORKFLOW_HISTORY: "getWorkflowHistory",
     APPROVE_PENGAJUAN: "approvePengajuan",
+    // Penjadwalan Ujian
+    GET_JADWAL:           "getJadwal",
+    GET_JADWAL_DRAFT:     "getJadwalDraft",
+    GENERATE_JADWAL:      "generateJadwal",
+    SAVE_JADWAL_DRAFT:    "saveJadwalDraft",
+    UPDATE_JADWAL_ROW:    "updateJadwalRow",
+    SAVE_JADWAL_PERMANEN: "saveJadwalPermanen",
+    DELETE_JADWAL_DRAFT:  "deleteJadwalDraft",
 }

@@ -3,101 +3,43 @@ import actions from "@/core/plugins/constants/actions";
 import Api from "@/core/services/Api";
 
 // ============================================================
-// MOCK DATA — akan diganti dengan API calls nanti
-// ============================================================
-const MOCK_PRODI = [
-    { id: 1, kode: 'TIF', nama: 'Teknik Informatika' },
-    { id: 2, kode: 'SI',  nama: 'Sistem Informasi' },
-    { id: 3, kode: 'TK',  nama: 'Teknik Komputer' },
-    { id: 4, kode: 'AKT', nama: 'Akuntansi' },
-    { id: 5, kode: 'MGT', nama: 'Manajemen' },
-    { id: 6, kode: 'HKM', nama: 'Hukum' },
-    { id: 7, kode: 'PSI', nama: 'Psikologi' },
-    { id: 8, kode: 'PBI', nama: 'Pendidikan Bahasa Inggris' },
-];
-
-const MOCK_KELAS = {
-    1: ['A', 'B', 'C'],
-    2: ['A', 'B'],
-    3: ['A', 'B', 'C', 'D'],
-    4: ['A', 'B'],
-    5: ['A', 'B', 'C'],
-    6: ['A', 'B'],
-    7: ['A'],
-    8: ['A', 'B'],
-};
-
-const MOCK_RUANGAN = [
-    { id: 1, nama: 'R.101', kapasitas: 40 },
-    { id: 2, nama: 'R.102', kapasitas: 40 },
-    { id: 3, nama: 'R.201', kapasitas: 50 },
-    { id: 4, nama: 'R.202', kapasitas: 50 },
-    { id: 5, nama: 'Aula A', kapasitas: 120 },
-    { id: 6, nama: 'Lab. Komputer 1', kapasitas: 35 },
-];
-
-const MOCK_DOSEN = [
-    { id: 1, nama: 'Dr. Budi Santoso, M.Kom' },
-    { id: 2, nama: 'Dr. Sari Dewi, M.T' },
-    { id: 3, nama: 'Prof. Ahmad Fauzi, Ph.D' },
-    { id: 4, nama: 'Dr. Lisa Permata, M.Si' },
-    { id: 5, nama: 'Ir. Hendra Wijaya, M.T' },
-    { id: 6, nama: 'Dr. Ratna Sari, M.Kom' },
-];
-
-const MOCK_JADWAL = [
-    { id: 'TMP-001', mk_kode: 'IF001', mk_nama: 'Basis Data', sks: 3, prodi_id: 1, prodi_kode: 'TIF', prodi_nama: 'Teknik Informatika', kelas: 'A', tanggal: '2025-05-12', hari: 'Senin', jam_mulai: '08:00', jam_selesai: '10:30', durasi: 150, ruangan_id: 1, ruangan_nama: 'R.101', kapasitas: 40, jumlah_peserta: 35, dosen_id: 1, dosen_nama: 'Dr. Budi Santoso, M.Kom', status: 'ok', conflict_reason: null },
-    { id: 'TMP-002', mk_kode: 'IF002', mk_nama: 'Pemrograman Web', sks: 3, prodi_id: 1, prodi_kode: 'TIF', prodi_nama: 'Teknik Informatika', kelas: 'A', tanggal: '2025-05-12', hari: 'Senin', jam_mulai: '08:00', jam_selesai: '10:30', durasi: 150, ruangan_id: 1, ruangan_nama: 'R.101', kapasitas: 40, jumlah_peserta: 38, dosen_id: 2, dosen_nama: 'Dr. Sari Dewi, M.T', status: 'conflict', conflict_reason: 'Ruangan R.101 sudah digunakan oleh IF001 pada waktu yang sama' },
-    { id: 'TMP-003', mk_kode: 'IF003', mk_nama: 'Algoritma & Struktur Data', sks: 3, prodi_id: 1, prodi_kode: 'TIF', prodi_nama: 'Teknik Informatika', kelas: 'B', tanggal: '2025-05-13', hari: 'Selasa', jam_mulai: '09:00', jam_selesai: '11:30', durasi: 150, ruangan_id: 3, ruangan_nama: 'R.201', kapasitas: 50, jumlah_peserta: 40, dosen_id: 3, dosen_nama: 'Prof. Ahmad Fauzi, Ph.D', status: 'edited', conflict_reason: null },
-    { id: 'TMP-004', mk_kode: 'IF004', mk_nama: 'Jaringan Komputer', sks: 2, prodi_id: 1, prodi_kode: 'TIF', prodi_nama: 'Teknik Informatika', kelas: 'C', tanggal: '2025-05-14', hari: 'Rabu', jam_mulai: '08:00', jam_selesai: '09:40', durasi: 100, ruangan_id: 2, ruangan_nama: 'R.102', kapasitas: 40, jumlah_peserta: 32, dosen_id: 5, dosen_nama: 'Ir. Hendra Wijaya, M.T', status: 'ok', conflict_reason: null },
-    { id: 'TMP-005', mk_kode: 'SI001', mk_nama: 'Sistem Basis Data', sks: 3, prodi_id: 2, prodi_kode: 'SI', prodi_nama: 'Sistem Informasi', kelas: 'A', tanggal: '2025-05-12', hari: 'Senin', jam_mulai: '11:00', jam_selesai: '13:30', durasi: 150, ruangan_id: 4, ruangan_nama: 'R.202', kapasitas: 50, jumlah_peserta: 45, dosen_id: 4, dosen_nama: 'Dr. Lisa Permata, M.Si', status: 'ok', conflict_reason: null },
-    { id: 'TMP-006', mk_kode: 'SI002', mk_nama: 'Analisis Sistem', sks: 2, prodi_id: 2, prodi_kode: 'SI', prodi_nama: 'Sistem Informasi', kelas: 'B', tanggal: '2025-05-13', hari: 'Selasa', jam_mulai: '08:00', jam_selesai: '09:40', durasi: 100, ruangan_id: 3, ruangan_nama: 'R.201', kapasitas: 50, jumlah_peserta: 28, dosen_id: 6, dosen_nama: 'Dr. Ratna Sari, M.Kom', status: 'ok', conflict_reason: null },
-    { id: 'TMP-007', mk_kode: 'TK001', mk_nama: 'Elektronika Dasar', sks: 4, prodi_id: 3, prodi_kode: 'TK', prodi_nama: 'Teknik Komputer', kelas: 'A', tanggal: '2025-05-14', hari: 'Rabu', jam_mulai: '08:00', jam_selesai: '11:20', durasi: 200, ruangan_id: 5, ruangan_nama: 'Aula A', kapasitas: 120, jumlah_peserta: 85, dosen_id: 1, dosen_nama: 'Dr. Budi Santoso, M.Kom', status: 'ok', conflict_reason: null },
-    { id: 'TMP-008', mk_kode: 'AK001', mk_nama: 'Akuntansi Keuangan', sks: 3, prodi_id: 4, prodi_kode: 'AKT', prodi_nama: 'Akuntansi', kelas: 'A', tanggal: '2025-05-15', hari: 'Kamis', jam_mulai: '08:00', jam_selesai: '10:30', durasi: 150, ruangan_id: 2, ruangan_nama: 'R.102', kapasitas: 40, jumlah_peserta: 36, dosen_id: 4, dosen_nama: 'Dr. Lisa Permata, M.Si', status: 'ok', conflict_reason: null },
-];
-
-const MOCK_HARI_LIBUR = [
-    { id: 1, tanggal: '2025-04-18', keterangan: 'Wafat Isa Almasih', tipe: 'nasional' },
-    { id: 2, tanggal: '2025-05-01', keterangan: 'Hari Buruh Internasional', tipe: 'nasional' },
-    { id: 3, tanggal: '2025-05-12', keterangan: 'Hari Raya Waisak', tipe: 'nasional' },
-    { id: 4, tanggal: '2025-05-29', keterangan: 'Kenaikan Isa Almasih', tipe: 'nasional' },
-    { id: 5, tanggal: '2025-06-01', keterangan: 'Hari Lahir Pancasila', tipe: 'nasional' },
-    { id: 6, tanggal: '2025-04-21', keterangan: 'Dies Natalis Kampus', tipe: 'kampus' },
-];
-
-// ============================================================
-// VUEX STORE MODULE
+// VUEX STORE MODULE — Penjadwalan Ujian
 // ============================================================
 const penjadwalanStore = {
     namespaced: true,
     state: {
         // Konteks filter (sebelum generate)
         context: {
-            type: 'uas',
+            type:       'uas',
             start_date: '',
-            prodi_id: null,
-            kelas: null,
+            periode_id: null,
+            prodi_id:   '',
+            kelas_id:   '',
         },
 
         // Tab aktif filter prodi di tabel hasil
         activeProdiTab: 'semua',
 
-        // Hasil generate (draft dari backend)
+        // Hasil generate (draft dari backend / CSP)
         draftJadwal: [],
 
         // Statistik ringkas
         stats: { ok: 0, conflict: 0, edited: 0 },
 
         // Status proses
-        isGenerating: false,
-        isSaving: false,
+        isGenerating:  false,
+        isSaving:      false,  // untuk simpan permanen
+        isSavingDraft: false,  // untuk simpan draft
 
-        // Master data pendukung
-        prodiList: MOCK_PRODI,
-        kelasList: [],
-        ruanganList: MOCK_RUANGAN,
-        dosenList: MOCK_DOSEN,
-        hariLiburList: MOCK_HARI_LIBUR,
+        // Metadata draft tersimpan
+        lastDraftSavedAt: null,   // timestamp terakhir simpan draft
+        isPermanen:       false,  // apakah jadwal sudah permanen (readonly)
+
+        // Master data pendukung (dari API)
+        periodeList:  [],
+        ruanganList:  [],
+        dosenList:    [],
+        hariLiburList:[],
     },
 
     getters: {
@@ -113,10 +55,9 @@ const penjadwalanStore = {
             return Object.values(prodiMap);
         },
 
-        // Jadwal yang difilter berdasarkan tab aktif
+        // Jadwal tanpa filter store (filter dipindah ke UI component)
         filteredJadwal(state) {
-            if (state.activeProdiTab === 'semua') return state.draftJadwal;
-            return state.draftJadwal.filter(j => j.prodi_id === state.activeProdiTab);
+            return state.draftJadwal;
         },
 
         // Tanggal-tanggal yang disabled di date picker
@@ -134,7 +75,6 @@ const penjadwalanStore = {
         },
         SET_DRAFT_JADWAL(state, jadwal) {
             state.draftJadwal = jadwal;
-            // Hitung statistik
             state.stats = {
                 ok:       jadwal.filter(j => j.status === 'ok').length,
                 conflict: jadwal.filter(j => j.status === 'conflict').length,
@@ -145,7 +85,6 @@ const penjadwalanStore = {
             const idx = state.draftJadwal.findIndex(j => j.id === updatedRow.id);
             if (idx !== -1) {
                 state.draftJadwal.splice(idx, 1, { ...state.draftJadwal[idx], ...updatedRow, status: 'edited' });
-                // Recalculate stats
                 state.stats = {
                     ok:       state.draftJadwal.filter(j => j.status === 'ok').length,
                     conflict: state.draftJadwal.filter(j => j.status === 'conflict').length,
@@ -153,66 +92,192 @@ const penjadwalanStore = {
                 };
             }
         },
-        SET_KELAS_LIST(state, list) {
-            state.kelasList = list;
+        SET_PERIODE_LIST(state, list)  { state.periodeList  = list; },
+        SET_RUANGAN(state, list)       { state.ruanganList  = list; },
+        SET_DOSEN(state, list)         { state.dosenList    = list; },
+        SET_HARI_LIBUR(state, list)    { state.hariLiburList= list; },
+        SET_GENERATING(state, val)     { state.isGenerating = val; },
+        SET_SAVING(state, val)         { state.isSaving     = val; },
+        SET_SAVING_DRAFT(state, val)   { state.isSavingDraft= val; },
+        SET_DRAFT_META(state, { savedAt }) {
+            state.lastDraftSavedAt = savedAt;
         },
-        SET_GENERATING(state, val) { state.isGenerating = val; },
-        SET_SAVING(state, val) { state.isSaving = val; },
-        ADD_HARI_LIBUR(state, item) { state.hariLiburList.push(item); },
-        REMOVE_HARI_LIBUR(state, id) {
-            state.hariLiburList = state.hariLiburList.filter(h => h.id !== id);
-        },
-        SET_RUANGAN(state, list) {
-            state.ruanganList = list;
+        SET_PERMANEN(state, val) {
+            state.isPermanen = val;
         },
     },
 
     actions: {
-        // Simulate generate — nanti diganti API call
-        async generateJadwal({ commit, state }) {
-            commit('SET_GENERATING', true);
-            await new Promise(r => setTimeout(r, 1800)); // simulasi delay API
-            commit('SET_DRAFT_JADWAL', MOCK_JADWAL);
-            commit('SET_GENERATING', false);
-        },
-
-        // Update satu baris jadwal (dari modal edit)
-        updateJadwalRow({ commit }, row) {
-            commit('UPDATE_JADWAL_ROW', row);
-        },
-
-        // Set kelas berdasarkan prodi yang dipilih
-        setKelasByProdi({ commit }, prodiId) {
-            const kelas = (MOCK_KELAS[prodiId] || []).map(k => ({ value: k, label: `Kelas ${k}` }));
-            commit('SET_KELAS_LIST', kelas);
-        },
-
-        // Get Rooms from API
-        async [actions.GET_ROOMS]({ commit }, params) {
+        // ── Ambil daftar periode dari API ──────────────────────────
+        async [actions.GET_PERIODE]({ commit }) {
             try {
-                const response = await Api.get(apiUrl.GET_ROOMS, { params });
-                const data = response.data.result;
-                commit('SET_RUANGAN', data);
-                return data;
-            } catch (error) {
-                console.error("Error Fetching Rooms:", error);
-                throw error;
+                const res = await Api.get(apiUrl.PERIODE, { params: { size: 100 } });
+                const allPeriods = res.data.result.content || [];
+                // Hanya ambil yang berstatus 'Aktif'
+                const activePeriods = allPeriods.filter(p => p.status === 'Aktif');
+                commit('SET_PERIODE_LIST', activePeriods);
+            } catch (e) {
+                console.error('Error fetching periode:', e);
             }
         },
 
-        // Simpan jadwal permanen (nanti diganti API)
-        async saveJadwal({ commit, state }) {
-            commit('SET_SAVING', true);
-            await new Promise(r => setTimeout(r, 1500));
-            commit('SET_SAVING', false);
-            return true;
+        // ── Ambil ruangan (hanya yg can_ujian) ────────────────────
+        async [actions.GET_ROOMS]({ commit }, params) {
+            try {
+                const res = await Api.get(apiUrl.GET_ROOMS, { params: { ...params, size: 100, can_ujian: 1 } });
+                const rooms = res.data.result.content || res.data.result || [];
+                const mappedRooms = rooms.map(r => ({
+                    ...r,
+                    nama: r.room_name || r.nama
+                }));
+                commit('SET_RUANGAN', mappedRooms);
+            } catch (e) {
+                console.error('Error fetching rooms:', e);
+            }
+        },
+        // ── Ambil dosen (semua aktif) ────────────────────────────
+        async [actions.GET_DOSEN]({ commit }, params) {
+            try {
+                const res = await Api.get(apiUrl.DOSEN, { 
+                    params: { 
+                        ...params, 
+                        size: params?.search ? 20 : 1000, 
+                        status: 'Aktif' 
+                    } 
+                });
+                commit('SET_DOSEN', res.data.result.content || res.data.result || []);
+            } catch (e) {
+                console.error('Error fetching dosen:', e);
+            }
         },
 
-        addHariLibur({ commit }, item) {
-            commit('ADD_HARI_LIBUR', { ...item, id: Date.now() });
+        // ── Ambil hari libur per periode ──────────────────────────
+        async [actions.GET_HARI_LIBUR]({ commit }, periodeId) {
+            try {
+                const res = await Api.get(apiUrl.HARI_LIBUR, {
+                    params: { periode_id: periodeId, size: 100 },
+                });
+                commit('SET_HARI_LIBUR', res.data.result.content || []);
+            } catch (e) {
+                console.error('Error fetching hari libur:', e);
+            }
         },
-        removeHariLibur({ commit }, id) {
-            commit('REMOVE_HARI_LIBUR', id);
+
+        // ── Cek & load draft lama ─────────────────────────────────
+        async [actions.GET_JADWAL_DRAFT]({ commit, state }) {
+            if (!state.context.periode_id || !state.context.type) return null;
+            try {
+                const res = await Api.get(apiUrl.JADWAL_DRAFT, {
+                    params: { periode_id: state.context.periode_id, tipe: state.context.type },
+                });
+                const data = res.data.result;
+                if (data && data.exists) {
+                    commit('SET_DRAFT_META', { savedAt: data.saved_at });
+                    return data; // { exists, count, saved_at, items }
+                }
+                return null;
+            } catch (e) {
+                console.error('Error fetching draft:', e);
+                return null;
+            }
+        },
+
+        // ── Load items draft ke tabel ─────────────────────────────
+        loadDraftItems({ commit }, items) {
+            commit('SET_DRAFT_JADWAL', items);
+        },
+
+        // ── Generate jadwal via CSP backend ───────────────────────
+        async [actions.GENERATE_JADWAL]({ commit, state }, payload = null) {
+            commit('SET_GENERATING', true);
+            try {
+                const body = {
+                    periode_id: state.context.periode_id,
+                    tipe:       state.context.type,
+                    start_date: state.context.start_date,
+                };
+                if (payload) body.jadwal = payload;
+
+                const res = await Api.post(apiUrl.JADWAL_GENERATE, body);
+                commit('SET_DRAFT_JADWAL', res.data.result || []);
+            } catch (e) {
+                console.error('Error generating/validating jadwal:', e);
+                throw e;
+            } finally {
+                commit('SET_GENERATING', false);
+            }
+        },
+
+        // ── Hapus draft (sebelum generate ulang) ──────────────────
+        async [actions.DELETE_JADWAL_DRAFT]({ state }) {
+            try {
+                await Api.delete(apiUrl.JADWAL_DRAFT, {
+                    params: { periode_id: state.context.periode_id, tipe: state.context.type },
+                });
+            } catch (e) {
+                console.error('Error deleting draft:', e);
+                throw e;
+            }
+        },
+
+        // ── Update 1 baris dari edit modal ────────────────────────
+        async [actions.UPDATE_JADWAL_ROW]({ commit, state }, row) {
+            // Update lokal di store dulu (optimistic)
+            commit('UPDATE_JADWAL_ROW', row);
+
+            // Jika row punya id DB nyata (bukan TMP-), update ke backend
+            if (row.id && !String(row.id).startsWith('TMP-')) {
+                try {
+                    await Api.patch(`${apiUrl.JADWAL_DRAFT_ROW}/${row.id}`, {
+                        dosen_id:        row.dosen_id,
+                        ruangan_id:      row.ruangan_id,
+                        tanggal:         row.tanggal,
+                        jam_mulai:       row.jam_mulai,
+                        jam_selesai:     row.jam_selesai,
+                        status_konflik:  'edited',
+                        conflict_reason: null,
+                    });
+                } catch (e) {
+                    console.error('Error updating jadwal row:', e);
+                }
+            }
+        },
+
+        // ── Simpan Draft ──────────────────────────────────────────
+        async [actions.SAVE_JADWAL_DRAFT]({ commit, state }) {
+            commit('SET_SAVING_DRAFT', true);
+            try {
+                const res = await Api.post(apiUrl.JADWAL_DRAFT, {
+                    periode_id: state.context.periode_id,
+                    tipe:       state.context.type,
+                    jadwal:     state.draftJadwal,
+                });
+                commit('SET_DRAFT_META', { savedAt: res.data.result.saved_at });
+                return res.data.result;
+            } catch (e) {
+                console.error('Error saving draft:', e);
+                throw e;
+            } finally {
+                commit('SET_SAVING_DRAFT', false);
+            }
+        },
+
+        // ── Simpan Permanen ───────────────────────────────────────
+        async [actions.SAVE_JADWAL_PERMANEN]({ commit, state }) {
+            commit('SET_SAVING', true);
+            try {
+                const res = await Api.patch(apiUrl.JADWAL_PERMANEN, {
+                    periode_id: state.context.periode_id,
+                    tipe:       state.context.type,
+                });
+                commit('SET_PERMANEN', true);
+                return res.data.result;
+            } catch (e) {
+                console.error('Error saving permanen:', e);
+                throw e;
+            } finally {
+                commit('SET_SAVING', false);
+            }
         },
     },
 };

@@ -1,40 +1,55 @@
 <template>
   <div class="space-y-3">
     <!-- Search Bar (mobile) -->
-    <div class="relative">
-      <app-input
-        v-model="search"
-        placeholder="Cari mata kuliah, dosen, ruangan..."
-        label=""
+    <div class="flex items-center gap-2">
+      <div class="relative flex-1">
+        <app-input
+          v-model="search"
+          placeholder="Cari mata kuliah, dosen, ruangan..."
+          label=""
+        >
+          <template #icon-left>
+            <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </template>
+        </app-input>
+      </div>
+      
+      <!-- Filter Trigger -->
+      <button 
+        @click="showFilterModal = true"
+        class="p-2.5 rounded-lg border transition-all flex items-center gap-1.5 font-bold text-xs"
+        :class="hasActiveFilters ? 'bg-teal-50 border-teal-200 text-teal-600' : 'bg-white border-gray-200 text-gray-500'"
       >
-        <template #icon-left>
-          <svg class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
-        </template>
-      </app-input>
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+        </svg>
+        <span v-if="activeFilterCount > 0">{{ activeFilterCount }}</span>
+      </button>
+
+      <button 
+        v-if="hasActiveFilters || search" 
+        @click="resetFilters"
+        class="p-2.5 bg-gray-50 text-gray-400 rounded-lg hover:bg-red-50 hover:text-red-500 transition-colors border border-gray-100"
+        title="Reset Filter"
+      >
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+        </svg>
+      </button>
     </div>
 
-    <!-- Filters Row (mobile) -->
-    <div class="flex gap-2">
-      <select-auto-complete
-        v-model="filterHari"
-        :options="hariOptions"
-        item-text="label"
-        item-value="value"
-        placeholder="Semua Hari"
-        class="flex-1"
-      />
-      <select-auto-complete
-        v-model="filterRuangan"
-        :options="ruanganList"
-        item-text="nama"
-        item-value="nama"
-        placeholder="Semua Ruangan"
-        class="flex-1"
-        @search="handleSearchRuangan"
-      />
-    </div>
+    <!-- Filter Modal (Mobile) -->
+    <jadwal-filter-modal
+      v-model="showFilterModal"
+      :filters="activeFilters"
+      :prodi-list="prodiList"
+      :kelas-list="kelasList"
+      :ruangan-list="ruanganList"
+      @apply="handleApplyFilters"
+      @search-ruangan="handleSearchRuangan"
+    />
 
     <!-- Empty State -->
     <div v-if="filteredItems.length === 0" class="bg-white rounded-xl border border-gray-100 py-12 text-center text-gray-400">
@@ -136,47 +151,62 @@
 <script>
 import AppInput from "@/core/components/AppInput.vue";
 import SelectAutoComplete from "@/core/components/SelectAutoComplete.vue";
+import JadwalFilterModal from "./JadwalFilterModal.vue";
 import DISPATCH from "@/core/plugins/constants/dispatches";
 
 export default {
   name: 'JadwalCard',
-  components: { AppInput, SelectAutoComplete },
+  components: { AppInput, SelectAutoComplete, JadwalFilterModal },
   props: {
     items: { type: Array, default: () => [] },
     ruanganList: { type: Array, default: () => [] },
+    prodiList: { type: Array, default: () => [] },
+    kelasList: { type: Array, default: () => [] },
   },
   emits: ['edit'],
   data() {
     return {
       search: '',
-      filterHari: '',
-      filterRuangan: '',
-      hariOptions: [
-        { label: 'Senin', value: 'Senin' },
-        { label: 'Selasa', value: 'Selasa' },
-        { label: 'Rabu', value: 'Rabu' },
-        { label: 'Kamis', value: 'Kamis' },
-        { label: 'Jumat', value: 'Jumat' },
-        { label: 'Sabtu', value: 'Sabtu' },
-      ],
+      activeFilters: {
+        prodi: '',
+        kelas: '',
+        hari: '',
+        ruangan: '',
+      },
+      showFilterModal: false,
     };
   },
   computed: {
+    hasActiveFilters() {
+      return this.activeFilterCount > 0;
+    },
+    activeFilterCount() {
+      return Object.values(this.activeFilters).filter(v => !!v).length;
+    },
     filteredItems() {
       let res = this.items;
+
+      if (this.activeFilters.prodi) {
+        res = res.filter(i => i.prodi_id == this.activeFilters.prodi);
+      }
+      if (this.activeFilters.kelas) {
+        res = res.filter(i => i.kelas_id == this.activeFilters.kelas);
+      }
+
       if (this.search) {
         const q = this.search.toLowerCase();
         res = res.filter(i =>
           i.mk_nama.toLowerCase().includes(q) ||
-          i.dosen_nama.toLowerCase().includes(q) ||
-          i.ruangan_nama.toLowerCase().includes(q)
+          i.mk_kode.toLowerCase().includes(q) ||
+          i.ruangan_nama.toLowerCase().includes(q) ||
+          i.dosen_nama.toLowerCase().includes(q)
         );
       }
-      if (this.filterHari) {
-        res = res.filter(i => i.hari === this.filterHari);
+      if (this.activeFilters.hari) {
+        res = res.filter(i => i.hari === this.activeFilters.hari);
       }
-      if (this.filterRuangan) {
-        res = res.filter(i => i.ruangan_nama === this.filterRuangan);
+      if (this.activeFilters.ruangan) {
+        res = res.filter(i => i.ruangan_id == this.activeFilters.ruangan);
       }
       return res;
     },
@@ -199,6 +229,18 @@ export default {
       this._ruanganSearchTimer = setTimeout(() => {
         this.fetchRuangan(query);
       }, 500);
+    },
+    handleApplyFilters(filters) {
+      this.activeFilters = { ...filters };
+    },
+    resetFilters() {
+      this.activeFilters = {
+        prodi: '',
+        kelas: '',
+        hari: '',
+        ruangan: '',
+      };
+      this.search = '';
     },
     cardBorder(status) {
       return {

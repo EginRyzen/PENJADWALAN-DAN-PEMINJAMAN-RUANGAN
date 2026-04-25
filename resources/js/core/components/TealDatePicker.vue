@@ -134,6 +134,7 @@ export default {
     minDate:       { type: String, default: '' },   // 'YYYY-MM-DD'
     hariLiburList: { type: Array, default: () => [] }, // Prop list (optional if store integrated)
     disableWeekend:{ type: Boolean, default: false },
+    allowedDays:   { type: Array,   default: null }, // Array of day names like ['Senin', 'Selasa']
   },
   emits: ['update:modelValue', 'change'],
   data() {
@@ -240,10 +241,20 @@ export default {
     isDisabledDay(day) {
       const ds = this.dayStr(day);
       if (this.minDate && ds < this.minDate) return true;
+      
+      const date = new Date(ds + 'T00:00:00');
+      const dow  = date.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+
       if (this.disableWeekend) {
-        const dow = new Date(ds + 'T00:00:00').getDay();
         if (dow === 0 || dow === 6) return true;
       }
+
+      if (this.allowedDays && this.allowedDays.length > 0) {
+        const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const dayName = dayNames[dow];
+        if (!this.allowedDays.includes(dayName)) return true;
+      }
+
       return false;
     },
     isHoliday(dateStr) {

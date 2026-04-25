@@ -13,10 +13,21 @@ class DataBaseBuildingRoomController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $rooms = DataBaseBuildingRoom::all();
+            $query = DataBaseBuildingRoom::query();
+
+            if ($request->has('can_ujian')) {
+                $query->where('can_ujian', $request->can_ujian);
+            }
+
+            // Tambahkan filter status gedung aktif
+            $query->whereHas('building', function ($q) {
+                $q->where('building_status', 'active');
+            });
+
+            $rooms = $query->get();
             return $this->successResponse($rooms, 'Daftar ruangan berhasil diambil');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500);

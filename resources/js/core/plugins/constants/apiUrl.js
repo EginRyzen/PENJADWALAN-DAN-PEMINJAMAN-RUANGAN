@@ -32,5 +32,11 @@ const apiUrl = {
     NOTIFICATION_UNREAD_COUNT: "/notifications/unread-count",
     MARK_ALL_NOTIFICATIONS_READ: "/notifications/mark-all-read",
     MARK_NOTIFICATION_READ: "/notifications",
+    // Penjadwalan Ujian
+    JADWAL_LIST:        "/jadwal",
+    JADWAL_DRAFT:       "/jadwal/draft",
+    JADWAL_DRAFT_ROW:   "/jadwal/draft",
+    JADWAL_GENERATE:    "/jadwal/generate",
+    JADWAL_PERMANEN:    "/jadwal/permanen",
 };
 export default apiUrl;

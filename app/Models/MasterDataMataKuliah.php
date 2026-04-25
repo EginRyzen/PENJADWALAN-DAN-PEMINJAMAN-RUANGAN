@@ -17,6 +17,7 @@ class MasterDataMataKuliah extends Model
         'nama',
         'sks',
         'semester',
+        'sks_ujian',
         'program_studi_id',
     ];
 

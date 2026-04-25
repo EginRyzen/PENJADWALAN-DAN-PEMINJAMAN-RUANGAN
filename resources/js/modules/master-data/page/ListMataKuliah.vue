@@ -57,6 +57,7 @@
             <td class="p-4 border-b font-medium text-gray-700 text-md">{{ item.kode }}</td>
             <td class="p-4 border-b text-gray-700 text-md">{{ item.nama }}</td>
             <td class="p-4 border-b text-gray-600 text-md text-center">{{ item.sks }}</td>
+            <td class="p-4 border-b text-gray-600 text-md text-center font-bold text-teal-600">{{ item.sks_ujian || 0 }}</td>
             <td class="p-4 border-b text-gray-600 text-md text-center">{{ item.semester }}</td>
             <td class="p-4 border-b text-gray-600 text-md">{{ item.program_studi ? item.program_studi.nama : '-' }}</td>
             <td class="p-4 border-b text-center">
@@ -111,6 +112,10 @@
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Semester <span class="text-red-500">*</span></label>
           <app-input v-model="form.semester" type="number" placeholder="Contoh: 2" label="" />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-gray-700 mb-1">SKS Ujian <span class="text-gray-400 text-xs">(Opsional)</span></label>
+          <app-input v-model="form.sks_ujian" type="number" placeholder="Default: SKS MK" label="" />
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Program Studi <span class="text-red-500">*</span></label>
@@ -192,6 +197,7 @@ export default {
         nama: "",
         sks: "",
         semester: "",
+        sks_ujian: 0,
         program_studi_id: "",
       },
       // PopUp Confirm State
@@ -219,6 +225,7 @@ export default {
         { text: "Kode MK",         value: "kode",     align: "start",  sortable: true  },
         { text: "Nama Mata Kuliah", value: "nama",    align: "start",  sortable: true  },
         { text: "SKS",             value: "sks",      align: "center", sortable: false },
+        { text: "SKS Ujian",       value: "sks_ujian",align: "center", sortable: false },
         { text: "Semester",        value: "semester", align: "center", sortable: false },
         { text: "Program Studi",   value: "prodi",    align: "start",  sortable: true  },
         { text: "Aksi",            value: "aksi",     align: "center", sortable: false },
@@ -309,7 +316,7 @@ export default {
     handleTambah() {
       this.isEditMode = false;
       this.editId = null;
-      this.form = { kode: "", nama: "", sks: "", semester: "", program_studi_id: "" };
+      this.form = { kode: "", nama: "", sks: "", semester: "", sks_ujian: 0, program_studi_id: "" };
       this.showModal = true;
     },
     handleEdit(item) {
@@ -320,6 +327,7 @@ export default {
         nama:             item.nama,
         sks:              item.sks,
         semester:         item.semester,
+        sks_ujian:        item.sks_ujian || 0,
         program_studi_id: item.program_studi_id,
       };
       this.showModal = true;

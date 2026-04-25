@@ -55,15 +55,24 @@
           <teal-date-picker
             v-model="form.tanggal"
             placeholder="Pilih tanggal ujian..."
+            :allowed-days="allowedDays"
+            :disabled-dates="disabledDates"
+            :min-date="today"
           />
         </div>
 
         <!-- Dosen Pengawas -->
         <div>
           <label class="block text-xs font-semibold text-gray-600 mb-1.5">Dosen Pengawas <span class="text-red-500">*</span></label>
-          <select v-model="form.dosen_id" @change="onDosenChange" class="w-full h-10 border border-teal-300 rounded-lg px-3 text-sm text-gray-700 focus:outline-none focus:border-teal-500 focus:ring-1 focus:ring-teal-200 transition bg-white">
-            <option v-for="d in dosenList" :key="d.id" :value="d.id">{{ d.nama }}</option>
-          </select>
+          <select-auto-complete
+            v-model="form.dosen_id"
+            :options="dosenList"
+            item-text="nama"
+            item-value="id"
+            placeholder="Pilih Dosen Pengawas..."
+            @search="handleSearchDosen"
+            @update:modelValue="onDosenChange"
+          />
         </div>
 
         <!-- Jam Mulai -->
@@ -78,7 +87,7 @@
         <!-- Jam Selesai (read-only, auto-calc) -->
         <div>
           <label class="block text-xs font-semibold text-gray-600 mb-1.5">Jam Selesai <span class="text-xs text-gray-400">(otomatis)</span></label>
-          <div class="w-full h-10 border border-gray-200 rounded-lg px-3 flex items-center bg-gray-50">
+          <div class="w-full h-10 border border-gray-200 rounded-lg px-3 flex items-center bg-gray-50 opacity-60 cursor-not-allowed">
             <span class="text-sm font-bold text-teal-700">{{ form.jam_selesai }}</span>
             <span class="ml-auto text-xs text-gray-400">{{ form.sks }} SKS × {{ sksDuration }} mnt</span>
           </div>
@@ -148,6 +157,8 @@ export default {
     ruanganList: { type: Array, default: () => [] },
     dosenList:   { type: Array, default: () => [] },
     sksDuration: { type: Number, default: 50 },
+    allowedDays:   { type: Array,   default: () => [] },
+    disabledDates: { type: Array,   default: () => [] },
   },
   emits: ['update:modelValue', 'save'],
   data() {
@@ -159,6 +170,7 @@ export default {
         jumlah_peserta: 0, dosen_id: null, dosen_nama: '',
         status: 'ok', conflict_reason: null,
       },
+      today: new Date().toISOString().split('T')[0],
     };
   },
   computed: {
@@ -190,10 +202,25 @@ export default {
         console.error("Gagal memuat data ruangan:", e);
       }
     },
+    async fetchDosen(query) {
+      try {
+        await this.$store.dispatch('penjadwalan/getDosen', {
+          search: query || undefined,
+        });
+      } catch (e) {
+        console.error("Gagal memuat data dosen:", e);
+      }
+    },
     handleSearchRuangan(query) {
       clearTimeout(this._ruanganSearchTimer);
       this._ruanganSearchTimer = setTimeout(() => {
         this.fetchRuangan(query);
+      }, 500);
+    },
+    handleSearchDosen(query) {
+      clearTimeout(this._dosenSearchTimer);
+      this._dosenSearchTimer = setTimeout(() => {
+        this.fetchDosen(query);
       }, 500);
     },
     onRuanganChange() {
