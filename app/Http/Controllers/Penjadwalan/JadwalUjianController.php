@@ -36,22 +36,32 @@ class JadwalUjianController extends Controller
         ]);
 
         try {
+            // Cek semua jadwal untuk periode + tipe ini (bisa draft atau permanen)
             $jadwal = JadwalUjian::with(['mataKuliah', 'kelas.programStudi', 'dosen', 'ruangan'])
-                ->draftFor($request->periode_id, $request->tipe)
+                ->where('periode_id', $request->periode_id)
+                ->where('tipe', $request->tipe)
+                ->orderBy('tanggal')
                 ->get();
 
             if ($jadwal->isEmpty()) {
-                return $this->successResponse(null, 'Tidak ada draft untuk periode dan tipe ini');
+                return $this->successResponse(null, 'Tidak ada jadwal (draft/permanen) untuk periode dan tipe ini');
             }
 
-            $mapped = $jadwal->map(fn($j) => $this->mapJadwalRow($j, 'draft'));
+            $isPermanen = $jadwal->every(fn($j) => $j->status_data === 'permanen');
+            // Jika ada campuran (seharusnya tidak ada), kita anggap draft jika ada minimal 1 draft
+            $statusUtama = $jadwal->contains('status_data', 'draft') ? 'draft' : 'permanen';
+
+            $mapped = $jadwal->map(fn($j) => $this->mapJadwalRow($j, $j->status_data));
 
             return $this->successResponse([
-                'exists'   => true,
-                'count'    => $jadwal->count(),
-                'saved_at' => $jadwal->first()->updated_at,
-                'items'    => $mapped,
-            ], 'Draft jadwal ditemukan');
+                'exists'      => true,
+                'is_permanen' => $statusUtama === 'permanen',
+                'status'      => $statusUtama,
+                'count'       => $jadwal->count(),
+                'saved_at'    => $jadwal->max('updated_at'),
+                'start_date'  => $jadwal->min('tanggal')?->toDateString(),
+                'items'       => $mapped,
+            ], 'Jadwal ditemukan');
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
         }
@@ -207,35 +217,70 @@ class JadwalUjianController extends Controller
         $request->validate([
             'periode_id' => 'required|uuid|exists:master_data_periodes,id',
             'tipe'       => 'required|in:uts,uas,pembelajaran',
+            'jadwal'     => 'nullable|array', // Opsional: jika dikirim langsung dari hasil generate
         ]);
 
-        // Pastikan tidak ada konflik yang tersisa
-        $adaKonflik = JadwalUjian::draftFor($request->periode_id, $request->tipe)
-            ->where('status_konflik', 'conflict')
-            ->exists();
-
-        if ($adaKonflik) {
-            return $this->errorResponse(
-                'Masih terdapat jadwal yang konflik. Selesaikan semua konflik sebelum menyimpan permanen.',
-                422,
-                'Unprocessable Entity'
-            );
-        }
+        // Jika data dikirim langsung, kita cek konflik dulu di payload (server-side validation)
+        // Namun biasanya frontend sudah memvalidasi ini.
 
         DB::beginTransaction();
         try {
             $userId = $request->user()->id;
 
-            JadwalUjian::draftFor($request->periode_id, $request->tipe)
-                ->update([
-                    'status_data' => 'permanen',
-                    'saved_by'    => $userId,
-                    'saved_at'    => now(),
-                ]);
+            if ($request->has('jadwal') && !empty($request->jadwal)) {
+                // Hapus draft lama jika ada
+                JadwalUjian::draftFor($request->periode_id, $request->tipe)->delete();
+
+                // Simpan langsung sebagai permanen
+                foreach ($request->jadwal as $row) {
+                    JadwalUjian::create([
+                        'periode_id'      => $request->periode_id,
+                        'tipe'            => $request->tipe,
+                        'mata_kuliah_id'  => $row['mata_kuliah_id'],
+                        'kelas_id'        => $row['kelas_id'],
+                        'dosen_id'        => $row['dosen_id'],
+                        'ruangan_id'      => $row['ruangan_id'],
+                        'tanggal'         => $row['tanggal'],
+                        'hari'            => $row['hari'],
+                        'jam_mulai'       => $row['jam_mulai'],
+                        'jam_selesai'     => $row['jam_selesai'],
+                        'durasi_menit'    => $row['durasi'],
+                        'status_data'     => 'permanen',
+                        'status_konflik'  => 'ok',
+                        'generated_by'    => $userId,
+                        'saved_by'        => $userId,
+                        'saved_at'        => now(),
+                    ]);
+                }
+            } else {
+                // Perilaku lama: upgrade draft yang sudah ada di DB menjadi permanen
+                $adaKonflik = JadwalUjian::draftFor($request->periode_id, $request->tipe)
+                    ->where('status_konflik', 'conflict')
+                    ->exists();
+
+                if ($adaKonflik) {
+                    return $this->errorResponse(
+                        'Masih terdapat jadwal yang konflik. Selesaikan semua konflik sebelum menyimpan permanen.',
+                        422,
+                        'Unprocessable Entity'
+                    );
+                }
+
+                $updated = JadwalUjian::draftFor($request->periode_id, $request->tipe)
+                    ->update([
+                        'status_data' => 'permanen',
+                        'saved_by'    => $userId,
+                        'saved_at'    => now(),
+                    ]);
+                
+                if ($updated === 0) {
+                     return $this->errorResponse('Tidak ada draft jadwal untuk disimpan permanen.', 404, 'Not Found');
+                }
+            }
 
             DB::commit();
 
-            // Kirim notifikasi email ke dosen (via queue, tidak blocking)
+            // Kirim notifikasi email ke dosen
             $this->kirimNotifikasiDosen($request->periode_id, $request->tipe);
 
             $count = JadwalUjian::permanenFor($request->periode_id, $request->tipe)->count();
@@ -243,7 +288,7 @@ class JadwalUjianController extends Controller
             return $this->successResponse([
                 'count'    => $count,
                 'saved_at' => now(),
-            ], 'Jadwal berhasil disimpan permanen dan notifikasi telah dikirim ke dosen');
+            ], 'Jadwal berhasil disimpan permanen');
         } catch (\Exception $e) {
             DB::rollBack();
             return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');

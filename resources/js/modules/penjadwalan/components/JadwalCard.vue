@@ -77,6 +77,7 @@
           </span>
         </div>
         <button
+          v-if="!isPermanen"
           @click="$emit('edit', item)"
           class="w-7 h-7 rounded-lg flex items-center justify-center transition-all"
           :class="item.status === 'conflict' ? 'bg-red-100 text-red-500' : 'bg-teal-100 text-teal-600'"
@@ -162,6 +163,7 @@ export default {
     ruanganList: { type: Array, default: () => [] },
     prodiList: { type: Array, default: () => [] },
     kelasList: { type: Array, default: () => [] },
+    isPermanen: { type: Boolean, default: false },
   },
   emits: ['edit'],
   data() {

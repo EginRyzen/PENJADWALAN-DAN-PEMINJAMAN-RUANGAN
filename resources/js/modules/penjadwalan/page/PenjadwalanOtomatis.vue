@@ -18,13 +18,16 @@
 
     <!-- Step 1: Filter Panel -->
     <filter-panel
+      ref="filterRef"
       :is-generating="isGenerating"
       :hari-libur-list="hariLiburList"
       :periode-list="periodeList"
       :prodi-list="programStudiList"
       :kelas-list="kelasList"
       :allowed-days="allowedDays"
+      :schedule-status="scheduleStatus"
       @generate="handleGenerate"
+      @download="handleDownload"
       @context-change="onContextChange"
       @periode-change="onPeriodeChange"
     />
@@ -92,6 +95,7 @@
           :ruangan-list="ruanganList"
           :prodi-list="programStudiList"
           :kelas-list="kelasList"
+          :is-permanen="isPermanen"
           @edit="openEditModal"
         />
       </div>
@@ -103,6 +107,7 @@
           :ruangan-list="ruanganList"
           :prodi-list="programStudiList"
           :kelas-list="kelasList"
+          :is-permanen="isPermanen"
           @edit="openEditModal"
         />
       </div>
@@ -148,6 +153,14 @@
       @generate-ulang="doGenerateUlang"
       @lanjutkan-draft="doLanjutkanDraft"
     />
+    
+    <!-- Modal: Konfirmasi Simpan Draft -->
+    <modal-pop-up-confirm
+      v-model="showConfirmDraft"
+      title="Simpan Sebagai Draft?"
+      description="Apakah Anda yakin ingin menyimpan jadwal saat ini sebagai draft? Anda dapat mengubahnya kembali nanti."
+      @confirm="doSaveDraft"
+    />
 
     <!-- Modal Sukses Draft -->
     <modal-pop-up-success
@@ -174,6 +187,7 @@
       :is-saving="isSaving"
       :is-saving-draft="isSavingDraft"
       :last-draft-saved-at="lastDraftSavedAt"
+      :is-permanen="isPermanen"
       @save="openKonfirmasiPermanen"
       @save-draft="handleSaveDraft"
       @reset="handleReset"
@@ -195,6 +209,7 @@ import RowEditModal          from '../components/RowEditModal.vue';
 import ActionBar             from '../components/ActionBar.vue';
 import KonfirmasiPermanenModal  from '../components/KonfirmasiPermanenModal.vue';
 import RegenerateConfirmModal   from '../components/RegenerateConfirmModal.vue';
+import ModalPopUpConfirm        from '@/core/components/ModalPopUpConfirm.vue';
 
 export default {
   name: 'PenjadwalanOtomatis',
@@ -210,6 +225,7 @@ export default {
     ActionBar,
     KonfirmasiPermanenModal,
     RegenerateConfirmModal,
+    ModalPopUpConfirm,
   },
   data() {
     return {
@@ -218,7 +234,9 @@ export default {
       showSuccessModalDraft:  false,
       showKonfirmasiPermanen: false,
       showRegenerateConfirm:  false,
+      showConfirmDraft:       false,
       editingItem:            null,
+      scheduleStatus:         null, // 'draft' | 'permanen' | null
       existingDraftMeta:      { count: 0, saved_at: null }, // info draft lama
       context:                { type: 'uas', start_date: '', periode_id: '' },
       breadcrumbItems: [
@@ -242,6 +260,9 @@ export default {
     programStudiList()  { return this.$store.state.masterData.programStudiList; },
     kelasList()         { return this.$store.state.settings.kelasList; },
     lastDraftSavedAt()  { return this.$store.state.penjadwalan.lastDraftSavedAt; },
+    isPermanen() {
+      return this.$store.state.penjadwalan.isPermanen || this.scheduleStatus === 'permanen';
+    },
     operasionalScheduleList() { return this.$store.state.settings.operasionalScheduleList; },
     allowedDays() {
       // Ambil nama hari yang aktif dari operasionalScheduleList
@@ -314,24 +335,83 @@ export default {
         this.fetchOperasionalSchedule();
       }
       this.$store.commit('penjadwalan/SET_CONTEXT', newContext);
+
+      // Setiap ada perubahan filter (terutama periode/type), cek ulang status jadwal di backend
+      this.checkScheduleStatus();
+    },
+
+    async checkScheduleStatus() {
+      if (!this.context.periode_id || !this.context.type) {
+        this.scheduleStatus = null;
+        return;
+      }
+
+      this.$store.commit('SET_LOADING', true);
+      this.$store.commit('SET_LOADING_MESSAGE', 'Memeriksa status penjadwalan...');
+      try {
+        console.log('Checking schedule status for:', this.context.periode_id, this.context.type);
+        const existing = await this.$store.dispatch(DISPATCH.GET_JADWAL_DRAFT);
+        console.log('Schedule status result:', existing);
+        
+        if (existing && existing.exists) {
+          this.scheduleStatus = existing.is_permanen ? 'permanen' : 'draft';
+          this.$store.commit('penjadwalan/SET_PERMANEN', !!existing.is_permanen);
+          
+          // Jika sudah ada data, kita simpan metanya
+          this.existingDraftMeta = { count: existing.count, saved_at: existing.saved_at };
+
+          // Sync start_date dari backend jika ada agar filter sesuai dengan data yang tersimpan
+          if (existing.start_date) {
+            this.context.start_date = existing.start_date;
+            this.$store.commit('penjadwalan/SET_CONTEXT', { ...this.context });
+          }
+        } else {
+          this.scheduleStatus = null;
+          this.$store.commit('penjadwalan/SET_PERMANEN', false);
+        }
+      } catch (e) {
+        console.error('Gagal cek status jadwal:', e);
+        this.scheduleStatus = null;
+      } finally {
+        this.$store.commit('SET_LOADING', false);
+      }
     },
 
     async onPeriodeChange(periodeId) {
-      if (!periodeId) return;
+      if (!periodeId) {
+        this.scheduleStatus = null;
+        return;
+      }
+      this.context.periode_id = periodeId;
+      this.$store.commit('penjadwalan/SET_CONTEXT', { ...this.context });
+      
       // Muat hari libur untuk periode yang dipilih
       await this.$store.dispatch(DISPATCH.GET_HARI_LIBUR, { periode_id: periodeId });
+      
+      // Re-check status jadwal untuk periode ini
+      await this.checkScheduleStatus();
     },
 
-    // ── Klik tombol Generate ──────────────────────────────────────
+    // ── Klik tombol Generate / Tampilkan ─────────────────────────
     async handleGenerate() {
-      if (!this.context.periode_id || !this.context.start_date) return;
+      if (!this.context.periode_id) return;
 
-      // Cek apakah ada draft lama untuk periode + tipe ini
+      // Jika sudah ada jadwal (draft/permanen), langsung load saja
+      if (this.scheduleStatus) {
+        await this.doLanjutkanDraft();
+        return;
+      }
+
+      // Jika belum ada, pastikan tanggal mulai sudah diisi
+      if (!this.context.start_date) return;
+
+      // Cek manual (double check) apakah ada draft lama (fallback jika checkScheduleStatus belum selesai)
       const existing = await this.$store.dispatch(DISPATCH.GET_JADWAL_DRAFT);
 
       if (existing && existing.exists) {
         // Ada draft lama → tampilkan modal pilihan
         this.existingDraftMeta = { count: existing.count, saved_at: existing.saved_at };
+        this.scheduleStatus = existing.is_permanen ? 'permanen' : 'draft';
         this.showRegenerateConfirm = true;
       } else {
         // Tidak ada draft lama → langsung generate
@@ -357,9 +437,17 @@ export default {
     // ── Lanjutkan Draft Lama ─────────────────────────────────────
     async doLanjutkanDraft() {
       this.showRegenerateConfirm = false;
-      const existing = await this.$store.dispatch(DISPATCH.GET_JADWAL_DRAFT);
-      if (existing && existing.items) {
-        this.$store.dispatch('penjadwalan/loadDraftItems', existing.items);
+      this.$store.commit('SET_LOADING', true);
+      this.$store.commit('SET_LOADING_MESSAGE', 'Memuat data jadwal...');
+      try {
+        const existing = await this.$store.dispatch(DISPATCH.GET_JADWAL_DRAFT);
+        if (existing && existing.items) {
+          this.$store.dispatch('penjadwalan/loadDraftItems', existing.items);
+        }
+      } catch (e) {
+        console.error('Gagal memuat jadwal:', e);
+      } finally {
+        this.$store.commit('SET_LOADING', false);
       }
     },
 
@@ -390,14 +478,26 @@ export default {
     },
 
     // ── Simpan Draft ─────────────────────────────────────────────
-    async handleSaveDraft() {
+    handleSaveDraft() {
+      this.showConfirmDraft = true;
+    },
+
+    async doSaveDraft() {
       this.$store.commit('SET_LOADING', true);
       this.$store.commit('SET_LOADING_MESSAGE', 'Menyimpan draft jadwal...');
       try {
         await this.$store.dispatch(DISPATCH.SAVE_JADWAL_DRAFT);
         this.showSuccessModalDraft = true;
+        
+        // Refresh data setelah simpan agar UI sinkron dengan DB
+        await this.checkScheduleStatus();
+        await this.doLanjutkanDraft();
       } catch (e) {
-        console.error('Gagal simpan draft:', e);
+        this.$store.commit('SET_SNACKBAR', {
+          show: true,
+          text: 'Gagal menyimpan draft: ' + (e.response?.data?.message || e.message),
+          color: 'error'
+        });
       } finally {
         this.$store.commit('SET_LOADING', false);
       }
@@ -411,15 +511,31 @@ export default {
     // ── Simpan Permanen (dipanggil setelah konfirmasi) ───────────
     async handleSavePermanen() {
       this.$store.commit('SET_LOADING', true);
-      this.$store.commit('SET_LOADING_MESSAGE', 'Sedang mengunci jadwal & mengirim notifikasi...');
+      this.$store.commit('SET_LOADING_MESSAGE', 'Menyimpan jadwal permanen...');
       try {
         await this.$store.dispatch(DISPATCH.SAVE_JADWAL_PERMANEN);
+        
+        // Refresh status dan data SEBELUM menampilkan modal sukses
+        // Agar ketika modal muncul, background UI sudah terupdate (tombol disabled & download muncul)
+        await this.checkScheduleStatus();
+        await this.doLanjutkanDraft();
+
         this.showSuccessModal = true;
       } catch (e) {
-        console.error('Gagal simpan permanen:', e);
+        this.$store.commit('SET_SNACKBAR', {
+          show: true,
+          text: 'Gagal menyimpan permanen: ' + (e.response?.data?.message || e.message),
+          color: 'error'
+        });
       } finally {
         this.$store.commit('SET_LOADING', false);
       }
+    },
+
+    // ── Download Data ────────────────────────────────────────────
+    handleDownload() {
+      console.log('Downloading schedule...');
+      // Placeholder: implementasi download logic
     },
 
     // ── Reset & bersihkan tabel ──────────────────────────────────

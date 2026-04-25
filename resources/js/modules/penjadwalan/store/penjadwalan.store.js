@@ -269,6 +269,7 @@ const penjadwalanStore = {
                 const res = await Api.patch(apiUrl.JADWAL_PERMANEN, {
                     periode_id: state.context.periode_id,
                     tipe:       state.context.type,
+                    jadwal:     state.draftJadwal,
                 });
                 commit('SET_PERMANEN', true);
                 return res.data.result;

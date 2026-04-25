@@ -46,7 +46,7 @@
           @click="handleConfirm"
           class="flex-1 py-2.5 text-sm font-bold text-white bg-teal-500 hover:bg-teal-600 rounded-xl transition shadow-sm shadow-teal-200"
         >
-          ✅ Ya, Simpan Permanen
+          Ya, Simpan Permanen
         </button>
       </div>
     </div>

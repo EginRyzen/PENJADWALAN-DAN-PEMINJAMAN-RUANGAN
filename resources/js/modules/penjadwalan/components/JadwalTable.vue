@@ -156,6 +156,7 @@
             <!-- Aksi -->
             <td class="px-3 py-3 text-center">
               <button
+                v-if="!isPermanen"
                 @click="$emit('edit', item)"
                 class="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 mx-auto"
                 :class="item.status === 'conflict'
@@ -167,6 +168,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                 </svg>
               </button>
+              <div v-else class="text-[10px] text-gray-400 font-medium italic">Read Only</div>
             </td>
           </tr>
         </tbody>
@@ -202,6 +204,7 @@ export default {
     ruanganList: { type: Array, default: () => [] },
     prodiList: { type: Array, default: () => [] },
     kelasList: { type: Array, default: () => [] },
+    isPermanen: { type: Boolean, default: false },
   },
   emits: ['edit'],
   data() {
