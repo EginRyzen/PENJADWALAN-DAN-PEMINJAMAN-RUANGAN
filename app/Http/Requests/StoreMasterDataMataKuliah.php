@@ -26,6 +26,7 @@ class StoreMasterDataMataKuliah extends FormRequest
             'nama'             => 'required|string|max:255',
             'sks'              => 'required|integer|min:1|max:10',
             'semester'         => 'required|integer|min:1|max:14',
+            'sks_ujian'        => 'nullable|integer|min:0|max:10',
             'program_studi_id' => 'required|uuid|exists:master_data_program_studis,id',
         ];
     }
@@ -38,6 +39,7 @@ class StoreMasterDataMataKuliah extends FormRequest
             'nama.required'             => 'Nama mata kuliah wajib diisi.',
             'sks.required'              => 'SKS wajib diisi.',
             'sks.integer'               => 'SKS harus berupa angka.',
+            'sks_ujian.integer'         => 'SKS Ujian harus berupa angka.',
             'semester.required'         => 'Semester wajib diisi.',
             'semester.integer'          => 'Semester harus berupa angka.',
             'program_studi_id.required' => 'Program studi wajib dipilih.',

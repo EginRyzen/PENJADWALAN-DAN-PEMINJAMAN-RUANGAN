@@ -9,14 +9,14 @@
           {{ hasDraftStatus ? '🟡 DRAFT' : '🟢 SIAP SIMPAN' }}
         </span>
       </div>
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 w-full">
         <!-- Search -->
-        <div class="relative">
+        <div class="relative flex-1">
           <app-input
             v-model="search"
-            placeholder="Cari MK, ruangan, dosen..."
+            placeholder="Cari mata kuliah, ruangan, atau dosen..."
             label=""
-            class="w-48"
+            class="w-full"
           >
             <template #icon-left>
               <svg class="w-3.5 h-3.5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -25,26 +25,35 @@
             </template>
           </app-input>
         </div>
-        <!-- Filter Hari -->
-        <select-auto-complete
-          v-model="filterHari"
-          :options="hariOptions"
-          item-text="label"
-          item-value="value"
-          placeholder="Semua Hari"
-          class="w-[120px]"
-        />
-        <!-- Filter Ruangan -->
-        <select-auto-complete
-          v-model="filterRuangan"
-          :options="ruanganList"
-          item-text="nama"
-          item-value="nama"
-          placeholder="Semua Ruangan"
-          class="w-[160px]"
-          @search="handleSearchRuangan"
-        />
+
+        <!-- Filter Button -->
+        <div class="relative">
+          <button
+            @click="showFilterModal = true"
+            class="h-11 px-4 flex items-center gap-2 rounded-lg border transition-all duration-200 font-bold text-xs"
+            :class="hasActiveFilters ? 'bg-teal-50 border-teal-200 text-teal-600' : 'bg-white border-gray-200 text-gray-600 hover:border-teal-400'"
+          >
+            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+            </svg>
+            Filter
+            <span v-if="activeFilterCount > 0" class="w-4 h-4 flex items-center justify-center bg-teal-500 text-white rounded-full text-[10px]">
+              {{ activeFilterCount }}
+            </span>
+          </button>
+        </div>
       </div>
+
+      <!-- Filter Modal -->
+      <jadwal-filter-modal
+        v-model="showFilterModal"
+        :filters="activeFilters"
+        :prodi-list="prodiList"
+        :kelas-list="kelasList"
+        :ruangan-list="ruanganList"
+        @apply="handleApplyFilters"
+        @search-ruangan="handleSearchRuangan"
+      />
     </div>
 
     <!-- Table Scroll Container -->
@@ -147,6 +156,7 @@
             <!-- Aksi -->
             <td class="px-3 py-3 text-center">
               <button
+                v-if="!isPermanen"
                 @click="$emit('edit', item)"
                 class="w-8 h-8 rounded-lg flex items-center justify-center transition-all duration-150 mx-auto"
                 :class="item.status === 'conflict'
@@ -158,6 +168,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/>
                 </svg>
               </button>
+              <div v-else class="text-[10px] text-gray-400 font-medium italic">Read Only</div>
             </td>
           </tr>
         </tbody>
@@ -165,25 +176,15 @@
     </div>
 
     <!-- Pagination -->
-    <div v-if="filteredItems.length > 0" class="px-4 py-3 border-t border-gray-100 flex flex-col sm:flex-row items-center justify-between gap-2">
-      <span class="text-xs text-gray-500">
-        Menampilkan {{ startIndex + 1 }}–{{ Math.min(startIndex + pageSize, filteredItems.length) }} dari {{ filteredItems.length }} jadwal
-      </span>
-      <div class="flex items-center gap-1">
-        <button @click="page--" :disabled="page <= 1" class="w-7 h-7 flex items-center justify-center rounded-lg border text-xs transition" :class="page <= 1 ? 'border-gray-100 text-gray-300 cursor-not-allowed' : 'border-gray-200 text-gray-600 hover:border-teal-400 hover:text-teal-600'">‹</button>
-        <button
-          v-for="p in totalPages" :key="p"
-          @click="page = p"
-          class="w-7 h-7 flex items-center justify-center rounded-lg border text-xs font-medium transition"
-          :class="page === p ? 'bg-teal-500 border-teal-500 text-white' : 'border-gray-200 text-gray-600 hover:border-teal-400 hover:text-teal-600'"
-        >{{ p }}</button>
-        <button @click="page++" :disabled="page >= totalPages" class="w-7 h-7 flex items-center justify-center rounded-lg border text-xs transition" :class="page >= totalPages ? 'border-gray-100 text-gray-300 cursor-not-allowed' : 'border-gray-200 text-gray-600 hover:border-teal-400 hover:text-teal-600'">›</button>
-      </div>
-      <select v-model="pageSize" class="text-xs border border-gray-200 rounded-lg px-2 py-1 focus:outline-none text-gray-600 bg-white">
-        <option :value="10">10 / halaman</option>
-        <option :value="20">20 / halaman</option>
-        <option :value="50">50 / halaman</option>
-      </select>
+    <div class="px-4 py-3 border-t border-gray-100">
+      <Pagination
+        :current="page"
+        :total="filteredItems.length"
+        :total-rows-on-page="paginatedItems.length"
+        :per-page="pageSize"
+        @page-changed="page = $event"
+        @paging-change="handlePagingChange"
+      />
     </div>
   </div>
 </template>
@@ -191,39 +192,79 @@
 <script>
 import AppInput from "@/core/components/AppInput.vue";
 import SelectAutoComplete from "@/core/components/SelectAutoComplete.vue";
+import Pagination from "@/core/components/Pagination.vue";
+import JadwalFilterModal from "./JadwalFilterModal.vue";
 import DISPATCH from "@/core/plugins/constants/dispatches";
 
 export default {
   name: 'JadwalTable',
-  components: { AppInput, SelectAutoComplete },
+  components: { AppInput, SelectAutoComplete, JadwalFilterModal, Pagination },
   props: {
     items: { type: Array, default: () => [] },
     ruanganList: { type: Array, default: () => [] },
+    prodiList: { type: Array, default: () => [] },
+    kelasList: { type: Array, default: () => [] },
+    isPermanen: { type: Boolean, default: false },
   },
   emits: ['edit'],
   data() {
     return {
       search: '',
-      filterHari: '',
-      filterRuangan: '',
+      activeFilters: {
+        prodi: '',
+        kelas: '',
+        hari: '',
+        ruangan: '',
+        status: '',
+        tanggalStart: '',
+        tanggalEnd: '',
+      },
+      showFilterModal: false,
       page: 1,
       pageSize: 10,
-      hariOptions: [
-        { label: 'Senin', value: 'Senin' },
-        { label: 'Selasa', value: 'Selasa' },
-        { label: 'Rabu', value: 'Rabu' },
-        { label: 'Kamis', value: 'Kamis' },
-        { label: 'Jumat', value: 'Jumat' },
-        { label: 'Sabtu', value: 'Sabtu' },
-      ],
     };
   },
   computed: {
     hasDraftStatus() {
       return this.items.some(i => i.status === 'conflict');
     },
+    hasActiveFilters() {
+      return this.activeFilterCount > 0;
+    },
+    activeFilterCount() {
+      return Object.values(this.activeFilters).filter(v => !!v).length;
+    },
     filteredItems() {
       let res = this.items;
+      
+      // Filter Status (Dosen, Ruangan, Kelas)
+      if (this.activeFilters.status) {
+        res = res.filter(i => i.status === this.activeFilters.status);
+      }
+
+      // Filter Rentang Tanggal
+      if (this.activeFilters.tanggalStart && this.activeFilters.tanggalEnd) {
+        res = res.filter(i => i.tanggal >= this.activeFilters.tanggalStart && i.tanggal <= this.activeFilters.tanggalEnd);
+      }
+
+      // Filter Hari
+      if (this.activeFilters.hari) {
+        res = res.filter(i => i.hari === this.activeFilters.hari);
+      }
+
+      // Filter Ruangan
+      if (this.activeFilters.ruangan) {
+        res = res.filter(i => i.ruangan_id == this.activeFilters.ruangan);
+      }
+
+      // Filter Prodi & Kelas
+      if (this.activeFilters.prodi) {
+        res = res.filter(i => i.prodi_id == this.activeFilters.prodi);
+      }
+      if (this.activeFilters.kelas) {
+        res = res.filter(i => i.kelas_id == this.activeFilters.kelas);
+      }
+
       if (this.search) {
         const q = this.search.toLowerCase();
         res = res.filter(i =>
@@ -232,12 +273,6 @@ export default {
           i.ruangan_nama.toLowerCase().includes(q) ||
           i.dosen_nama.toLowerCase().includes(q)
         );
-      }
-      if (this.filterHari) {
-        res = res.filter(i => i.hari === this.filterHari);
-      }
-      if (this.filterRuangan) {
-        res = res.filter(i => i.ruangan_nama === this.filterRuangan);
       }
       return res;
     },
@@ -255,7 +290,8 @@ export default {
     this.fetchRuangan();
   },
   watch: {
-    filteredItems() { this.page = 1; },
+    search() { this.page = 1; },
+    // Jangan reset page di filteredItems karena akan mengganggu saat edit data
   },
   methods: {
     async fetchRuangan(query) {
@@ -272,6 +308,31 @@ export default {
       this._ruanganSearchTimer = setTimeout(() => {
         this.fetchRuangan(query);
       }, 500);
+    },
+    handleApplyFilters(filters) {
+      this.activeFilters = { ...filters, status: '' }; // Reset status filter jika pakai filter modal
+      this.search = ''; // Reset search jika menggunakan filter modal
+      this.page = 1;
+    },
+    setStatusFilter(status) {
+      this.activeFilters.status = status;
+      this.activeFilters.tanggalStart = '';
+      this.activeFilters.tanggalEnd = '';
+      this.page = 1;
+      this.search = '';
+    },
+    handlePagingChange(size) {
+      this.pageSize = size;
+      this.page = 1;
+    },
+    resetFilters() {
+      this.activeFilters = {
+        prodi: '',
+        kelas: '',
+        hari: '',
+        ruangan: '',
+      };
+      this.search = '';
     },
     rowBg(status) {
       return {

@@ -70,6 +70,7 @@ class MasterDataMataKuliahController extends Controller
                 'nama'             => $request->nama,
                 'sks'              => $request->sks,
                 'semester'         => $request->semester,
+                'sks_ujian'        => $request->sks_ujian ?? 0,
                 'program_studi_id' => $request->program_studi_id,
             ]);
 
@@ -114,6 +115,7 @@ class MasterDataMataKuliahController extends Controller
                 'nama'             => $request->nama,
                 'sks'              => $request->sks,
                 'semester'         => $request->semester,
+                'sks_ujian'        => $request->sks_ujian ?? 0,
                 'program_studi_id' => $request->program_studi_id,
             ]);
 

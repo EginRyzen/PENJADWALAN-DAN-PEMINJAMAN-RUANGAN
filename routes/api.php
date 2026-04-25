@@ -7,6 +7,7 @@ use App\Http\Controllers\Building\DataBaseBuildingRoomController;
 use App\Http\Controllers\DataDocumentController;
 use App\Http\Controllers\Pengajuan\PengajuanPeminjamanController;
 use App\Http\Controllers\Pengajuan\PengajuanWorkflowController;
+use App\Http\Controllers\Penjadwalan\JadwalUjianController;
 use App\Http\Controllers\MasterData\MasterDataProgramStudiController;
 use App\Http\Controllers\MasterData\MasterDataKelasController;
 use App\Http\Controllers\MasterData\MasterDataMataKuliahController;
@@ -82,6 +83,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/peminjaman', [PengajuanPeminjamanController::class, 'index']);
         Route::post('/peminjaman', [PengajuanPeminjamanController::class, 'store']);
         Route::get('/peminjaman/{id}', [PengajuanPeminjamanController::class, 'show']);
+        Route::post('/approve', [PengajuanPeminjamanController::class, 'approve']);
         Route::get('/peminjaman/{id}/workflow', [PengajuanWorkflowController::class, 'index']);
+    });
+
+    // Penjadwalan Ujian
+    Route::prefix('jadwal')->group(function () {
+        Route::get('/',             [JadwalUjianController::class, 'index']);
+        Route::get('/draft',        [JadwalUjianController::class, 'getDraft']);
+        Route::post('/generate',    [JadwalUjianController::class, 'generate']);
+        Route::post('/draft',       [JadwalUjianController::class, 'saveDraft']);
+        Route::patch('/draft/{id}', [JadwalUjianController::class, 'updateRow']);
+        Route::patch('/permanen',   [JadwalUjianController::class, 'savePermanen']);
+        Route::delete('/draft',     [JadwalUjianController::class, 'deleteDraft']);
     });
 });

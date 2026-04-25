@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignUuid('pengajuan_id')->constrained('pengajuan_ruangans');
             $table->foreignUuid('status_id')->constrained('workflow_steps');
             $table->foreignUuid('user_id')->constrained('users');
-            $table->enum('aksi', ['APPROVE', 'REJECT', 'KOREKSI', 'CREATED', 'SUBMITTED']);
+            $table->enum('aksi', ['APPROVE', 'REJECT', 'KOREKSI', 'CREATED', 'SUBMITTED', 'COMPLETED']);
             $table->text('catatan')->nullable();
             $table->integer('sequence');
             $table->timestamps();

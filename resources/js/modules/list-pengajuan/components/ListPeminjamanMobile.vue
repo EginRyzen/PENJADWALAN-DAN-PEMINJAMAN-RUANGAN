@@ -4,7 +4,7 @@
     <div class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-100 p-4 shadow-sm">
       <div class="flex justify-between items-center mb-4">
         <h1 class="text-xl font-bold text-gray-800">Daftar Peminjaman</h1>
-        <router-link :to="{ name: 'peminjaman.create' }">
+        <router-link v-if="canCreatePengajuan" :to="{ name: 'peminjaman.create' }">
           <button class="bg-teal-500 hover:bg-teal-600 text-white p-2.5 rounded-full shadow-lg transition-all active:scale-95">
             <font-awesome-icon icon="plus" />
           </button>
@@ -313,6 +313,27 @@ export default {
     window.removeEventListener("resize", this.onResize);
   },
   computed: {
+    canCreatePengajuan() {
+      // Coba ambil dari Vuex state terlebih dahulu
+      const user = this.$store.state.auth.user;
+      let roles = [];
+
+      if (user && user.roles) {
+        roles = user.roles;
+      } else {
+        // Fallback: Ambil dari localStorage jika user belum ter-load dari API akibat refresh
+        const savedRoles = localStorage.getItem('user_roles');
+        if (savedRoles) {
+          try {
+            roles = JSON.parse(savedRoles);
+          } catch (e) {
+            roles = [];
+          }
+        }
+      }
+
+      return roles.includes('MAHASISWA') || roles.includes('DOSEN');
+    },
     pengajuans() {
       return this.$store.state.listPengajuan.pengajuans || [];
     },

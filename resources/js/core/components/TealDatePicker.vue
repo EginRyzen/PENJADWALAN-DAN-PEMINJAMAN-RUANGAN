@@ -7,13 +7,18 @@
     <!-- Trigger Input -->
     <button
       type="button"
-      @click="togglePicker"
+      @click="!disabled && togglePicker()"
+      :disabled="disabled"
       class="w-full h-11 flex items-center gap-2 px-3 border rounded-lg transition-all duration-200 text-sm text-left"
-      :class="isOpen
-        ? 'border-teal-500 ring-1 ring-teal-200 bg-white'
-        : modelValue
-          ? 'border-teal-400 bg-white text-gray-700 hover:border-teal-500'
-          : 'border-gray-200 bg-white text-gray-400 hover:border-teal-400'"
+      :class="[
+        disabled
+          ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed opacity-70'
+          : (isOpen
+            ? 'border-teal-500 ring-1 ring-teal-200 bg-white'
+            : modelValue
+              ? 'border-teal-400 bg-white text-gray-700 hover:border-teal-500'
+              : 'border-gray-200 bg-white text-gray-400 hover:border-teal-400')
+      ]"
     >
       <!-- Calendar icon -->
       <svg class="w-4 h-4 flex-shrink-0" :class="modelValue ? 'text-teal-500' : 'text-gray-400'" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -134,6 +139,10 @@ export default {
     minDate:       { type: String, default: '' },   // 'YYYY-MM-DD'
     hariLiburList: { type: Array, default: () => [] }, // Prop list (optional if store integrated)
     disableWeekend:{ type: Boolean, default: false },
+    allowedDays:   { type: Array,   default: null }, // Array of day names like ['Senin', 'Selasa']
+    disabled:      { type: Boolean, default: false },
+    disableHolidays: { type: Boolean, default: false },
+    disabledDates:   { type: Array,   default: () => [] }, // Array of 'YYYY-MM-DD'
   },
   emits: ['update:modelValue', 'change'],
   data() {
@@ -240,10 +249,26 @@ export default {
     isDisabledDay(day) {
       const ds = this.dayStr(day);
       if (this.minDate && ds < this.minDate) return true;
+      
+      // Check explicit disabled dates
+      if (this.disabledDates && this.disabledDates.includes(ds)) return true;
+
+      // Check holidays if disabled
+      if (this.disableHolidays && this.isHoliday(ds)) return true;
+
+      const date = new Date(ds + 'T00:00:00');
+      const dow  = date.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
+
       if (this.disableWeekend) {
-        const dow = new Date(ds + 'T00:00:00').getDay();
         if (dow === 0 || dow === 6) return true;
       }
+
+      if (this.allowedDays && this.allowedDays.length > 0) {
+        const dayNames = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+        const dayName = dayNames[dow];
+        if (!this.allowedDays.includes(dayName)) return true;
+      }
+
       return false;
     },
     isHoliday(dateStr) {

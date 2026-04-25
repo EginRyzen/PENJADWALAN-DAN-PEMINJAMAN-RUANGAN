@@ -95,8 +95,8 @@ export default {
         let performerLabel = "Oleh";
         if (item.aksi === 'CREATED') performerLabel = "Dibuat oleh";
         else if (item.aksi === 'SUBMITTED') performerLabel = "Diajukan oleh";
-        else if (item.aksi === 'APPROVED' || item.aksi === 'DISETUJUI') performerLabel = "Disetujui oleh";
-        else if (item.aksi === 'REJECTED' || item.aksi === 'DITOLAK') performerLabel = "Ditolak oleh";
+        else if (item.aksi === 'APPROVE' || item.aksi === 'APPROVED' || item.aksi === 'DISETUJUI' || item.aksi === 'COMPLETED') performerLabel = "Disetujui oleh";
+        else if (item.aksi === 'REJECT' || item.aksi === 'REJECTED' || item.aksi === 'DITOLAK') performerLabel = "Ditolak oleh";
         else if (item.aksi === 'REVISION' || item.aksi === 'KOREKSI') performerLabel = "Dikoreksi oleh";
 
         // Logic for "Diajukan kepada"
