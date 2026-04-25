@@ -141,6 +141,8 @@ export default {
     disableWeekend:{ type: Boolean, default: false },
     allowedDays:   { type: Array,   default: null }, // Array of day names like ['Senin', 'Selasa']
     disabled:      { type: Boolean, default: false },
+    disableHolidays: { type: Boolean, default: false },
+    disabledDates:   { type: Array,   default: () => [] }, // Array of 'YYYY-MM-DD'
   },
   emits: ['update:modelValue', 'change'],
   data() {
@@ -248,6 +250,12 @@ export default {
       const ds = this.dayStr(day);
       if (this.minDate && ds < this.minDate) return true;
       
+      // Check explicit disabled dates
+      if (this.disabledDates && this.disabledDates.includes(ds)) return true;
+
+      // Check holidays if disabled
+      if (this.disableHolidays && this.isHoliday(ds)) return true;
+
       const date = new Date(ds + 'T00:00:00');
       const dow  = date.getDay(); // 0=Sun, 1=Mon, ..., 6=Sat
 

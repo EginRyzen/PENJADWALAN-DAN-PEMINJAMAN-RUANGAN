@@ -133,6 +133,7 @@
       :sks-duration="sksDuration"
       :allowed-days="allowedDays"
       :disabled-dates="disabledDates"
+      disable-holidays
       @save="handleRowSave"
     />
 
@@ -299,6 +300,9 @@ export default {
       const start = new Date(this.dateRange.start);
       const end   = new Date(this.dateRange.end);
       return Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    },
+    disabledDates() {
+      return this.hariLiburList.map(h => h.tanggal);
     },
   },
   mounted() {

@@ -57,6 +57,7 @@
             placeholder="Pilih tanggal ujian..."
             :allowed-days="allowedDays"
             :disabled-dates="disabledDates"
+            :disable-holidays="disableHolidays"
             :min-date="today"
           />
         </div>
@@ -159,6 +160,7 @@ export default {
     sksDuration: { type: Number, default: 50 },
     allowedDays:   { type: Array,   default: () => [] },
     disabledDates: { type: Array,   default: () => [] },
+    disableHolidays: { type: Boolean, default: false },
   },
   emits: ['update:modelValue', 'save'],
   data() {

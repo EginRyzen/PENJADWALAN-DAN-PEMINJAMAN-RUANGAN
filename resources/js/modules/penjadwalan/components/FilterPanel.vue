@@ -58,6 +58,7 @@
           :min-date="today"
           :disabled="!localContext.periode_id || !!scheduleStatus"
           :hari-libur-list="hariLiburList"
+          :disable-holidays="true"
           :allowed-days="allowedDays"
           @change="emitContext"
         />
