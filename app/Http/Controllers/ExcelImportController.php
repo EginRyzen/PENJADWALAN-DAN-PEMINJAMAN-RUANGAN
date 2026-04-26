@@ -10,6 +10,7 @@ use App\Imports\KelasImport;
 use App\Imports\MataKuliahImport;
 use App\Imports\MahasiswaImport;
 use App\Imports\DosenImport;
+use App\Imports\HariLiburImport;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
@@ -115,6 +116,20 @@ class ExcelImportController extends Controller
     public function importDosen(Request $request)
     {
         return $this->processImport(new DosenImport(), $request);
+    }
+
+    // Master Data Hari Libur
+    public function downloadTemplateHariLibur()
+    {
+        return Excel::download(new GenericTemplateExport('Hari Libur', [
+            ['tanggal', 'keterangan', 'tipe', 'nama_periode'],
+            ['2025-08-17', 'Hari Kemerdekaan', 'nasional', 'Ganjil 2025/2026'],
+        ]), 'template_hari_libur.xlsx');
+    }
+
+    public function importHariLibur(Request $request)
+    {
+        return $this->processImport(new HariLiburImport(), $request);
     }
 
     private function processImport($importClass, Request $request)

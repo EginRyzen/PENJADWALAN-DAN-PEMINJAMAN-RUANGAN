@@ -97,6 +97,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
             Route::get('dosen/template', [ExcelImportController::class, 'downloadTemplateDosen']);
             Route::post('dosen/import', [ExcelImportController::class, 'importDosen']);
+
+            Route::get('hari-libur/template', [ExcelImportController::class, 'downloadTemplateHariLibur']);
+            Route::post('hari-libur/import', [ExcelImportController::class, 'importHariLibur']);
         });
     });
 
