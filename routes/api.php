@@ -20,6 +20,7 @@ use App\Http\Controllers\MasterData\MasterDataHariLiburController;
 use App\Http\Controllers\MasterData\MenuController;
 use App\Http\Controllers\MasterData\RoleMenuController;
 use App\Http\Controllers\NotificationController;
+use App\Http\Controllers\ExcelImportController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -63,6 +64,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/rooms/{id}/facilities', [DataBaseBuildingRoomController::class, 'getFacilities']);
         Route::apiResource('rooms', DataBaseBuildingRoomController::class);
         Route::apiResource('facilities', DataBaseBuildingFacilityController::class);
+        Route::get('/excel/template', [ExcelImportController::class, 'downloadTemplate']);
+        Route::post('/excel/import', [ExcelImportController::class, 'import']);
     });
     Route::prefix('master-data')->group(function () {
         Route::apiResource('program-studi', MasterDataProgramStudiController::class);
