@@ -80,6 +80,24 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('role-menus', RoleMenuController::class);
         Route::post('operasional-schedule/bulk-update', [MasterOperasionalScheduleController::class, 'bulkUpdate']);
         Route::apiResource('operasional-schedule', MasterOperasionalScheduleController::class);
+
+        // Excel Import Master Data
+        Route::prefix('excel')->group(function () {
+            Route::get('program-studi/template', [ExcelImportController::class, 'downloadTemplateProgramStudi']);
+            Route::post('program-studi/import', [ExcelImportController::class, 'importProgramStudi']);
+
+            Route::get('kelas/template', [ExcelImportController::class, 'downloadTemplateKelas']);
+            Route::post('kelas/import', [ExcelImportController::class, 'importKelas']);
+
+            Route::get('mata-kuliah/template', [ExcelImportController::class, 'downloadTemplateMataKuliah']);
+            Route::post('mata-kuliah/import', [ExcelImportController::class, 'importMataKuliah']);
+
+            Route::get('mahasiswa/template', [ExcelImportController::class, 'downloadTemplateMahasiswa']);
+            Route::post('mahasiswa/import', [ExcelImportController::class, 'importMahasiswa']);
+
+            Route::get('dosen/template', [ExcelImportController::class, 'downloadTemplateDosen']);
+            Route::post('dosen/import', [ExcelImportController::class, 'importDosen']);
+        });
     });
 
     Route::prefix('pengajuan')->group(function () {
