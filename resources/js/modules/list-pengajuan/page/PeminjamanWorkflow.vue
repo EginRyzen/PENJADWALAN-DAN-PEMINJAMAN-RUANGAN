@@ -154,6 +154,19 @@ export default {
             comment: item.catatan
           });
         }
+        else if (item.aksi === 'KOREKSI') {
+          // Case: Correction Action
+          result.push({
+            title: 'Koreksi Diperlukan',
+            status: 'error',
+            timestamp: timestamp,
+            performerLabel: performerLabel,
+            performerName: item.user?.name || "System",
+            targetNames: [],
+            commentLabel: "Alasan Koreksi",
+            comment: item.catatan
+          });
+        }
         else {
           // Standard Entry (CREATED, SUBMITTED, REJECT, etc)
           result.push({

@@ -76,6 +76,8 @@ export default {
     GET_WORKFLOW_HISTORY: "getWorkflowHistory",
     APPROVE_PENGAJUAN: "approvePengajuan",
     REJECT_PENGAJUAN: "rejectPengajuan",
+    REVISION_PENGAJUAN: "revisionPengajuan",
+    UPDATE_PENGAJUAN: "updatePengajuan",
     // Penjadwalan Ujian
     GET_JADWAL:           "getJadwal",
     GET_JADWAL_DRAFT:     "getJadwalDraft",

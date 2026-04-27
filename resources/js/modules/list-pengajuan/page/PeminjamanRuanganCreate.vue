@@ -35,7 +35,7 @@
         <!-- Centered Title -->
         <div class="text-center">
           <h1 class="text-2xl md:text-3xl font-semibold text-gray-900 tracking-tight">
-            Buat Peminjaman Ruangan
+            {{ $route.params.id ? 'Perbarui' : 'Buat' }} Peminjaman Ruangan
           </h1>
         </div>
       </div>
@@ -500,7 +500,7 @@ export default {
       breadcrumbs: [
         { text: "Gedung", link: "#" },
         { text: "List Peminjaman Ruangan", link: "/app/list-peminjaman-ruangan" },
-        { text: "Buat Pengajuan Peminjaman", link: "#"},
+        { text: this.$route.params.id ? "Edit Pengajuan" : "Buat Pengajuan Peminjaman", link: "#"},
       ],
       tipeOptions: [
         { id: "PEMBELAJARAN", name: "Pembelajaran" },
@@ -553,6 +553,9 @@ export default {
   },
   mounted() {
     this.fetchBuildingOptions();
+    if (this.$route.params.id) {
+      this.fetchPengajuanDetail(this.$route.params.id);
+    }
     window.addEventListener("resize", this.onResize);
   },
   beforeDestroy() {
@@ -639,6 +642,73 @@ export default {
     },
     goBack() {
       this.$router.push({ name: 'peminjaman.list' });
+    },
+    async fetchPengajuanDetail(id) {
+      try {
+        this.$store.commit("SET_LOADING", true);
+        const data = await this.$store.dispatch(DISPATCH.GET_DETAIL_PENGAJUAN, id);
+        
+        // Populate Form
+        this.form.tipe_pengajuan = data.tipe_pengajuan;
+        this.form.tanggal_start = data.tanggal_start_peminjaman;
+        this.form.tanggal_end = data.tanggal_end_peminjaman;
+        this.form.jam_mulai = data.jam_mulai;
+        this.form.jam_selesai = data.jam_selesai;
+        this.form.keterangan = data.alasan;
+        
+        if (data.dokumen_pendukung) {
+          this.form.file_name = data.dokumen_pendukung.file_name;
+          this.form.file_url = data.dokumen_pendukung.file_url;
+          this.form.created_at = moment(data.dokumen_pendukung.created_at).format("DD/MM/YYYY HH:mm");
+          this.form.created_by_name = data.user?.name || "Anda";
+        }
+
+        this.form.dokumen_pendukung_id = data.dokumen_pendukung_id;
+
+        // Group rooms by building
+        const buildingGroups = {};
+        data.items.forEach(item => {
+          if (!item.ruangan) return;
+          const bId = item.ruangan.building_id;
+          if (!buildingGroups[bId]) {
+            buildingGroups[bId] = [];
+          }
+          buildingGroups[bId].push({
+            id: item.ruangan_id,
+            name: item.ruangan.room_name
+          });
+        });
+
+        this.form.items = [];
+        for (const [bId, rooms] of Object.entries(buildingGroups)) {
+          // Fetch building details to get rooms_list
+          const buildingData = await this.$store.dispatch(`gedung/${DISPATCH.GET_DETAIL_GEDUNG_DATA.split('/')[1]}`, bId);
+          
+          this.form.items.push({
+            building_id: bId,
+            selected_rooms: rooms,
+            rooms_list: buildingData.rooms.map(r => ({ id: r.id, name: r.room_name })),
+            loadingRooms: false
+          });
+        }
+
+        // Add a default row if empty
+        if (this.form.items.length === 0) {
+          this.addRoomRow();
+        }
+
+        this.datePicker = {
+          start: new Date(data.tanggal_start_peminjaman),
+          end: new Date(data.tanggal_end_peminjaman)
+        };
+
+      } catch (error) {
+        console.error("Gagal memuat detail pengajuan:", error);
+        this.errorMessage = "Gagal memuat data pengajuan.";
+        this.showErrorModal = true;
+      } finally {
+        this.$store.commit("SET_LOADING", false);
+      }
     },
     openTimeModal(type) {
       if (type === 'start') {
@@ -814,7 +884,10 @@ export default {
           dokumen_pendukung_id: dokumenId
         };
 
-        const response = await this.$store.dispatch(DISPATCH.SUBMIT_PENGAJUAN, payload);
+        const action = this.$route.params.id ? DISPATCH.UPDATE_PENGAJUAN : DISPATCH.SUBMIT_PENGAJUAN;
+        const finalPayload = this.$route.params.id ? { ...payload, id: this.$route.params.id } : payload;
+
+        const response = await this.$store.dispatch(action, finalPayload);
 
         this.showSuccessModal = true;
       } catch (error) {
