@@ -2,6 +2,7 @@ import ListMataKuliah from '@/modules/master-data/page/ListMataKuliah.vue';
 import ListMahasiswa from '@/modules/master-data/page/ListMahasiswa.vue';
 import ListProgramStudi from '@/modules/master-data/page/ListProgramStudi.vue';
 import ListDosen from '@/modules/master-data/page/ListDosen.vue';
+import ListKelasMataKuliah from '@/modules/master-data/page/ListKelasMataKuliah.vue';
 
 const masterDataRoutes = [
     {
@@ -26,6 +27,12 @@ const masterDataRoutes = [
         path: 'dosen-list',
         name: 'master-data.dosen-list',
         component: ListDosen,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: 'kelas-mata-kuliah',
+        name: 'master-data.kelas-mata-kuliah',
+        component: ListKelasMataKuliah,
         meta: { requiresAuth: true }
     }
 ];

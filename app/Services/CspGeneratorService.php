@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\JadwalUjian;
 use App\Models\MasterDataKelas;
 use App\Models\MasterDataMataKuliah;
+use App\Models\MasterDataKelasMataKuliah;
 use App\Models\MasterDataDosen;
 use App\Models\MasterDataHariLibur;
 use App\Models\MasterSksSetting;
@@ -62,14 +63,20 @@ class CspGeneratorService
             ->get()
             ->shuffle(); // Acak agar beban dosen merata
 
-        // 7. Kumpulkan semua mata kuliah yang perlu dijadwalkan
+        // 7. Kumpulkan semua mata kuliah yang perlu dijadwalkan (Berdasarkan Plotting Kelas Mata Kuliah)
         $matkulPerKelas = [];
         $isUjian = in_array($tipe, ['uts', 'uas']);
 
         foreach ($kelasList as $kelas) {
-            $matkulList = MasterDataMataKuliah::where('program_studi_id', $kelas->program_studi_id)
+            // Ambil plotting mata kuliah khusus untuk kelas ini dari table junction
+            $plottingList = MasterDataKelasMataKuliah::with('mataKuliah')
+                ->where('kelas_id', $kelas->id)
                 ->get();
-            foreach ($matkulList as $mk) {
+
+            foreach ($plottingList as $plotting) {
+                $mk = $plotting->mataKuliah;
+                if (!$mk) continue;
+
                 // Gunakan sks_ujian jika tipe adalah UTS/UAS, jika tidak gunakan sks biasa
                 $sksBasis = ($isUjian) ? ($mk->sks_ujian ?: 1) : $mk->sks;
                 

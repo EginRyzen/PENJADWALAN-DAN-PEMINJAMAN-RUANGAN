@@ -47,6 +47,11 @@ export default {
     CREATE_PERIODE: "createPeriode",
     UPDATE_PERIODE: "updatePeriode",
     DELETE_PERIODE: "deletePeriode",
+    // Master Data - Kelas Mata Kuliah
+    GET_KELAS_MATA_KULIAH: "getKelasMataKuliah",
+    CREATE_KELAS_MATA_KULIAH: "createKelasMataKuliah",
+    UPDATE_KELAS_MATA_KULIAH: "updateKelasMataKuliah",
+    DELETE_KELAS_MATA_KULIAH: "deleteKelasMataKuliah",
     // Master Data - Hari Libur
     GET_HARI_LIBUR: "getHariLibur",
     CREATE_HARI_LIBUR: "createHariLibur",

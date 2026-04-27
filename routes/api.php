@@ -19,6 +19,7 @@ use App\Http\Controllers\MasterData\MasterPeriodeController;
 use App\Http\Controllers\MasterData\MasterDataHariLiburController;
 use App\Http\Controllers\MasterData\MenuController;
 use App\Http\Controllers\MasterData\RoleMenuController;
+use App\Http\Controllers\MasterData\MasterDataKelasMataKuliahController;
 use App\Http\Controllers\NotificationController;
 use App\Http\Controllers\ExcelImportController;
 use Illuminate\Http\Request;
@@ -80,6 +81,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('role-menus', RoleMenuController::class);
         Route::post('operasional-schedule/bulk-update', [MasterOperasionalScheduleController::class, 'bulkUpdate']);
         Route::apiResource('operasional-schedule', MasterOperasionalScheduleController::class);
+        Route::apiResource('kelas-mata-kuliah', MasterDataKelasMataKuliahController::class);
 
         // Excel Import Master Data
         Route::prefix('excel')->group(function () {
