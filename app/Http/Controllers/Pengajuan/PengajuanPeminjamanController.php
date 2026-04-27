@@ -397,6 +397,80 @@ class PengajuanPeminjamanController extends Controller
     }
 
     /**
+     * Reject a pengajuan.
+     */
+    public function reject(Request $request)
+    {
+        try {
+            $request->validate([
+                'pengajuan_id' => 'required|uuid',
+                'catatan' => 'required|string' // Catatan wajib untuk penolakan
+            ]);
+
+            return DB::transaction(function () use ($request) {
+                $user = auth()->user();
+                $pengajuan = PengajuanRuangan::with(['status.role', 'user'])->findOrFail($request->pengajuan_id);
+                $currentStatus = $pengajuan->status;
+
+                if (!$currentStatus) {
+                    return response()->json(['message' => 'Status pengajuan tidak ditemukan.'], 404);
+                }
+
+                // 1. Otorisasi (Sama dengan approve)
+                $requiredRole = $currentStatus->role ? $currentStatus->role->name_role : null;
+                $userRoles = $user->roles->pluck('name_role')->toArray();
+
+                if (!$requiredRole || !in_array($requiredRole, $userRoles)) {
+                    return response()->json(['message' => 'Anda tidak berwenang melakukan penolakan pada tahap ini.'], 403);
+                }
+
+                // 2. Cari Status REJECTED sesuai tipe pengajuan
+                $rejectStatus = WorkflowStep::where('tipe_pengajuan', $pengajuan->tipe_pengajuan)
+                    ->where('nama_status', 'REJECTED')
+                    ->first();
+
+                if (!$rejectStatus) {
+                    return response()->json(['message' => 'Status REJECTED tidak ditemukan untuk tipe pengajuan ini.'], 400);
+                }
+
+                // 3. Update Status Pengajuan
+                $pengajuan->current_status_id = $rejectStatus->id;
+                $pengajuan->save();
+
+                // 4. Catat Sejarah Penolakan (History)
+                $lastSequence = PengajuanHistory::where('pengajuan_id', $pengajuan->id)->max('sequence') ?? 0;
+                
+                PengajuanHistory::create([
+                    'pengajuan_id' => $pengajuan->id,
+                    'status_id' => $rejectStatus->id,
+                    'user_id' => $user->id,
+                    'aksi' => 'REJECT',
+                    'catatan' => $request->catatan,
+                    'sequence' => $lastSequence + 1,
+                ]);
+
+                // 5. Kirim Notifikasi Penolakan ke Pembuat Pengajuan
+                $requester = $pengajuan->user;
+                if ($requester) {
+                    try {
+                        $requester->notify(new \App\Notifications\PengajuanRejectedNotification($pengajuan, $user, $request->catatan));
+                    } catch (\Exception $e) {
+                        logger()->error('Notification Error (Rejected): ' . $e->getMessage());
+                    }
+                }
+
+                return response()->json([
+                    'message' => 'Pengajuan telah ditolak.',
+                    'data' => $pengajuan
+                ]);
+            });
+        } catch (\Exception $e) {
+            logger()->error('Reject Error: ' . $e->getMessage());
+            return response()->json(['message' => 'Terjadi kesalahan saat memproses penolakan.'], 500);
+        }
+    }
+
+    /**
      * Show the form for editing the specified resource.
      */
     public function edit(string $id)

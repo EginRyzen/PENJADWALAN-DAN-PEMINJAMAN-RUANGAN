@@ -118,6 +118,16 @@ export const Store = {
         throw error;
       }
     },
+    
+    async [actions.REJECT_PENGAJUAN]({ commit }, payload) {
+      try {
+        const response = await Api.post(apiUrl.REJECT_PENGAJUAN, payload);
+        return response.data;
+      } catch (error) {
+        console.error('Error rejecting pengajuan:', error);
+        throw error;
+      }
+    },
 
     async [actions.UPLOAD_IMAGE]({ commit }, file) {
       try {

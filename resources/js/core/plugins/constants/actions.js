@@ -75,6 +75,7 @@ export default {
     GET_DETAIL_PENGAJUAN: "getDetailPengajuan",
     GET_WORKFLOW_HISTORY: "getWorkflowHistory",
     APPROVE_PENGAJUAN: "approvePengajuan",
+    REJECT_PENGAJUAN: "rejectPengajuan",
     // Penjadwalan Ujian
     GET_JADWAL:           "getJadwal",
     GET_JADWAL_DRAFT:     "getJadwalDraft",

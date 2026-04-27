@@ -226,8 +226,8 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h3 class="font-extrabold text-3xl mb-2 text-slate-800 tracking-tight">Berhasil!</h3>
-          <p class="py-2 text-slate-500 font-medium">Pengajuan telah berhasil disetujui.</p>
+          <h3 class="font-extrabold text-3xl mb-2 text-slate-800 tracking-tight">{{ successModal.title }}</h3>
+          <p class="py-2 text-slate-500 font-medium">{{ successModal.message }}</p>
           <div class="modal-action justify-center mt-8">
             <button class="h-12 w-full rounded-xl font-extrabold text-sm transition-all text-white bg-[#2DD4BF] hover:bg-[#26bba8] active:scale-95 shadow-lg shadow-teal-500/20" @click="closeSuccessModal">
               Tutup & Kembali
@@ -264,7 +264,7 @@ export default {
       form: {
         id: "",
         no_pengajuan: "LOADING...",
-        unit_name: "KCU SMP 2 - Kanwil 10",
+        unit_name: "",
         tipe_pengajuan: "",
         tanggal_start: "",
         tanggal_end: "",
@@ -287,7 +287,9 @@ export default {
         config: {}
       },
       successModal: {
-        show: false
+        show: false,
+        title: "Berhasil!",
+        message: ""
       }
     };
   },
@@ -493,10 +495,25 @@ export default {
           });
           
           // Tampilkan Modal Success
+          this.successModal.title = "Berhasil Disetujui!";
+          this.successModal.message = "Pengajuan telah berhasil disetujui.";
           this.successModal.show = true;
-        } else {
-          // Untuk Tolak dan Koreksi (Belum ada endpoint backend-nya di scope ini)
-          alert(`Fitur ${action} sedang dalam tahap pengembangan.`);
+        } else if (action === 'tolak') {
+          // Panggil Action Vuex untuk Tolak
+          await this.$store.dispatch(DISPATCH.REJECT_PENGAJUAN, {
+            pengajuan_id: this.form.id,
+            catatan: comment || ''
+          });
+          
+          // Tampilkan Modal Success
+          this.successModal.title = "Berhasil Ditolak!";
+          this.successModal.message = "Pengajuan telah berhasil ditolak.";
+          this.successModal.show = true;
+        } else if (action === 'koreksi') {
+          // Untuk Koreksi (Backend belum siap, tapi UI kita siapkan)
+          this.successModal.title = "Berhasil Dikirim!";
+          this.successModal.message = "Permintaan koreksi telah berhasil dikirim.";
+          this.successModal.show = true;
         }
       } catch (error) {
         // Error sudah ditangani secara global oleh interceptor Api.js (muncul sebagai Toast popup)

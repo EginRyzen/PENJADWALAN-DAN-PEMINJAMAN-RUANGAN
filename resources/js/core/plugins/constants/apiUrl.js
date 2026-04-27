@@ -29,6 +29,7 @@ const apiUrl = {
     GET_DETAIL_PENGAJUAN: "/pengajuan/peminjaman",
     GET_WORKFLOW_HISTORY: "/pengajuan/peminjaman",
     APPROVE_PENGAJUAN: "/pengajuan/approve",
+    REJECT_PENGAJUAN: "/pengajuan/reject",
     NOTIFICATIONS: "/notifications",
     NOTIFICATION_UNREAD_COUNT: "/notifications/unread-count",
     MARK_ALL_NOTIFICATIONS_READ: "/notifications/mark-all-read",
