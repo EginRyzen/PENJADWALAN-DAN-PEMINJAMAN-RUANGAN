@@ -132,24 +132,19 @@ class PengajuanPeminjamanController extends Controller
                     return response()->json(['message' => 'Salah satu ruangan sudah dipesan pada waktu tersebut.'], 422);
                 }
 
-                // 3. Determine Initial Workflow status (Next sequence after draft)
-                $userRoleName = $userRole->name_role;
-                $statusName = '';
-                
-                if ($userRoleName === 'MAHASISWA') {
-                    $statusName = ($validated['tipe_pengajuan'] === 'PEMBELAJARAN') ? 'VERIFIKASI_TU' : 'VALIDASI_KEMAHASISWAAN';
-                } else if ($userRoleName === 'DOSEN') {
-                    $statusName = ($validated['tipe_pengajuan'] === 'PEMBELAJARAN') ? 'VERIFIKASI_TU' : 'PENGECEKAN_RUANG_TU';
+                // 3. Determine Initial Workflow status (Dynamic based on Track)
+                $initialStep = WorkflowStep::where('tipe_pengajuan', $validated['tipe_pengajuan'])
+                    ->where('role_id', $userRole->id)
+                    ->whereIn('urutan', [1, 11, 21])
+                    ->first();
+
+                if (!$initialStep) {
+                    return response()->json(['message' => 'Workflow awal tidak ditemukan untuk role Anda.'], 422);
                 }
 
                 $nextStatus = WorkflowStep::where('tipe_pengajuan', $validated['tipe_pengajuan'])
-                    ->where('urutan', 2)
-                    ->where('nama_status', $statusName)
-                    ->first();
-
-                $initialStep = WorkflowStep::where('tipe_pengajuan', $validated['tipe_pengajuan'])
-                    ->where('role_id', $userRole->id)
-                    ->where('urutan', 1)
+                    ->where('urutan', '>', $initialStep->urutan)
+                    ->orderBy('urutan', 'asc')
                     ->first();
 
                 // 4. Generate No. Pengajuan (Format: KodeGedung-Tahun-Urutan)
@@ -176,7 +171,7 @@ class PengajuanPeminjamanController extends Controller
                 $pengajuan = PengajuanRuangan::create([
                     'no_pengajuan' => $noPengajuan,
                     'tipe_pengajuan' => $validated['tipe_pengajuan'],
-                    'current_status_id' => $nextStatus ? $nextStatus->id : ($initialStep ? $initialStep->id : null),
+                    'current_status_id' => $nextStatus ? $nextStatus->id : $initialStep->id,
                     'user_id' => $user->id,
                     'tanggal_pengajuan' => now(),
                     'tanggal_start_peminjaman' => $validated['tanggal_start'],
@@ -273,7 +268,7 @@ class PengajuanPeminjamanController extends Controller
         try {
             $data = PengajuanRuangan::with([
                 'status', 
-                'user', 
+                'user.roles', 
                 'dokumen_pendukung', 
                 'items.ruangan.building',
                 'histories' => function($q) {

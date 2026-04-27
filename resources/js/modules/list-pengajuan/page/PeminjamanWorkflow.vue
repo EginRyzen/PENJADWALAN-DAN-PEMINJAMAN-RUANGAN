@@ -91,39 +91,72 @@ export default {
     workflowSteps() {
       if (!this.workflow_history) return [];
       
-      return this.workflow_history.map(item => {
+      const result = [];
+      
+      this.workflow_history.forEach(item => {
+        // Mapping label performer
         let performerLabel = "Oleh";
         if (item.aksi === 'CREATED') performerLabel = "Dibuat oleh";
         else if (item.aksi === 'SUBMITTED') performerLabel = "Diajukan oleh";
-        else if (item.aksi === 'APPROVE' || item.aksi === 'APPROVED' || item.aksi === 'DISETUJUI' || item.aksi === 'COMPLETED') performerLabel = "Disetujui oleh";
-        else if (item.aksi === 'REJECT' || item.aksi === 'REJECTED' || item.aksi === 'DITOLAK') performerLabel = "Ditolak oleh";
-        else if (item.aksi === 'REVISION' || item.aksi === 'KOREKSI') performerLabel = "Dikoreksi oleh";
+        else if (['APPROVE', 'APPROVED', 'DISETUJUI', 'COMPLETED'].includes(item.aksi)) performerLabel = "Disetujui oleh";
+        else if (['REJECT', 'REJECTED', 'DITOLAK'].includes(item.aksi)) performerLabel = "Ditolak oleh";
+        else if (['REVISION', 'KOREKSI'].includes(item.aksi)) performerLabel = "Dikoreksi oleh";
+
+        const timestamp = item.created_at ? moment(item.created_at).format("DD/MM/YYYY HH:mm:ss") : "-";
 
         // Logic for "Diajukan kepada"
-        let targetName = null;
-        if (item.aksi === 'SUBMITTED' && item.status?.role) {
-          const roleName = item.status.role.name_role;
-          const users = item.status.role.users || [];
-          
+        const getTargetNames = (historyItem) => {
+          if (!historyItem.status?.role || historyItem.status.is_final) return [];
+          const roleName = historyItem.status.role.name_role;
+          const users = historyItem.status.role.users || [];
           if (users.length > 0) {
-            const userNames = users.map(u => u.name).join(', ');
-            targetName = `${userNames} (${roleName})`;
-          } else {
-            targetName = roleName;
+            return users.map(u => `${u.name} (${roleName})`);
           }
-        }
-
-        return {
-          title: item.status?.nama_status || item.aksi,
-          status: this.getStatusType(item.aksi),
-          timestamp: item.created_at ? moment(item.created_at).format("DD/MM/YYYY HH:mm:ss") : "-",
-          performerLabel: performerLabel,
-          performerName: item.user?.name || "System",
-          targetName: targetName,
-          commentLabel: "Catatan",
-          comment: item.catatan
+          return [roleName];
         };
+
+        // Case: Approval Action (Split into two entries as requested)
+        if (['APPROVE', 'APPROVED', 'DISETUJUI', 'COMPLETED'].includes(item.aksi) && item.aksi !== 'SUBMITTED') {
+          // 1. Approved Milestone Entry
+          result.push({
+            title: 'Approved',
+            status: 'success',
+            timestamp: timestamp,
+            performerLabel: performerLabel,
+            performerName: item.user?.name || "System",
+            targetNames: [],
+            commentLabel: "Catatan",
+            comment: item.catatan
+          });
+
+          // 2. Next Status Entry
+          result.push({
+            title: item.status?.nama_status || item.aksi,
+            status: 'success',
+            timestamp: timestamp,
+            performerLabel: performerLabel,
+            performerName: item.user?.name || "System",
+            targetNames: getTargetNames(item),
+            commentLabel: "Catatan",
+            comment: null // Comment already shown in Approved step
+          });
+        } 
+        else {
+          // Standard Entry (CREATED, SUBMITTED, REJECT, etc)
+          result.push({
+            title: item.status?.nama_status || item.aksi,
+            status: this.getStatusType(item.aksi),
+            timestamp: timestamp,
+            performerLabel: performerLabel,
+            performerName: item.user?.name || "System",
+            targetNames: item.aksi === 'SUBMITTED' ? getTargetNames(item) : [],
+            commentLabel: "Catatan",
+            comment: item.catatan
+          });
+        }
       });
+      
+      return result;
     }
   },
   async created() {

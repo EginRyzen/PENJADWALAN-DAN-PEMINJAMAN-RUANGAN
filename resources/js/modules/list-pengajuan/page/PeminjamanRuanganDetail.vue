@@ -297,29 +297,54 @@ export default {
       return `${moment(this.form.tanggal_start).format("DD/MM/YYYY")} - ${moment(this.form.tanggal_end).format("DD/MM/YYYY")}`;
     },
     showActionButtons() {
-      // 1. Periksa apakah status pengajuan saat ini adalah VERIFIKASI_TU
-      const isStatusVerifikasi = this.form.status?.nama_status === 'VERIFIKASI_TU';
-      
-      // 2. Periksa apakah user yang sedang login memiliki role TENAGA_TU
+      // 1. Ambil data role user login
       const user = this.$store.state.auth.user;
-      let roles = [];
+      let rawRoles = [];
       if (user && user.roles) {
-        roles = user.roles;
+        rawRoles = user.roles;
       } else {
         const savedRoles = localStorage.getItem('user_roles');
         if (savedRoles) {
           try {
-            roles = JSON.parse(savedRoles);
+            rawRoles = JSON.parse(savedRoles);
           } catch (e) {
-            roles = [];
+            rawRoles = [];
           }
         }
       }
-      
-      const isTenagaTU = roles.includes('TENAGA_TU');
 
-      // Tampilkan tombol HANYA JIKA kedua kondisi terpenuhi
-      return isStatusVerifikasi && isTenagaTU;
+      // Map roles ke format string (antisipasi format object)
+      const roles = rawRoles.map(r => typeof r === 'object' ? r.name_role : r);
+      const currentStatus = this.form.status?.nama_status;
+
+      const isTenagaTU = roles.includes('TENAGA_TU');
+      const isUnitKemahasiswaan = roles.includes('UNIT_KEMAHASISWAAN');
+      const isBagianSarpras = roles.includes('BAGIAN_SARPRAS');
+      const isKabagUmum = roles.includes('KABAG_UMUM');
+
+      // Kondisi Logik per Role dan Status
+      
+      // 1. TENAGA_TU (Menangani Verifikasi & Pengecekan Ruang)
+      if (isTenagaTU && (currentStatus === 'VERIFIKASI_TU' || currentStatus === 'PENGECEKAN_RUANG_TU')) {
+        return true;
+      }
+
+      // 2. UNIT_KEMAHASISWAAN (Menangani Validasi Khusus Event Mahasiswa)
+      if (isUnitKemahasiswaan && currentStatus === 'VALIDASI_KEMAHASISWAAN') {
+        return true;
+      }
+
+      // 3. BAGIAN_SARPRAS (Menangani Persiapan Sarpras)
+      if (isBagianSarpras && currentStatus === 'PERSIAPAN_SARPRAS') {
+        return true;
+      }
+
+      // 4. KABAG_UMUM (Menangani Pengesahan Akhir)
+      if (isKabagUmum && currentStatus === 'PENGESAHAN_KABAG_UMUM') {
+        return true;
+      }
+
+      return false;
     }
   },
   mounted() {
