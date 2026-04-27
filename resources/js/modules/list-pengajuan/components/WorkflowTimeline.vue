@@ -94,14 +94,14 @@ export default {
   methods: {
     getNodeClass(status) {
       status = status.toLowerCase();
-      if (status.includes('reject') || status.includes('koreksi') || status.includes('correction')) {
+      if (status === 'error' || status.includes('reject') || status.includes('koreksi') || status.includes('correction')) {
         return 'bg-[#EF4444] shadow-red-500/20';
       }
       return 'bg-[#2DD4BF] shadow-teal-500/20';
     },
     getIcon(status) {
       status = status.toLowerCase();
-      if (status.includes('reject') || status.includes('koreksi') || status.includes('correction')) {
+      if (status === 'error' || status.includes('reject') || status.includes('koreksi') || status.includes('correction')) {
         return 'times-circle';
       }
       return 'check-circle';

@@ -141,6 +141,19 @@ export default {
             comment: null // Comment already shown in Approved step
           });
         } 
+        else if (['REJECT', 'REJECTED', 'DITOLAK'].includes(item.aksi)) {
+          // Case: Rejection Action (Single entry as requested)
+          result.push({
+            title: item.status?.nama_status || 'Rejected',
+            status: 'error',
+            timestamp: timestamp,
+            performerLabel: performerLabel,
+            performerName: item.user?.name || "System",
+            targetNames: [],
+            commentLabel: "Alasan Penolakan",
+            comment: item.catatan
+          });
+        }
         else {
           // Standard Entry (CREATED, SUBMITTED, REJECT, etc)
           result.push({
