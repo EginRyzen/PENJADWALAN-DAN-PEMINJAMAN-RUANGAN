@@ -7,17 +7,17 @@
     <div class="max-w-full mx-auto px-4 md:px-8 pb-16">
 
       <!-- Mobile Header Row (Back button + Title) -->
-      <div class="flex items-center justify-between md:hidden mb-8">
-        <div
-          @click="goBack"
-          class="inline-flex items-center gap-2 cursor-pointer text-teal-600 bg-white shadow-sm border border-teal-100 px-3 py-2 rounded-xl font-semibold text-sm"
-        >
-          <font-awesome-icon icon="arrow-left" />
-          Kembali
+        <div class="flex items-center justify-between md:hidden mb-8">
+          <div
+            @click="goBack"
+            class="inline-flex items-center gap-2 cursor-pointer text-teal-600 bg-white shadow-sm border border-teal-100 px-3 py-2 rounded-xl font-semibold text-sm"
+          >
+            <font-awesome-icon icon="arrow-left" />
+            Kembali
+          </div>
+          <h1 class="text-lg font-bold text-gray-900">Detail Pengajuan</h1>
+          <div class="w-10"></div> <!-- Spacer -->
         </div>
-        <h1 class="text-xl font-semibold text-gray-900">Detail Pengajuan</h1>
-        <div class="w-20"></div> <!-- Spacer for centering -->
-      </div>
 
       <!-- Top Header Area - Desktop Only -->
       <div class="hidden md:flex relative flex-row items-center justify-center mb-10 gap-4">
@@ -33,7 +33,7 @@
         </div>
 
         <h1 class="text-xl md:text-2xl font-bold text-slate-800 text-center">
-          {{ form.unit_name || "KCU SMP 2 - Kanwil 10" }}
+          {{ form.unit_name || "-" }}
         </h1>
       </div>
 
@@ -185,7 +185,7 @@
         </div>
       </div>
 
-      <!-- Action Buttons -->
+      <!-- Action Buttons (Approvers) -->
       <div v-if="showActionButtons" class="flex flex-col md:flex-row justify-center items-center gap-4 pb-10">
         <button 
           @click="showActionModal('tolak')"
@@ -204,6 +204,17 @@
           class="w-full md:w-56 h-12 rounded-xl bg-teal-500 text-white font-bold hover:bg-teal-600 transition-all shadow-lg shadow-teal-500/20 flex justify-center items-center gap-2 active:scale-95"
         >
           Setuju
+        </button>
+      </div>
+
+      <!-- Edit Button (Applicant/Owner only when status is Koreksi/Draft) -->
+      <div v-if="canEdit" class="flex justify-center pb-10">
+        <button 
+          @click="goToEdit"
+          class="w-full md:w-80 h-12 rounded-xl bg-teal-500 text-white font-bold hover:bg-teal-600 transition-all shadow-lg shadow-teal-500/20 flex justify-center items-center gap-2 active:scale-95"
+        >
+          <font-awesome-icon icon="edit" />
+          Edit & Ajukan Kembali
         </button>
       </div>
 
@@ -226,8 +237,8 @@
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <h3 class="font-extrabold text-3xl mb-2 text-slate-800 tracking-tight">Berhasil!</h3>
-          <p class="py-2 text-slate-500 font-medium">Pengajuan telah berhasil disetujui.</p>
+          <h3 class="font-extrabold text-3xl mb-2 text-slate-800 tracking-tight">{{ successModal.title }}</h3>
+          <p class="py-2 text-slate-500 font-medium">{{ successModal.message }}</p>
           <div class="modal-action justify-center mt-8">
             <button class="h-12 w-full rounded-xl font-extrabold text-sm transition-all text-white bg-[#2DD4BF] hover:bg-[#26bba8] active:scale-95 shadow-lg shadow-teal-500/20" @click="closeSuccessModal">
               Tutup & Kembali
@@ -245,6 +256,7 @@ import DetailHeader from "../components/DetailHeader.vue";
 import ConfirmModal from "@/core/components/ConfirmModal.vue";
 import DISPATCH from "@/core/plugins/constants/dispatches";
 import moment from "moment";
+import { mapState } from "vuex";
 
 export default {
   name: "PeminjamanRuanganDetail",
@@ -264,7 +276,7 @@ export default {
       form: {
         id: "",
         no_pengajuan: "LOADING...",
-        unit_name: "KCU SMP 2 - Kanwil 10",
+        unit_name: "",
         tipe_pengajuan: "",
         tanggal_start: "",
         tanggal_end: "",
@@ -287,39 +299,92 @@ export default {
         config: {}
       },
       successModal: {
-        show: false
+        show: false,
+        title: "Berhasil!",
+        message: ""
       }
     };
   },
   computed: {
+    ...mapState("auth", ["user"]),
     formatDateRange() {
       if (!this.form.tanggal_start || !this.form.tanggal_end) return "-";
       return `${moment(this.form.tanggal_start).format("DD/MM/YYYY")} - ${moment(this.form.tanggal_end).format("DD/MM/YYYY")}`;
     },
     showActionButtons() {
-      // 1. Periksa apakah status pengajuan saat ini adalah VERIFIKASI_TU
-      const isStatusVerifikasi = this.form.status?.nama_status === 'VERIFIKASI_TU';
-      
-      // 2. Periksa apakah user yang sedang login memiliki role TENAGA_TU
+      // 1. Ambil data role user login
       const user = this.$store.state.auth.user;
-      let roles = [];
+      let rawRoles = [];
       if (user && user.roles) {
-        roles = user.roles;
+        rawRoles = user.roles;
       } else {
         const savedRoles = localStorage.getItem('user_roles');
         if (savedRoles) {
           try {
-            roles = JSON.parse(savedRoles);
+            rawRoles = JSON.parse(savedRoles);
           } catch (e) {
-            roles = [];
+            rawRoles = [];
           }
         }
       }
-      
-      const isTenagaTU = roles.includes('TENAGA_TU');
 
-      // Tampilkan tombol HANYA JIKA kedua kondisi terpenuhi
-      return isStatusVerifikasi && isTenagaTU;
+      // Map roles ke format string (antisipasi format object)
+      const roles = rawRoles.map(r => typeof r === 'object' ? r.name_role : r);
+      const currentStatus = this.form.status?.nama_status;
+
+      const isTenagaTU = roles.includes('TENAGA_TU');
+      const isUnitKemahasiswaan = roles.includes('UNIT_KEMAHASISWAAN');
+      const isBagianSarpras = roles.includes('BAGIAN_SARPRAS');
+      const isKabagUmum = roles.includes('KABAG_UMUM');
+
+      // Kondisi Logik per Role dan Status
+      
+      // 1. TENAGA_TU (Menangani Verifikasi & Pengecekan Ruang)
+      if (isTenagaTU && (currentStatus === 'VERIFIKASI_TU' || currentStatus === 'PENGECEKAN_RUANG_TU')) {
+        return true;
+      }
+
+      // 2. UNIT_KEMAHASISWAAN (Menangani Validasi Khusus Event Mahasiswa)
+      if (isUnitKemahasiswaan && currentStatus === 'VALIDASI_KEMAHASISWAAN') {
+        return true;
+      }
+
+      // 3. BAGIAN_SARPRAS (Menangani Persiapan Sarpras)
+      if (isBagianSarpras && currentStatus === 'PERSIAPAN_SARPRAS') {
+        return true;
+      }
+
+      // 4. KABAG_UMUM (Menangani Pengesahan Akhir)
+      if (isKabagUmum && currentStatus === 'PENGESAHAN_KABAG_UMUM') {
+        return true;
+      }
+
+      return false;
+    },
+    canEdit() {
+      if (!this.form || !this.form.status || !this.user) return false;
+      
+      const statusName = String(this.form.status.nama_status || "").toUpperCase().trim();
+      const isDraftOrKoreksi = statusName.includes('DRAFT') || statusName.includes('KOREKSI');
+      
+      // Ownership check: try multiple fields for robustness
+      const currentUserId = String(this.user.id || "").trim();
+      const currentUserUsername = String(this.user.username || "").trim();
+      const currentUserEmail = String(this.user.email || "").trim();
+      const currentUserIdentity = String(this.user.identity_number || "").trim();
+      
+      const formUserId = String(this.form.user_id || this.form.user?.id || "").trim();
+      const formUserUsername = String(this.form.user?.username || "").trim();
+      const formUserEmail = String(this.form.user?.email || "").trim();
+      const formUserIdentity = String(this.form.user?.identity_number || "").trim();
+      
+      const isOwner = 
+        (currentUserId && formUserId && formUserId === currentUserId) || 
+        (currentUserUsername && formUserUsername && formUserUsername === currentUserUsername) ||
+        (currentUserEmail && formUserEmail && formUserEmail === currentUserEmail) ||
+        (currentUserIdentity && formUserIdentity && formUserIdentity === currentUserIdentity);
+                      
+      return isDraftOrKoreksi && isOwner;
     }
   },
   mounted() {
@@ -411,6 +476,7 @@ export default {
               role: result.user?.role || { name: "Pengaju" }
             },
             status: result.status || { nama_status: "" },
+            user_id: result.user_id,
             items: Object.values(buildingGroups)
           };
         }
@@ -422,6 +488,12 @@ export default {
     },
     goBack() {
       this.$router.push({ name: 'peminjaman.list' });
+    },
+    goToEdit() {
+      this.$router.push({ 
+        name: 'peminjaman.edit', 
+        params: { id: this.form.id } 
+      });
     },
     viewUploadedPdf() {
       if (!this.form.file_url) {
@@ -468,10 +540,31 @@ export default {
           });
           
           // Tampilkan Modal Success
+          this.successModal.title = "Berhasil Disetujui!";
+          this.successModal.message = "Pengajuan telah berhasil disetujui.";
           this.successModal.show = true;
-        } else {
-          // Untuk Tolak dan Koreksi (Belum ada endpoint backend-nya di scope ini)
-          alert(`Fitur ${action} sedang dalam tahap pengembangan.`);
+        } else if (action === 'tolak') {
+          // Panggil Action Vuex untuk Tolak
+          await this.$store.dispatch(DISPATCH.REJECT_PENGAJUAN, {
+            pengajuan_id: this.form.id,
+            catatan: comment || ''
+          });
+          
+          // Tampilkan Modal Success
+          this.successModal.title = "Berhasil Ditolak!";
+          this.successModal.message = "Pengajuan telah berhasil ditolak.";
+          this.successModal.show = true;
+        } else if (action === 'koreksi') {
+          // Panggil Action Vuex untuk Koreksi
+          await this.$store.dispatch(DISPATCH.REVISION_PENGAJUAN, {
+            pengajuan_id: this.form.id,
+            catatan: comment || ''
+          });
+          
+          // Tampilkan Modal Success
+          this.successModal.title = "Berhasil Dikirim!";
+          this.successModal.message = "Permintaan koreksi telah berhasil dikirim.";
+          this.successModal.show = true;
         }
       } catch (error) {
         // Error sudah ditangani secara global oleh interceptor Api.js (muncul sebagai Toast popup)
@@ -512,10 +605,7 @@ export default {
         s.includes("VALIDASI") || 
         s.includes("PENGECEKAN") || 
         s.includes("PERSIAPAN") || 
-        s.includes("MENUNGGU") ||
-        s === "VALIDASI_KEMAHASISWAAN" ||
-        s === "PENGECEKAN_RUANG_TU" ||
-        s === "PERSIAPAN_SARPRAS"
+        s.includes("MENUNGGU")
       ) {
         return {
           backgroundColor: "#fff7ed",
@@ -524,12 +614,12 @@ export default {
         };
       }
 
-      // Rejected / Correction (Red)
-      if (s.includes("KOREKSI") || s.includes("TOLAK") || s.includes("REJECTED")) {
+      // Drafts / Koreksi (Gray/Slate or specific theme)
+      if (s.includes("DRAFT") || s.includes("KOREKSI")) {
         return {
-          backgroundColor: "#fef2f2",
-          color: "#dc2626",
-          borderColor: "#fee2e2",
+          backgroundColor: "#f1f5f9",
+          color: "#475569",
+          borderColor: "#e2e8f0",
         };
       }
 

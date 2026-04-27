@@ -14,6 +14,12 @@ const routes = [
         meta: { title: 'Buat Peminjaman Ruangan' }
     },
     {
+        path: 'edit-peminjaman-ruangan/:id',
+        name: 'peminjaman.edit',
+        component: () => import('../page/PeminjamanRuanganCreate.vue'),
+        meta: { title: 'Edit Peminjaman Ruangan' }
+    },
+    {
         path: 'detail-peminjaman-ruangan/:id',
         name: 'peminjaman.detail',
         component: () => import('../page/PeminjamanRuanganDetail.vue'),

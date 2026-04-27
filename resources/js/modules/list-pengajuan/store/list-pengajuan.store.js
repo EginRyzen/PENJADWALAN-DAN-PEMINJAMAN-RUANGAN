@@ -118,6 +118,37 @@ export const Store = {
         throw error;
       }
     },
+    
+    async [actions.REJECT_PENGAJUAN]({ commit }, payload) {
+      try {
+        const response = await Api.post(apiUrl.REJECT_PENGAJUAN, payload);
+        return response.data;
+      } catch (error) {
+        console.error('Error rejecting pengajuan:', error);
+        throw error;
+      }
+    },
+
+    async [actions.REVISION_PENGAJUAN]({ commit }, payload) {
+      try {
+        const response = await Api.post(apiUrl.REVISION_PENGAJUAN, payload);
+        return response.data;
+      } catch (error) {
+        console.error('Error revisioning pengajuan:', error);
+        throw error;
+      }
+    },
+
+    async [actions.UPDATE_PENGAJUAN]({ commit }, payload) {
+      try {
+        const { id, ...data } = payload;
+        const response = await Api.put(`${apiUrl.UPDATE_PENGAJUAN}/${id}`, data);
+        return response.data;
+      } catch (error) {
+        console.error('Error updating pengajuan:', error);
+        throw error;
+      }
+    },
 
     async [actions.UPLOAD_IMAGE]({ commit }, file) {
       try {

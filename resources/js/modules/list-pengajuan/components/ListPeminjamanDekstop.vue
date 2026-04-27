@@ -398,8 +398,8 @@ export default {
       if (!status) return {};
       const s = status.toUpperCase();
 
-      // Drafts (Gray/Slate)
-      if (s.includes("DRAFT")) {
+      // Drafts / Koreksi (Gray/Slate)
+      if (s.includes("DRAFT") || s.includes("KOREKSI")) {
         return {
           backgroundColor: "#f1f5f9",
           color: "#475569",
@@ -425,8 +425,8 @@ export default {
         };
       }
 
-      // Rejected / Correction (Red)
-      if (s.includes("KOREKSI") || s.includes("TOLAK") || s.includes("REJECTED")) {
+      // Rejected (Red)
+      if (s.includes("TOLAK") || s.includes("REJECTED")) {
         return {
           backgroundColor: "#fef2f2",
           color: "#dc2626",

@@ -38,6 +38,13 @@ const defaultState = () => ({
         total_elements: 0,
         total_elements_per_page: 10,
     },
+    kmList: [],
+    kmPagination: {
+        current_page: 0,
+        total_pages: 0,
+        total_elements: 0,
+        total_elements_per_page: 10,
+    },
 });
 
 export const Store = {
@@ -103,6 +110,19 @@ export const Store = {
             } else {
                 state.periodeList = payload.content || [];
                 state.periodePagination = {
+                    current_page: payload.current_page || 0,
+                    total_pages: payload.total_pages || 0,
+                    total_elements: payload.total_elements || 0,
+                    total_elements_per_page: payload.total_elements_per_page || 10,
+                };
+            }
+        },
+        SET_KELAS_MATA_KULIAH(state, payload) {
+            if (Array.isArray(payload)) {
+                state.kmList = payload;
+            } else {
+                state.kmList = payload.content || [];
+                state.kmPagination = {
                     current_page: payload.current_page || 0,
                     total_pages: payload.total_pages || 0,
                     total_elements: payload.total_elements || 0,
@@ -310,6 +330,45 @@ export const Store = {
                 return response.data;
             } catch (error) {
                 console.error("Error Deleting Periode:", error);
+                throw error;
+            }
+        },
+        // Kelas Mata Kuliah Actions
+        async [actions.GET_KELAS_MATA_KULIAH]({ commit }, params) {
+            try {
+                const response = await Api.get(apiUrl.KELAS_MATA_KULIAH, { params });
+                const data = response.data.result;
+                commit("SET_KELAS_MATA_KULIAH", data);
+                return data;
+            } catch (error) {
+                console.error("Error Fetching Kelas Mata Kuliah:", error);
+                throw error;
+            }
+        },
+        async [actions.CREATE_KELAS_MATA_KULIAH]({ commit }, payload) {
+            try {
+                const response = await Api.post(apiUrl.KELAS_MATA_KULIAH, payload);
+                return response.data;
+            } catch (error) {
+                console.error("Error Creating Kelas Mata Kuliah:", error);
+                throw error;
+            }
+        },
+        async [actions.UPDATE_KELAS_MATA_KULIAH]({ commit }, payload) {
+            try {
+                const response = await Api.put(`${apiUrl.KELAS_MATA_KULIAH}/${payload.id}`, payload);
+                return response.data;
+            } catch (error) {
+                console.error("Error Updating Kelas Mata Kuliah:", error);
+                throw error;
+            }
+        },
+        async [actions.DELETE_KELAS_MATA_KULIAH]({ commit }, id) {
+            try {
+                const response = await Api.delete(`${apiUrl.KELAS_MATA_KULIAH}/${id}`);
+                return response.data;
+            } catch (error) {
+                console.error("Error Deleting Kelas Mata Kuliah:", error);
                 throw error;
             }
         },

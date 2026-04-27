@@ -33,4 +33,11 @@ class MasterDataKelas extends Model
     {
         return $this->belongsTo(MasterDataPeriode::class, 'periode_id');
     }
+
+    public function mataKuliahs()
+    {
+        return $this->belongsToMany(MasterDataMataKuliah::class, 'master_data_kelas_mata_kuliahs', 'kelas_id', 'mata_kuliah_id')
+            ->withPivot('semester')
+            ->withTimestamps();
+    }
 }

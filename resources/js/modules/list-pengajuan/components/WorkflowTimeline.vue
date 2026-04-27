@@ -62,14 +62,16 @@
               </div>
 
               <!-- Target Row (Diajukan kepada) -->
-              <div v-if="step.targetName" class="flex flex-col md:flex-row md:items-start gap-1 md:gap-2">
+              <div v-if="step.targetNames && step.targetNames.length > 0" class="flex flex-col md:flex-row md:items-start gap-1 md:gap-2">
                 <span class="hidden md:block md:min-w-[140px]"></span>
                 <div class="flex items-start gap-2">
                   <span class="min-w-[100px] md:min-w-[130px] text-slate-400 md:text-slate-500">Diajukan kepada</span>
-                  <span class="text-slate-700 flex-1 font-semibold">
-                    <span class="hidden md:inline mr-2">:</span>
-                    <span class="md:hidden">: </span>{{ step.targetName }}
-                  </span>
+                  <div class="flex flex-col gap-1 flex-1">
+                    <span v-for="(name, nIdx) in step.targetNames" :key="nIdx" class="text-slate-700 font-semibold">
+                      <span class="hidden md:inline mr-2">:</span>
+                      <span class="md:hidden">: </span>{{ name }}
+                    </span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -92,14 +94,14 @@ export default {
   methods: {
     getNodeClass(status) {
       status = status.toLowerCase();
-      if (status.includes('reject') || status.includes('koreksi') || status.includes('correction')) {
+      if (status === 'error' || status.includes('reject') || status.includes('koreksi') || status.includes('correction')) {
         return 'bg-[#EF4444] shadow-red-500/20';
       }
       return 'bg-[#2DD4BF] shadow-teal-500/20';
     },
     getIcon(status) {
       status = status.toLowerCase();
-      if (status.includes('reject') || status.includes('koreksi') || status.includes('correction')) {
+      if (status === 'error' || status.includes('reject') || status.includes('koreksi') || status.includes('correction')) {
         return 'times-circle';
       }
       return 'check-circle';

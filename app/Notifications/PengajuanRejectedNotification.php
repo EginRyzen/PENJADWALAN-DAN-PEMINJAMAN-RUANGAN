@@ -7,18 +7,22 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 
-class PengajuanCompletedNotification extends Notification implements ShouldQueue
+class PengajuanRejectedNotification extends Notification implements ShouldQueue
 {
     use Queueable;
 
     public $pengajuan;
+    public $approver;
+    public $catatan;
 
     /**
      * Create a new notification instance.
      */
-    public function __construct($pengajuan)
+    public function __construct($pengajuan, $approver = null, $catatan = null)
     {
         $this->pengajuan = $pengajuan;
+        $this->approver = $approver;
+        $this->catatan = $catatan;
     }
 
     /**
@@ -39,14 +43,16 @@ class PengajuanCompletedNotification extends Notification implements ShouldQueue
         $url = url('/app/detail-peminjaman-ruangan/' . $this->pengajuan->id);
 
         return (new MailMessage)
-                    ->subject('Pengajuan Peminjaman Selesai - ' . $this->pengajuan->no_pengajuan)
+                    ->subject('Pengajuan Peminjaman Ditolak - ' . $this->pengajuan->no_pengajuan)
                     ->greeting('Halo, ' . $notifiable->name)
-                    ->line('Peminjaman ruangan Anda sudah berstatus COMPLETED dan siap digunakan.')
+                    ->line('Mohon maaf, pengajuan peminjaman ruangan Anda telah ditolak.')
                     ->line('**Detail Pengajuan:**')
                     ->line('No. Pengajuan: ' . $this->pengajuan->no_pengajuan)
                     ->line('Tipe: ' . $this->pengajuan->tipe_pengajuan)
+                    ->line('**Alasan Penolakan:**')
+                    ->line($this->catatan ?? '-')
                     ->action('Lihat Detail Pengajuan', $url)
-                    ->line('Terima kasih telah menggunakan aplikasi kami!');
+                    ->line('Silakan ajukan kembali dengan jadwal atau ruangan yang berbeda.');
     }
 
     /**
@@ -57,8 +63,8 @@ class PengajuanCompletedNotification extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         return [
-            'title' => 'Peminjaman Disetujui: ' . $this->pengajuan->no_pengajuan,
-            'message' => 'Peminjaman ruangan Anda sudah berstatus COMPLETED dan siap digunakan.',
+            'title' => 'Peminjaman Ditolak: ' . $this->pengajuan->no_pengajuan,
+            'message' => 'Pengajuan peminjaman ruangan Anda telah ditolak dengan alasan: ' . ($this->catatan ?? '-'),
             'type' => 'pengajuan',
             'pengajuan_id' => $this->pengajuan->id,
             'link' => '/app/detail-peminjaman-ruangan/' . $this->pengajuan->id,

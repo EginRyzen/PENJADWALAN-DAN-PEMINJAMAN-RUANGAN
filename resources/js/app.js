@@ -70,7 +70,7 @@ const initApp = async () => {
             const userData = response.data.result.user;
             localStorage.setItem('user_roles', JSON.stringify(userData.roles));
 
-            store.commit('SET_USER', userData);
+            store.commit('auth/SET_USER', userData);
         } catch (error) {
             console.error("Gagal memvalidasi sesi", error);
             localStorage.removeItem('token');

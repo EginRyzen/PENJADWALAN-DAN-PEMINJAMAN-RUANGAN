@@ -132,24 +132,19 @@ class PengajuanPeminjamanController extends Controller
                     return response()->json(['message' => 'Salah satu ruangan sudah dipesan pada waktu tersebut.'], 422);
                 }
 
-                // 3. Determine Initial Workflow status (Next sequence after draft)
-                $userRoleName = $userRole->name_role;
-                $statusName = '';
-                
-                if ($userRoleName === 'MAHASISWA') {
-                    $statusName = ($validated['tipe_pengajuan'] === 'PEMBELAJARAN') ? 'VERIFIKASI_TU' : 'VALIDASI_KEMAHASISWAAN';
-                } else if ($userRoleName === 'DOSEN') {
-                    $statusName = ($validated['tipe_pengajuan'] === 'PEMBELAJARAN') ? 'VERIFIKASI_TU' : 'PENGECEKAN_RUANG_TU';
+                // 3. Determine Initial Workflow status (Dynamic based on Track)
+                $initialStep = WorkflowStep::where('tipe_pengajuan', $validated['tipe_pengajuan'])
+                    ->where('role_id', $userRole->id)
+                    ->whereIn('urutan', [1, 11, 21])
+                    ->first();
+
+                if (!$initialStep) {
+                    return response()->json(['message' => 'Workflow awal tidak ditemukan untuk role Anda.'], 422);
                 }
 
                 $nextStatus = WorkflowStep::where('tipe_pengajuan', $validated['tipe_pengajuan'])
-                    ->where('urutan', 2)
-                    ->where('nama_status', $statusName)
-                    ->first();
-
-                $initialStep = WorkflowStep::where('tipe_pengajuan', $validated['tipe_pengajuan'])
-                    ->where('role_id', $userRole->id)
-                    ->where('urutan', 1)
+                    ->where('urutan', '>', $initialStep->urutan)
+                    ->orderBy('urutan', 'asc')
                     ->first();
 
                 // 4. Generate No. Pengajuan (Format: KodeGedung-Tahun-Urutan)
@@ -176,7 +171,7 @@ class PengajuanPeminjamanController extends Controller
                 $pengajuan = PengajuanRuangan::create([
                     'no_pengajuan' => $noPengajuan,
                     'tipe_pengajuan' => $validated['tipe_pengajuan'],
-                    'current_status_id' => $nextStatus ? $nextStatus->id : ($initialStep ? $initialStep->id : null),
+                    'current_status_id' => $nextStatus ? $nextStatus->id : $initialStep->id,
                     'user_id' => $user->id,
                     'tanggal_pengajuan' => now(),
                     'tanggal_start_peminjaman' => $validated['tanggal_start'],
@@ -273,7 +268,7 @@ class PengajuanPeminjamanController extends Controller
         try {
             $data = PengajuanRuangan::with([
                 'status', 
-                'user', 
+                'user.roles', 
                 'dokumen_pendukung', 
                 'items.ruangan.building',
                 'histories' => function($q) {
@@ -402,6 +397,80 @@ class PengajuanPeminjamanController extends Controller
     }
 
     /**
+     * Reject a pengajuan.
+     */
+    public function reject(Request $request)
+    {
+        try {
+            $request->validate([
+                'pengajuan_id' => 'required|uuid',
+                'catatan' => 'required|string' // Catatan wajib untuk penolakan
+            ]);
+
+            return DB::transaction(function () use ($request) {
+                $user = auth()->user();
+                $pengajuan = PengajuanRuangan::with(['status.role', 'user'])->findOrFail($request->pengajuan_id);
+                $currentStatus = $pengajuan->status;
+
+                if (!$currentStatus) {
+                    return response()->json(['message' => 'Status pengajuan tidak ditemukan.'], 404);
+                }
+
+                // 1. Otorisasi (Sama dengan approve)
+                $requiredRole = $currentStatus->role ? $currentStatus->role->name_role : null;
+                $userRoles = $user->roles->pluck('name_role')->toArray();
+
+                if (!$requiredRole || !in_array($requiredRole, $userRoles)) {
+                    return response()->json(['message' => 'Anda tidak berwenang melakukan penolakan pada tahap ini.'], 403);
+                }
+
+                // 2. Cari Status REJECTED sesuai tipe pengajuan
+                $rejectStatus = WorkflowStep::where('tipe_pengajuan', $pengajuan->tipe_pengajuan)
+                    ->where('nama_status', 'REJECTED')
+                    ->first();
+
+                if (!$rejectStatus) {
+                    return response()->json(['message' => 'Status REJECTED tidak ditemukan untuk tipe pengajuan ini.'], 400);
+                }
+
+                // 3. Update Status Pengajuan
+                $pengajuan->current_status_id = $rejectStatus->id;
+                $pengajuan->save();
+
+                // 4. Catat Sejarah Penolakan (History)
+                $lastSequence = PengajuanHistory::where('pengajuan_id', $pengajuan->id)->max('sequence') ?? 0;
+                
+                PengajuanHistory::create([
+                    'pengajuan_id' => $pengajuan->id,
+                    'status_id' => $rejectStatus->id,
+                    'user_id' => $user->id,
+                    'aksi' => 'REJECT',
+                    'catatan' => $request->catatan,
+                    'sequence' => $lastSequence + 1,
+                ]);
+
+                // 5. Kirim Notifikasi Penolakan ke Pembuat Pengajuan
+                $requester = $pengajuan->user;
+                if ($requester) {
+                    try {
+                        $requester->notify(new \App\Notifications\PengajuanRejectedNotification($pengajuan, $user, $request->catatan));
+                    } catch (\Exception $e) {
+                        logger()->error('Notification Error (Rejected): ' . $e->getMessage());
+                    }
+                }
+
+                return response()->json([
+                    'message' => 'Pengajuan telah ditolak.',
+                    'data' => $pengajuan
+                ]);
+            });
+        } catch (\Exception $e) {
+            logger()->error('Reject Error: ' . $e->getMessage());
+            return response()->json(['message' => 'Terjadi kesalahan saat memproses penolakan.'], 500);
+        }
+    }
+
+    /**
      * Show the form for editing the specified resource.
      */
     public function edit(string $id)
@@ -410,11 +479,212 @@ class PengajuanPeminjamanController extends Controller
     }
 
     /**
+     * Send for revision (Koreksi).
+     */
+    public function revision(Request $request)
+    {
+        try {
+            $request->validate([
+                'pengajuan_id' => 'required|uuid',
+                'catatan' => 'required|string'
+            ]);
+
+            return DB::transaction(function () use ($request) {
+                $user = auth()->user();
+                $pengajuan = PengajuanRuangan::with(['status.role', 'user.roles'])->findOrFail($request->pengajuan_id);
+                $currentStatus = $pengajuan->status;
+
+                if (!$currentStatus) {
+                    return response()->json(['message' => 'Status pengajuan tidak ditemukan.'], 404);
+                }
+
+                // 1. Otorisasi (Sama dengan approve/reject)
+                $requiredRole = $currentStatus->role ? $currentStatus->role->name_role : null;
+                $userRoles = $user->roles->pluck('name_role')->toArray();
+
+                if (!$requiredRole || !in_array($requiredRole, $userRoles)) {
+                    return response()->json(['message' => 'Anda tidak berwenang meminta koreksi pada tahap ini.'], 403);
+                }
+
+                // 2. Cari Status DRAFT awal sesuai tipe pengajuan dan role pembuat
+                // Kita asumsikan urutan awal adalah 1, 11, atau 21 sesuai track-nya
+                $creator = $pengajuan->user;
+                $creatorRole = $creator->roles()->whereIn('name_role', ['MAHASISWA', 'DOSEN'])->first();
+                
+                if (!$creatorRole) {
+                    return response()->json(['message' => 'Role pembuat tidak ditemukan.'], 422);
+                }
+
+                $urutanAwal = 1;
+                if ($creatorRole->name_role === 'DOSEN') {
+                    $urutanAwal = ($pengajuan->tipe_pengajuan === 'EVENT') ? 11 : 21;
+                }
+
+                $draftStatus = WorkflowStep::where('tipe_pengajuan', $pengajuan->tipe_pengajuan)
+                    ->where('urutan', $urutanAwal)
+                    ->first();
+
+                if (!$draftStatus) {
+                    return response()->json(['message' => 'Status DRAFT awal tidak ditemukan.'], 422);
+                }
+
+                // 3. Update Status Pengajuan ke DRAFT
+                $pengajuan->current_status_id = $draftStatus->id;
+                $pengajuan->save();
+
+                // 4. Catat Sejarah Koreksi (History)
+                $lastSequence = PengajuanHistory::where('pengajuan_id', $pengajuan->id)->max('sequence') ?? 0;
+                
+                PengajuanHistory::create([
+                    'pengajuan_id' => $pengajuan->id,
+                    'status_id' => $draftStatus->id,
+                    'user_id' => $user->id,
+                    'aksi' => 'KOREKSI',
+                    'catatan' => $request->catatan,
+                    'sequence' => $lastSequence + 1,
+                ]);
+
+                // 5. Kirim Notifikasi ke Pembuat Pengajuan
+                if ($creator) {
+                    try {
+                        $creator->notify(new \App\Notifications\PengajuanRevisionNotification($pengajuan, $user, $request->catatan));
+                    } catch (\Exception $e) {
+                        logger()->error('Notification Error (Revision): ' . $e->getMessage());
+                    }
+                }
+
+                return response()->json([
+                    'message' => 'Permintaan koreksi berhasil dikirim.',
+                    'data' => $pengajuan
+                ]);
+            });
+        } catch (\Exception $e) {
+            logger()->error('Revision Error: ' . $e->getMessage());
+            return response()->json(['message' => 'Terjadi kesalahan saat memproses permintaan koreksi.'], 500);
+        }
+    }
+
+    /**
      * Update the specified resource in storage.
      */
     public function update(Request $request, string $id)
     {
-        //
+        try {
+            // Kita bisa pakai StorePengajuanPeminjamanRequest jika validasinya sama
+            // Tapi untuk fleksibilitas kita manual di sini atau buat update request
+            return DB::transaction(function () use ($request, $id) {
+                $user = auth()->user();
+                $pengajuan = PengajuanRuangan::with(['status', 'user'])->findOrFail($id);
+
+                // 1. Otorisasi (Hanya pembuat yang bisa edit jika statusnya DRAFT)
+                if ($pengajuan->user_id !== $user->id) {
+                    return response()->json(['message' => 'Anda tidak memiliki otoritas untuk mengubah pengajuan ini.'], 403);
+                }
+
+                $isDraftOrRevision = str_contains($pengajuan->status->nama_status, 'DRAFT') || str_contains($pengajuan->status->nama_status, 'Koreksi');
+                if (!$isDraftOrRevision) {
+                    return response()->json(['message' => 'Hanya pengajuan berstatus DRAFT atau Koreksi yang dapat diubah.'], 422);
+                }
+
+                $validated = $request->validate([
+                    'tipe_pengajuan' => 'required|string',
+                    'tanggal_start' => 'required|date',
+                    'tanggal_end' => 'required|date',
+                    'jam_mulai' => 'required',
+                    'jam_selesai' => 'required',
+                    'alasan' => 'required|string',
+                    'all_room_ids' => 'required|array',
+                    'dokumen_pendukung_id' => 'nullable|uuid',
+                ]);
+                
+                $roomIds = $validated['all_room_ids'];
+
+                // 2. Conflict Check (Ignore self and REJECTED)
+                $hasConflict = PengajuanRuangan::where('id', '!=', $id)
+                    ->whereHas('items', function($q) use ($roomIds) {
+                        $q->whereIn('ruangan_id', $roomIds);
+                    })
+                    ->whereHas('status', function($q) {
+                        $q->where('nama_status', 'not like', '%REJECT%')
+                          ->where('nama_status', 'not like', '%TOLAK%')
+                          ->where('nama_status', 'not like', '%DITOLAK%');
+                    })
+                    ->where(function($q) use ($validated) {
+                        $q->where('tanggal_start_peminjaman', '<=', $validated['tanggal_end'])
+                          ->where('tanggal_end_peminjaman', '>=', $validated['tanggal_start']);
+                    })
+                    ->where(function($q) use ($validated) {
+                        $q->where('jam_mulai', '<', $validated['jam_selesai'])
+                          ->where('jam_selesai', '>', $validated['jam_mulai']);
+                    })
+                    ->exists();
+
+                if ($hasConflict) {
+                    return response()->json(['message' => 'Salah satu ruangan sudah dipesan pada waktu tersebut.'], 422);
+                }
+
+                // 3. Update Pengajuan
+                $pengajuan->update([
+                    'tipe_pengajuan' => $validated['tipe_pengajuan'],
+                    'tanggal_start_peminjaman' => $validated['tanggal_start'],
+                    'tanggal_end_peminjaman' => $validated['tanggal_end'],
+                    'jam_mulai' => $validated['jam_mulai'],
+                    'jam_selesai' => $validated['jam_selesai'],
+                    'alasan' => $validated['alasan'],
+                    'dokumen_pendukung_id' => $validated['dokumen_pendukung_id'] ?? $pengajuan->dokumen_pendukung_id,
+                ]);
+
+                // 4. Sync Items
+                $pengajuan->items()->delete();
+                foreach ($roomIds as $roomId) {
+                    PengajuanRuanganItem::create([
+                        'pengajuan_id' => $pengajuan->id,
+                        'ruangan_id' => $roomId,
+                    ]);
+                }
+
+                // 5. Tentukan Status Selanjutnya (Submitted kembali)
+                $nextStatus = WorkflowStep::where('tipe_pengajuan', $validated['tipe_pengajuan'])
+                    ->where('urutan', '>', $pengajuan->status->urutan)
+                    ->orderBy('urutan', 'asc')
+                    ->first();
+
+                if ($nextStatus) {
+                    $pengajuan->current_status_id = $nextStatus->id;
+                    $pengajuan->save();
+
+                    // 6. Record History (SUBMITTED kembali)
+                    $lastSequence = PengajuanHistory::where('pengajuan_id', $pengajuan->id)->max('sequence') ?? 0;
+                    PengajuanHistory::create([
+                        'pengajuan_id' => $pengajuan->id,
+                        'status_id' => $pengajuan->current_status_id,
+                        'user_id' => $user->id,
+                        'aksi' => 'SUBMITTED',
+                        'sequence' => $lastSequence + 1,
+                    ]);
+
+                    // 7. Notifikasi ke Approver Selanjutnya
+                    if ($nextStatus->role) {
+                        $nextApprovers = $nextStatus->role->users;
+                        foreach ($nextApprovers as $approver) {
+                            try {
+                                $approver->notify(new NewPengajuanNotification($pengajuan, $user));
+                            } catch (\Exception $e) {
+                                logger()->error('Notification Error (Resubmit): ' . $e->getMessage());
+                            }
+                        }
+                    }
+                }
+
+                return response()->json([
+                    'message' => 'Pengajuan berhasil diperbarui dan diajukan kembali.',
+                    'data' => $pengajuan
+                ]);
+            });
+        } catch (\Exception $e) {
+            logger()->error('Update Pengajuan Error: ' . $e->getMessage());
+            return response()->json(['message' => 'Terjadi kesalahan saat memperbarui pengajuan.'], 500);
+        }
     }
 
     /**
