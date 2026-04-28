@@ -105,7 +105,7 @@
           <select-auto-complete
             v-model="form.kelas_id"
             :options="kelasOptions"
-            item-text="nama_kelas"
+            item-text="displayText"
             item-value="id"
             placeholder="Pilih Kelas..."
             @search="handleSearchKelas"
@@ -116,7 +116,7 @@
           <select-auto-complete
             v-model="form.mata_kuliah_id"
             :options="mataKuliahOptions"
-            item-text="nama"
+            item-text="displayText"
             item-value="id"
             placeholder="Pilih Mata Kuliah..."
             @search="handleSearchMK"
@@ -238,10 +238,16 @@ export default {
       return this.$store.state.masterData.kmPagination;
     },
     kelasOptions() {
-      return this.$store.state.settings.kelasList;
+      return (this.$store.state.settings.kelasList || []).map(item => ({
+        ...item,
+        displayText: `${item.nama_kelas} - ${item.program_studi?.nama || '-'}`
+      }));
     },
     mataKuliahOptions() {
-      return this.$store.state.masterData.mataKuliahList;
+      return (this.$store.state.masterData.mataKuliahList || []).map(item => ({
+        ...item,
+        displayText: `${item.nama} - Semester ${item.semester || '-'}`
+      }));
     },
     startingIndex() {
       return ((this.tableOptions.page ?? 1) - 1) * this.tableOptions.itemsPerPage;

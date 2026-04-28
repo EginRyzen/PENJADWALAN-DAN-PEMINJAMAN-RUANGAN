@@ -5,8 +5,9 @@ namespace App\Imports;
 use App\Models\MasterDataProgramStudi;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithValidation;
 
-class ProgramStudiImport implements ToModel, WithHeadingRow
+class ProgramStudiImport implements ToModel, WithHeadingRow, WithValidation
 {
     public function model(array $row)
     {
@@ -19,5 +20,14 @@ class ProgramStudiImport implements ToModel, WithHeadingRow
                 'status'   => $row['status'] ?? 'aktif',
             ]
         );
+    }
+
+    public function rules(): array
+    {
+        return [
+            'kode' => 'required',
+            'nama' => 'required',
+            'jenjang' => 'required',
+        ];
     }
 }

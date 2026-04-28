@@ -6,16 +6,13 @@ use App\Models\MasterDataMataKuliah;
 use App\Models\MasterDataProgramStudi;
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithValidation;
 
-class MataKuliahImport implements ToModel, WithHeadingRow
+class MataKuliahImport implements ToModel, WithHeadingRow, WithValidation
 {
     public function model(array $row)
     {
         $prodi = MasterDataProgramStudi::where('kode', $row['kode_prodi'])->first();
-
-        if (!$prodi) {
-            return null;
-        }
 
         return MasterDataMataKuliah::updateOrCreate(
             ['kode' => $row['kode']],
@@ -27,5 +24,23 @@ class MataKuliahImport implements ToModel, WithHeadingRow
                 'program_studi_id' => $prodi->id,
             ]
         );
+    }
+
+    public function rules(): array
+    {
+        return [
+            'kode' => 'required',
+            'nama' => 'required',
+            'sks' => 'required|numeric',
+            'semester' => 'required|numeric',
+            'kode_prodi' => 'required|exists:master_data_program_studis,kode',
+        ];
+    }
+
+    public function customValidationMessages()
+    {
+        return [
+            'kode_prodi.exists' => 'Kode prodi ":input" tidak ditemukan.',
+        ];
     }
 }

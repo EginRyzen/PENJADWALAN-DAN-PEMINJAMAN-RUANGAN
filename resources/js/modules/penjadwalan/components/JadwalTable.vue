@@ -51,8 +51,10 @@
         :prodi-list="prodiList"
         :kelas-list="kelasList"
         :ruangan-list="ruanganList"
+        :dosen-list="dosenList"
         @apply="handleApplyFilters"
         @search-ruangan="handleSearchRuangan"
+        @search-dosen="handleSearchDosen"
       />
     </div>
 
@@ -204,6 +206,7 @@ export default {
     ruanganList: { type: Array, default: () => [] },
     prodiList: { type: Array, default: () => [] },
     kelasList: { type: Array, default: () => [] },
+    dosenList: { type: Array, default: () => [] },
     isPermanen: { type: Boolean, default: false },
   },
   emits: ['edit'],
@@ -215,6 +218,7 @@ export default {
         kelas: '',
         hari: '',
         ruangan: '',
+        dosen: '',
         status: '',
         tanggalStart: '',
         tanggalEnd: '',
@@ -255,6 +259,11 @@ export default {
       // Filter Ruangan
       if (this.activeFilters.ruangan) {
         res = res.filter(i => i.ruangan_id == this.activeFilters.ruangan);
+      }
+
+      // Filter Dosen
+      if (this.activeFilters.dosen) {
+        res = res.filter(i => i.dosen_id == this.activeFilters.dosen);
       }
 
       // Filter Prodi & Kelas
@@ -302,6 +311,9 @@ export default {
       } catch (e) {
         console.error("Gagal memuat data ruangan:", e);
       }
+    },
+    handleSearchDosen(query) {
+      this.$store.dispatch('penjadwalan/getDosen', { search: query, size: 50 });
     },
     handleSearchRuangan(query) {
       clearTimeout(this._ruanganSearchTimer);

@@ -95,6 +95,7 @@
           :ruangan-list="ruanganList"
           :prodi-list="programStudiList"
           :kelas-list="kelasList"
+          :dosen-list="dosenList"
           :is-permanen="isPermanen"
           @edit="openEditModal"
         />
@@ -107,6 +108,7 @@
           :ruangan-list="ruanganList"
           :prodi-list="programStudiList"
           :kelas-list="kelasList"
+          :dosen-list="dosenList"
           :is-permanen="isPermanen"
           @edit="openEditModal"
         />

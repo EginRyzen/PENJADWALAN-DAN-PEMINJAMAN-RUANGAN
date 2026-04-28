@@ -89,18 +89,31 @@ class CspGeneratorService
         }
 
         // 8. Build jadwal dengan algoritma greedy + CSP constraint
-        $result       = [];
-        $busyRuangan  = []; // key: "tanggal|ruangan_id" => [[start, end], ...]
-        $busyDosen    = []; // key: "tanggal|dosen_id"   => [[start, end], ...]
-        $busyKelas    = []; // key: "tanggal|kelas_id"   => [[start, end], ...]
-        $currentDate  = Carbon::parse($startDate);
+        $result          = [];
+        $busyRuangan     = []; // key: "tanggal|ruangan_id" => [[start, end], ...]
+        $busyDosen       = []; // key: "tanggal|dosen_id"   => [[start, end], ...]
+        $busyKelas       = []; // key: "tanggal|kelas_id"   => [[start, end], ...]
+        $dosenDailyCount = []; // key: "tanggal|dosen_id"   => int (jumlah sesi per hari)
+        $currentDate     = Carbon::parse($startDate);
+
+        // Cari kapasitas ruangan terbesar
+        $maxRoomCapacity = $ruanganList->max('room_capacity') ?? 0;
 
         foreach ($matkulPerKelas as $item) {
             $scheduled = false;
+            $conflictReason = 'Tidak ada slot waktu & ruangan yang tersedia dalam 60 hari ke depan.';
 
-            // Coba cari slot kosong mulai dari $currentDate
-            $tryDate = $currentDate->copy();
-            $maxTry  = 60; // batasi 60 hari ke depan
+            // Cek apakah jumlah peserta melebihi kapasitas ruangan terbesar
+            $pesertaCount = $item['kelas']->mahasiswas_count ?? 0;
+            if ($pesertaCount > $maxRoomCapacity) {
+                $conflictReason = "Kapasitas ruangan tidak mencukupi. (Peserta: {$pesertaCount}, Max Ruangan: {$maxRoomCapacity})";
+                // Skip pencarian karena pasti tidak akan muat
+                $tryDate = $currentDate->copy();
+                $maxTry = 0; 
+            } else {
+                $tryDate = $currentDate->copy();
+                $maxTry  = 60; // batasi 60 hari ke depan
+            }
 
             for ($d = 0; $d < $maxTry && !$scheduled; $d++) {
                 // Skip hari libur & hari minggu
@@ -127,6 +140,7 @@ class CspGeneratorService
                     $busyRuangan,
                     $busyDosen,
                     $busyKelas,
+                    $dosenDailyCount,
                     $ruanganList,
                     $dosenList,
                     $item['kelas']
@@ -139,6 +153,9 @@ class CspGeneratorService
                     $busyRuangan["{$dateKey}|{$slot['ruangan_id']}"][] = [$slot['jam_mulai'], $slot['jam_selesai']];
                     $busyDosen["{$dateKey}|{$slot['dosen_id']}"][]     = [$slot['jam_mulai'], $slot['jam_selesai']];
                     $busyKelas["{$dateKey}|{$item['kelas']->id}"][]    = [$slot['jam_mulai'], $slot['jam_selesai']];
+                    // Tambah counter harian dosen (max 2 sesi/hari)
+                    $dosenDailyCount["{$dateKey}|{$slot['dosen_id']}"] =
+                        ($dosenDailyCount["{$dateKey}|{$slot['dosen_id']}"] ?? 0) + 1;
 
                     $result[] = [
                         'id'               => 'TMP-' . uniqid(),
@@ -163,7 +180,7 @@ class CspGeneratorService
                         'ruangan_id'       => $slot['ruangan_id'],
                         'ruangan_nama'     => $slot['ruangan_nama'],
                         'kapasitas'        => $slot['kapasitas'],
-                        'jumlah_peserta'   => $item['kelas']->mahasiswas_count ?? 0,
+                        'jumlah_peserta'   => $pesertaCount,
                         'status'           => 'ok',
                         'conflict_reason'  => null,
                     ];
@@ -199,9 +216,9 @@ class CspGeneratorService
                     'ruangan_id'       => null,
                     'ruangan_nama'     => '-',
                     'kapasitas'        => 0,
-                    'jumlah_peserta'   => 0,
+                    'jumlah_peserta'   => $pesertaCount,
                     'status'           => 'conflict',
-                    'conflict_reason'  => 'Tidak ada slot waktu & ruangan yang tersedia dalam 60 hari ke depan.',
+                    'conflict_reason'  => $conflictReason,
                 ];
             }
         }
@@ -309,6 +326,7 @@ class CspGeneratorService
         array &$busyRuangan,
         array &$busyDosen,
         array &$busyKelas,
+        array &$dosenDailyCount,
         $ruanganList,
         $dosenList,
         $kelas
@@ -347,8 +365,12 @@ class CspGeneratorService
                 $ruBusy = $busyRuangan["{$tanggal}|{$ruangan->id}"] ?? [];
                 if ($this->hasOverlap($jamMulai, $jamSelesai, $ruBusy)) continue;
 
-                // 3. Cari dosen yang kosong di jam tersebut
+                // 3. Cari dosen yang kosong di jam tersebut dan belum mengawasi >= 2 kali hari ini
                 foreach ($dosenList as $dosen) {
+                    // Batasi: 1 dosen maksimal 2 kali mengawasi per hari
+                    $dosenCountToday = $dosenDailyCount["{$tanggal}|{$dosen->id}"] ?? 0;
+                    if ($dosenCountToday >= 2) continue;
+
                     $doBusy = $busyDosen["{$tanggal}|{$dosen->id}"] ?? [];
                     if ($this->hasOverlap($jamMulai, $jamSelesai, $doBusy)) continue;
 
