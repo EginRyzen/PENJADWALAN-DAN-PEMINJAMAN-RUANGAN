@@ -567,6 +567,7 @@ export default {
     },
     async fetchBuildingOptions() {
       try {
+        this.$store.commit("SET_LOADING", true);
         const data = await this.$store.dispatch(`gedung/${DISPATCH.GET_BUILDINGS_ONLY.split('/')[1]}`, {
           active: "active",
         });
@@ -575,7 +576,9 @@ export default {
           id: item.id,
           name: item.building_code + " - " + item.building_name,
         }));
+        this.$store.commit("SET_LOADING", false);
       } catch (error) {
+        this.$store.commit("SET_LOADING", false);
         console.error("Gagal memuat filter gedung:", error);
       }
     },
@@ -597,6 +600,7 @@ export default {
       }
 
       try {
+        this.$store.commit("SET_LOADING", true);
         this.form.items[index].loadingRooms = true;
         this.form.items[index].selected_rooms = [];
         
@@ -611,7 +615,9 @@ export default {
         } else {
            this.form.items[index].rooms_list = [];
         }
+        this.$store.commit("SET_LOADING", false);
       } catch (error) {
+        this.$store.commit("SET_LOADING", false);
         console.error("Gagal memuat data ruangan:", error);
       } finally {
         this.form.items[index].loadingRooms = false;

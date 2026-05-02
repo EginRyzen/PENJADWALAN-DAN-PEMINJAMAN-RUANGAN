@@ -42,10 +42,24 @@ class PengajuanPeminjamanController extends Controller
                 $query->whereIn('tipe_pengajuan', explode(',', $request->tipe));
             }
 
+            // Filter Status Pengajuan
+            if ($request->status) {
+                $query->whereHas('status', function($q) use ($request) {
+                    $q->whereIn('nama_status', explode(',', $request->status));
+                });
+            }
+
             // Filter Gedung (melalui relasi items -> ruangan)
             if ($request->buildings) {
                 $query->whereHas('items.ruangan', function($q) use ($request) {
                     $q->whereIn('building_id', explode(',', $request->buildings));
+                });
+            }
+
+            // Filter Ruangan (melalui relasi items)
+            if ($request->rooms) {
+                $query->whereHas('items', function($q) use ($request) {
+                    $q->whereIn('ruangan_id', explode(',', $request->rooms));
                 });
             }
 

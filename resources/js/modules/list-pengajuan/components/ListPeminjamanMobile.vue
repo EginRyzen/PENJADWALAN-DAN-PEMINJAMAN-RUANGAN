@@ -55,12 +55,34 @@
           />
 
           <autocomplete
+            label="Ruangan"
+            :options="roomOptions"
+            item-value="id"
+            item-text="name"
+            placeholder="Pilih Ruangan..."
+            v-model="filterRuangan"
+            multiple
+            show-select-all
+          />
+
+          <autocomplete
             label="Tipe"
             :options="typeOptions"
             item-value="id"
             item-text="name"
             placeholder="Pilih Tipe..."
             v-model="filterTipe"
+            multiple
+            show-select-all
+          />
+
+          <autocomplete
+            label="Status"
+            :options="statusOptions"
+            item-value="id"
+            item-text="name"
+            placeholder="Pilih Status..."
+            v-model="filterStatus"
             multiple
             show-select-all
           />
@@ -271,6 +293,19 @@ export default {
       ],
       filterGedung: [],
       buildingOptions: [],
+      filterRuangan: [],
+      filterStatus: [],
+      statusOptions: [
+        { id: "KOREKSI", name: "KOREKSI" },
+        { id: "VERIFIKASI_TU", name: "VERIFIKASI TU" },
+        { id: "VALIDASI_KEMAHASISWAAN", name: "VALIDASI KEMAHASISWAAN" },
+        { id: "PERSIAPAN_SARPRAS", name: "PERSIAPAN SARPRAS" },
+        { id: "PENGESAHAN_KABAG_UMUM", name: "PENGESAHAN KABAG UMUM" },
+        { id: "REJECTED", name: "REJECTED" },
+        { id: "COMPLETED", name: "COMPLETED" },
+      ],
+      roomOptions: [],
+      isProgrammaticGedungChange: false,
       filter: {
         tanggal_mulai: "",
         tanggal_selesai: "",
@@ -292,6 +327,7 @@ export default {
   mounted() {
     this.fetchData();
     this.fetchBuildingOptions();
+    this.fetchRoomOptions();
     this.$nextTick(() => {
       // Attach scroll to the parent scrollable container (from MasterLayout)
       const scrollEl = this.$el.closest('.overflow-y-auto');
@@ -350,6 +386,34 @@ export default {
       this.params.page = 0;
       this.fetchData();
     }, 500),
+    filterGedung: {
+      handler() {
+        if (!this.isProgrammaticGedungChange) {
+          this.filterRuangan = [];
+        }
+        this.isProgrammaticGedungChange = false;
+        this.fetchRoomOptions();
+      },
+      deep: true,
+    },
+    filterRuangan: {
+      handler(newVal) {
+        if (newVal && newVal.length > 0) {
+          const selectedBuildingIds = [...new Set(newVal.map(r => r.building_id))].filter(id => id);
+          const currentBuildingIds = this.filterGedung.map(b => b.id);
+          const missingBuildingIds = selectedBuildingIds.filter(id => !currentBuildingIds.includes(id));
+          
+          if (missingBuildingIds.length > 0) {
+            const missingBuildings = this.buildingOptions.filter(b => missingBuildingIds.includes(b.id));
+            if (missingBuildings.length > 0) {
+              this.isProgrammaticGedungChange = true;
+              this.filterGedung = [...this.filterGedung, ...missingBuildings];
+            }
+          }
+        }
+      },
+      deep: true
+    },
   },
   methods: {
     onResize() {
@@ -372,7 +436,9 @@ export default {
           isAppend,
           search: this.searchQuery,
           tipe: this.filterTipe.map(t => t.id).join(","),
+          status: this.filterStatus.map(s => s.id).join(","),
           buildings: this.filterGedung.map(b => b.id).join(","),
+          rooms: this.filterRuangan.map(r => r.id).join(","),
           start_date: this.filter.tanggal_mulai,
           end_date: this.filter.tanggal_selesai,
         };
@@ -390,6 +456,7 @@ export default {
     },
     async fetchBuildingOptions() {
       try {
+        this.$store.commit("SET_LOADING", true);
         const data = await this.$store.dispatch(DISPATCH.GET_BUILDINGS_ONLY, {
           active: "active",
         });
@@ -398,8 +465,34 @@ export default {
           id: item.id,
           name: item.building_code,
         }));
+        this.$store.commit("SET_LOADING", false);
       } catch (error) {
+        this.$store.commit("SET_LOADING", false);
         console.error("Gagal memuat filter gedung:", error);
+      }
+    },
+    async fetchRoomOptions() {
+      try {
+        this.$store.commit("SET_LOADING", true);
+        const params = {
+          active: "active",
+        };
+        
+        if (this.filterGedung && this.filterGedung.length > 0) {
+          params.building_ids = this.filterGedung.map(b => b.id).join(",");
+        }
+
+        const data = await this.$store.dispatch(DISPATCH.GET_ROOMS_BY_GEDUNG, params);
+
+        this.roomOptions = data.map((item) => ({
+          id: item.id,
+          name: item.room_name || item.nama,
+          building_id: item.building_id,
+        }));
+        this.$store.commit("SET_LOADING", false);
+      } catch (error) {
+        this.$store.commit("SET_LOADING", false);
+        console.error("Gagal memuat filter ruangan:", error);
       }
     },
     handleScroll() {
@@ -422,7 +515,9 @@ export default {
     handleReset() {
       this.searchQuery = "";
       this.filterTipe = [];
+      this.filterStatus = [];
       this.filterGedung = [];
+      this.filterRuangan = [];
       this.filter.tanggal_mulai = "";
       this.filter.tanggal_selesai = "";
       this.datePicker = {

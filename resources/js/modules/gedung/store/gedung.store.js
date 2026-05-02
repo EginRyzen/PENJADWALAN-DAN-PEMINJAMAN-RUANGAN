@@ -113,5 +113,14 @@ export const Store = {
                 throw error;
             }
         },
+        async [actions.GET_ROOMS]({ commit }, params) {
+            try {
+                const response = await Api.get(apiUrl.GET_ROOMS, { params });
+                return response.data.result;
+            } catch (error) {
+                console.error("Error Fetching Rooms:", error);
+                throw error;
+            }
+        },
     },
 };

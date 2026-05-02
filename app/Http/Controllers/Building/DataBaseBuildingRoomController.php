@@ -22,6 +22,11 @@ class DataBaseBuildingRoomController extends Controller
                 $query->where('can_ujian', $request->can_ujian);
             }
 
+            if ($request->has('building_ids') && $request->building_ids != '') {
+                $buildingIds = explode(',', $request->building_ids);
+                $query->whereIn('building_id', $buildingIds);
+            }
+
             // Tambahkan filter status gedung aktif
             $query->whereHas('building', function ($q) {
                 $q->where('building_status', 'active');
