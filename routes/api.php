@@ -109,6 +109,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::prefix('pengajuan')->group(function () {
+        Route::get('/peminjaman/export', [PengajuanPeminjamanController::class, 'export']);
         Route::get('/peminjaman', [PengajuanPeminjamanController::class, 'index']);
         Route::post('/peminjaman', [PengajuanPeminjamanController::class, 'store']);
         Route::get('/peminjaman/{id}', [PengajuanPeminjamanController::class, 'show']);

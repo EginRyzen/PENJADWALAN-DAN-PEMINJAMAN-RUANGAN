@@ -78,6 +78,7 @@ export default {
     REJECT_PENGAJUAN: "rejectPengajuan",
     REVISION_PENGAJUAN: "revisionPengajuan",
     UPDATE_PENGAJUAN: "updatePengajuan",
+    EXPORT_PENGAJUAN: "exportPengajuan",
     // Penjadwalan Ujian
     GET_JADWAL:           "getJadwal",
     GET_JADWAL_DRAFT:     "getJadwalDraft",
