@@ -79,20 +79,9 @@
           </div>
         </div>
 
-        <!-- Right Side: Notifications -->
+        <!-- Right Side: Action Button or Other -->
         <div class="hidden md:flex items-center gap-4">
-          <router-link 
-            to="/notifications" 
-            class="relative p-2 text-gray-200 hover:text-white transition-colors"
-          >
-            <font-awesome-icon icon="bell" class="text-xl" />
-            <span 
-              v-if="unreadCount > 0"
-              class="absolute top-1.5 right-1.5 w-4 h-4 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-teal-600"
-            >
-              {{ unreadCount > 9 ? '9+' : unreadCount }}
-            </span>
-          </router-link>
+          <!-- Placeholder or other actions if needed -->
         </div>
       </div>
     </div>
@@ -125,7 +114,6 @@ const closeAllDropdowns = (e) => {
 onMounted(() => {
   document.addEventListener('click', closeAllDropdowns);
   fetchMenus();
-  store.dispatch(DISPATCHES.GET_UNREAD_NOTIFICATION_COUNT);
 });
 
 onUnmounted(() => {
@@ -150,8 +138,6 @@ const menus = computed(() => {
   };
   return [dashboard, ...rawMenus];
 });
-
-const unreadCount = computed(() => store.state.dashboard?.unreadCount || 0);
 
 const handleMouseEnter = (index) => {
   if (isPinned.value) {

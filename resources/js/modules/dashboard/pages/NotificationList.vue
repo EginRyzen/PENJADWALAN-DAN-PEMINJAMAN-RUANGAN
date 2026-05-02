@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50/50 pb-20 md:pb-10 p-4 md:p-6">
+  <div ref="pageContainer" class="min-h-screen bg-gray-50/50 pb-20 md:pb-10 p-4 md:p-6">
     <!-- Breadcrumb -->
     <breadcrumb-bima :items="breadcrumbItems" class="mb-6 hidden md:block" />
 
@@ -120,16 +120,21 @@
           </div>
         </div>
 
-        <!-- Load More -->
-        <div v-if="hasMore" class="flex justify-center pt-4">
-           <button 
-             @click="loadMore" 
-             :disabled="loading"
-             class="px-6 py-2.5 bg-white border border-gray-200 rounded-full text-sm font-bold text-gray-600 hover:bg-gray-50 transition-all active:scale-95 disabled:opacity-50"
-           >
-             <font-awesome-icon v-if="loading" icon="spinner" spin class="mr-2" />
-             Lihat lebih banyak
-           </button>
+        <!-- Desktop Pagination -->
+        <div class="hidden md:flex justify-end pt-6">
+          <pagination-app
+            :current="pagination.current_page || 1"
+            :total="pagination.total || 0"
+            :per-page="pagination.per_page || 10"
+            :total-rows-on-page="notifications.length"
+            @page-changed="handlePageChange"
+            @paging-change="handlePagingChange"
+          />
+        </div>
+
+        <!-- Mobile Loading Indicator (Bottom) -->
+        <div v-if="loading && page > 1" class="md:hidden flex justify-center py-4">
+          <font-awesome-icon icon="spinner" spin class="text-teal-500" />
         </div>
       </div>
 
@@ -148,10 +153,11 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue';
+import { ref, computed, onMounted, onUnmounted } from 'vue';
 import { useStore } from 'vuex';
 import { useRouter } from 'vue-router';
 import BreadcrumbBima from '@/core/components/Breadcrumb.vue';
+import PaginationApp from '@/core/components/Pagination.vue';
 import DISPATCHES from '@/core/plugins/constants/dispatches';
 import moment from 'moment';
 import 'moment/dist/locale/id';
@@ -160,6 +166,10 @@ moment.locale('id');
 
 const store = useStore();
 const router = useRouter();
+
+// Reference to page container to find parent scroll
+const pageContainer = ref(null);
+const scrollEl = ref(null);
 
 const loading = ref(false);
 const page = ref(1);
@@ -190,34 +200,76 @@ const hasMore = computed(() => pagination.value.current_page < pagination.value.
 
 const fetchNotifications = async (isLoadMore = false) => {
   if (loading.value) return;
+  
   loading.value = true;
+  // Set global loading only for initial load or desktop pagination
+  if (!isLoadMore) store.commit('SET_LOADING', true);
+
   try {
-    if (!isLoadMore) page.value = 1;
     await store.dispatch(DISPATCHES.GET_NOTIFICATIONS, { 
       page: page.value,
-      per_page: 20 
+      per_page: 10,
+      isAppend: isLoadMore
     });
   } finally {
     loading.value = false;
+    store.commit('SET_LOADING', false);
   }
 };
 
 const loadMore = () => {
+  if (loading.value || !hasMore.value) return;
   page.value++;
   fetchNotifications(true);
 };
 
+const handlePageChange = (newPage) => {
+  page.value = newPage;
+  fetchNotifications(false);
+};
+
+const handlePagingChange = (newSize) => {
+  page.value = 1;
+  // If the store supports custom per_page, we can pass it here. 
+  // For now we use the default or fixed 10.
+  fetchNotifications(false);
+};
+
+const handleScroll = (e) => {
+  // Infinite scroll only for mobile
+  if (window.innerWidth >= 768) return;
+
+  const el = e.target;
+  const scrollHeight = el.scrollHeight;
+  const scrollTop = el.scrollTop;
+  const clientHeight = el.clientHeight;
+
+  if (scrollTop + clientHeight >= scrollHeight - 100) {
+    loadMore();
+  }
+};
+
 const markAllRead = async () => {
-  await store.dispatch(DISPATCHES.MARK_ALL_NOTIFICATIONS_READ);
+  store.commit('SET_LOADING', true);
+  try {
+    await store.dispatch(DISPATCHES.MARK_ALL_NOTIFICATIONS_READ);
+  } finally {
+    store.commit('SET_LOADING', false);
+  }
 };
 
 const handleNotificationClick = async (notif) => {
-  if (!notif.read_at) {
-    await store.dispatch(DISPATCHES.MARK_NOTIFICATION_READ, notif.id);
-  }
-  
-  if (notif.data.link) {
-    router.push(notif.data.link);
+  store.commit('SET_LOADING', true);
+  try {
+    if (!notif.read_at) {
+      await store.dispatch(DISPATCHES.MARK_NOTIFICATION_READ, notif.id);
+    }
+    
+    if (notif.data.link) {
+      router.push(notif.data.link);
+    }
+  } finally {
+    store.commit('SET_LOADING', false);
   }
 };
 
@@ -267,6 +319,25 @@ const getIconColor = (type) => {
 onMounted(() => {
   fetchNotifications();
   store.dispatch(DISPATCHES.GET_UNREAD_NOTIFICATION_COUNT);
+  
+  // Find the scrollable container from MasterLayout
+  if (pageContainer.value) {
+    const parentScroll = pageContainer.value.closest('.overflow-y-auto');
+    if (parentScroll) {
+      scrollEl.value = parentScroll;
+      parentScroll.addEventListener('scroll', handleScroll);
+    } else {
+      window.addEventListener('scroll', handleScroll);
+    }
+  }
+});
+
+onUnmounted(() => {
+  if (scrollEl.value) {
+    scrollEl.value.removeEventListener('scroll', handleScroll);
+  } else {
+    window.removeEventListener('scroll', handleScroll);
+  }
 });
 </script>
 

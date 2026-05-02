@@ -21,15 +21,19 @@ export const Store = {
             state.dashboardData = payload;
         },
         SET_NOTIFICATIONS(state, payload) {
-            if (payload.current_page === 1) {
-                state.notifications = payload.data;
+            const { data, current_page, last_page, total, per_page, isAppend } = payload;
+            
+            if (isAppend) {
+                state.notifications = [...state.notifications, ...data];
             } else {
-                state.notifications = [...state.notifications, ...payload.data];
+                state.notifications = data;
             }
+
             state.notificationPagination = {
-                current_page: payload.current_page,
-                last_page: payload.last_page,
-                total: payload.total
+                current_page: current_page,
+                last_page: last_page,
+                total: total,
+                per_page: per_page
             };
         },
         SET_UNREAD_COUNT(state, count) {
@@ -59,10 +63,14 @@ export const Store = {
                 console.error("Error fetching dashboard data:", error);
             }
         },
-        async [actions.GET_NOTIFICATIONS]({ commit }, params = {}) {
+        async [actions.GET_NOTIFICATIONS]({ commit }, payload = {}) {
             try {
+                const { isAppend, ...params } = payload;
                 const response = await Api.get(apiUrl.NOTIFICATIONS, { params });
-                commit('SET_NOTIFICATIONS', response.data.result);
+                commit('SET_NOTIFICATIONS', { 
+                    ...response.data.result, 
+                    isAppend 
+                });
                 return response.data;
             } catch (error) {
                 console.error("Error fetching notifications:", error);
