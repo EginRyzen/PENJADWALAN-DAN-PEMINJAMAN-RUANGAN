@@ -24,6 +24,11 @@ class DataBaseBuildingRoom extends Model
         'can_pembelajaran',
     ];
 
+    protected $casts = [
+        'can_ujian' => 'boolean',
+        'can_pembelajaran' => 'boolean',
+    ];
+
     public function building()
     {
         return $this->belongsTo(DataBaseBuilding::class, 'building_id');
