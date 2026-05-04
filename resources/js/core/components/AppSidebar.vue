@@ -28,10 +28,16 @@
         </button>
         <button
           @click="goToNotifications"
-          class="p-2 shadow-md text-teal-400 transition-colors duration-200 rounded-md bg-indigo-50 hover:text-teal-400 hover:bg-indigo-100 dark:hover:text-light dark:hover:bg-teal-500 dark:bg-dark focus:outline-none focus:bg-indigo-100 dark:focus:bg-teal-600 focus:ring-teal-800"
+          class="p-2 shadow-md text-teal-400 transition-colors duration-200 rounded-md bg-indigo-50 hover:text-teal-400 hover:bg-indigo-100 dark:hover:text-light dark:hover:bg-teal-500 dark:bg-dark focus:outline-none focus:bg-indigo-100 dark:focus:bg-teal-600 focus:ring-teal-800 relative"
         >
           <span class="sr-only">Open Notifications</span>
           <font-awesome-icon icon="bell" class="w-8 h-8" />
+          <span 
+            v-if="unreadCount > 0"
+            class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full border-2 border-white shadow-sm"
+          >
+            {{ unreadCount > 9 ? '9+' : unreadCount }}
+          </span>
         </button>
       </div>
 
@@ -90,11 +96,20 @@
 </template>
 
 <script setup>
-import { ref } from "vue";
+import { ref, onMounted, computed } from "vue";
 import { useRouter } from "vue-router";
+import { useStore } from "vuex";
+import DISPATCHES from "@/core/plugins/constants/dispatches";
 
 const router = useRouter();
+const store = useStore();
 const isUserMenuOpen = ref(false);
+
+const unreadCount = computed(() => store.state.dashboard?.unreadCount || 0);
+
+onMounted(() => {
+  store.dispatch(DISPATCHES.GET_UNREAD_NOTIFICATION_COUNT);
+});
 
 const goToNotifications = () => {
   router.push("/notifications");

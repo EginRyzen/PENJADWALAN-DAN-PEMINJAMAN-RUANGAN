@@ -32,6 +32,7 @@ const apiUrl = {
     REJECT_PENGAJUAN: "/pengajuan/reject",
     REVISION_PENGAJUAN: "/pengajuan/revision",
     UPDATE_PENGAJUAN: "/pengajuan/peminjaman",
+    EXPORT_PENGAJUAN: "/pengajuan/peminjaman/export",
     NOTIFICATIONS: "/notifications",
     NOTIFICATION_UNREAD_COUNT: "/notifications/unread-count",
     MARK_ALL_NOTIFICATIONS_READ: "/notifications/mark-all-read",

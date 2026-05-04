@@ -102,10 +102,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
             Route::get('hari-libur/template', [ExcelImportController::class, 'downloadTemplateHariLibur']);
             Route::post('hari-libur/import', [ExcelImportController::class, 'importHariLibur']);
+
+            Route::get('kelas-mata-kuliah/template', [ExcelImportController::class, 'downloadTemplateKelasMataKuliah']);
+            Route::post('kelas-mata-kuliah/import', [ExcelImportController::class, 'importKelasMataKuliah']);
         });
     });
 
     Route::prefix('pengajuan')->group(function () {
+        Route::get('/peminjaman/export', [PengajuanPeminjamanController::class, 'export']);
         Route::get('/peminjaman', [PengajuanPeminjamanController::class, 'index']);
         Route::post('/peminjaman', [PengajuanPeminjamanController::class, 'store']);
         Route::get('/peminjaman/{id}', [PengajuanPeminjamanController::class, 'show']);

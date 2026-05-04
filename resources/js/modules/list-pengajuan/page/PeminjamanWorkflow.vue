@@ -192,12 +192,14 @@ export default {
     async fetchWorkflowHistory() {
       if (!this.workflowId) return;
       this.loading = true;
+      this.$store.commit("SET_LOADING", true);
       try {
         await this.$store.dispatch(DISPATCHES.GET_WORKFLOW_HISTORY, this.workflowId);
       } catch (error) {
         console.error("Failed to fetch workflow history:", error);
       } finally {
         this.loading = false;
+        this.$store.commit("SET_LOADING", false);
       }
     },
     getStatusType(aksi) {

@@ -4,11 +4,20 @@
     <div class="sticky top-0 z-30 bg-white/80 backdrop-blur-md border-b border-gray-100 p-4 shadow-sm">
       <div class="flex justify-between items-center mb-4">
         <h1 class="text-xl font-bold text-gray-800">Daftar Peminjaman</h1>
-        <router-link v-if="canCreatePengajuan" :to="{ name: 'peminjaman.create' }">
-          <button class="bg-teal-500 hover:bg-teal-600 text-white p-2.5 rounded-full shadow-lg transition-all active:scale-95">
-            <font-awesome-icon icon="plus" />
+        <div class="flex items-center gap-2">
+          <button 
+            @click="downloadDataTable"
+            class="bg-white border border-teal-500 text-teal-500 p-2.5 rounded-full shadow-md transition-all active:scale-95"
+            title="Download Excel"
+          >
+            <font-awesome-icon icon="download" />
           </button>
-        </router-link>
+          <router-link v-if="canCreatePengajuan" :to="{ name: 'peminjaman.create' }">
+            <button class="bg-teal-500 hover:bg-teal-600 text-white p-2.5 rounded-full shadow-lg transition-all active:scale-95">
+              <font-awesome-icon icon="plus" />
+            </button>
+          </router-link>
+        </div>
       </div>
 
       <!-- Search Bar -->
@@ -55,12 +64,34 @@
           />
 
           <autocomplete
+            label="Ruangan"
+            :options="roomOptions"
+            item-value="id"
+            item-text="name"
+            placeholder="Pilih Ruangan..."
+            v-model="filterRuangan"
+            multiple
+            show-select-all
+          />
+
+          <autocomplete
             label="Tipe"
             :options="typeOptions"
             item-value="id"
             item-text="name"
             placeholder="Pilih Tipe..."
             v-model="filterTipe"
+            multiple
+            show-select-all
+          />
+
+          <autocomplete
+            label="Status"
+            :options="statusOptions"
+            item-value="id"
+            item-text="name"
+            placeholder="Pilih Status..."
+            v-model="filterStatus"
             multiple
             show-select-all
           />
@@ -239,6 +270,11 @@
       @close="modalDatePicker = false"
       @submit="submitDatePicker"
     />
+    <ModalPopUpError
+      v-model="showErrorModal"
+      :title="errorModalContent.title"
+      :description="errorModalContent.description"
+    />
   </div>
 </template>
 
@@ -248,6 +284,7 @@ import AppInput from "@/core/components/AppInput.vue";
 import Autocomplete from "@/core/components/Autocomplete.vue";
 import ModalDatePicker from "@/core/components/ModalDatePicker.vue";
 import ModalDatePickerMobile from "@/core/components/ModalDatePickerMobile.vue";
+import ModalPopUpError from "@/core/components/ModalPopUpError.vue";
 import DISPATCH from "@/core/plugins/constants/dispatches";
 import moment from "moment";
 import _ from "lodash";
@@ -260,6 +297,7 @@ export default {
     Autocomplete,
     ModalDatePicker,
     ModalDatePickerMobile,
+    ModalPopUpError,
   },
   data() {
     return {
@@ -271,6 +309,19 @@ export default {
       ],
       filterGedung: [],
       buildingOptions: [],
+      filterRuangan: [],
+      filterStatus: [],
+      statusOptions: [
+        { id: "KOREKSI", name: "KOREKSI" },
+        { id: "VERIFIKASI_TU", name: "VERIFIKASI TU" },
+        { id: "VALIDASI_KEMAHASISWAAN", name: "VALIDASI KEMAHASISWAAN" },
+        { id: "PERSIAPAN_SARPRAS", name: "PERSIAPAN SARPRAS" },
+        { id: "PENGESAHAN_KABAG_UMUM", name: "PENGESAHAN KABAG UMUM" },
+        { id: "REJECTED", name: "REJECTED" },
+        { id: "COMPLETED", name: "COMPLETED" },
+      ],
+      roomOptions: [],
+      isProgrammaticGedungChange: false,
       filter: {
         tanggal_mulai: "",
         tanggal_selesai: "",
@@ -286,12 +337,18 @@ export default {
         page: 0,
         size: 10,
       },
+      showErrorModal: false,
+      errorModalContent: {
+        title: "Batas Waktu Terlampaui",
+        description: "Maksimal penarikan data adalah 6 bulan dari hari ini.",
+      },
       loading: false,
     };
   },
   mounted() {
     this.fetchData();
     this.fetchBuildingOptions();
+    this.fetchRoomOptions();
     this.$nextTick(() => {
       // Attach scroll to the parent scrollable container (from MasterLayout)
       const scrollEl = this.$el.closest('.overflow-y-auto');
@@ -350,6 +407,34 @@ export default {
       this.params.page = 0;
       this.fetchData();
     }, 500),
+    filterGedung: {
+      handler() {
+        if (!this.isProgrammaticGedungChange) {
+          this.filterRuangan = [];
+        }
+        this.isProgrammaticGedungChange = false;
+        this.fetchRoomOptions();
+      },
+      deep: true,
+    },
+    filterRuangan: {
+      handler(newVal) {
+        if (newVal && newVal.length > 0) {
+          const selectedBuildingIds = [...new Set(newVal.map(r => r.building_id))].filter(id => id);
+          const currentBuildingIds = this.filterGedung.map(b => b.id);
+          const missingBuildingIds = selectedBuildingIds.filter(id => !currentBuildingIds.includes(id));
+          
+          if (missingBuildingIds.length > 0) {
+            const missingBuildings = this.buildingOptions.filter(b => missingBuildingIds.includes(b.id));
+            if (missingBuildings.length > 0) {
+              this.isProgrammaticGedungChange = true;
+              this.filterGedung = [...this.filterGedung, ...missingBuildings];
+            }
+          }
+        }
+      },
+      deep: true
+    },
   },
   methods: {
     onResize() {
@@ -372,7 +457,9 @@ export default {
           isAppend,
           search: this.searchQuery,
           tipe: this.filterTipe.map(t => t.id).join(","),
+          status: this.filterStatus.map(s => s.id).join(","),
           buildings: this.filterGedung.map(b => b.id).join(","),
+          rooms: this.filterRuangan.map(r => r.id).join(","),
           start_date: this.filter.tanggal_mulai,
           end_date: this.filter.tanggal_selesai,
         };
@@ -390,6 +477,7 @@ export default {
     },
     async fetchBuildingOptions() {
       try {
+        this.$store.commit("SET_LOADING", true);
         const data = await this.$store.dispatch(DISPATCH.GET_BUILDINGS_ONLY, {
           active: "active",
         });
@@ -398,8 +486,34 @@ export default {
           id: item.id,
           name: item.building_code,
         }));
+        this.$store.commit("SET_LOADING", false);
       } catch (error) {
+        this.$store.commit("SET_LOADING", false);
         console.error("Gagal memuat filter gedung:", error);
+      }
+    },
+    async fetchRoomOptions() {
+      try {
+        this.$store.commit("SET_LOADING", true);
+        const params = {
+          active: "active",
+        };
+        
+        if (this.filterGedung && this.filterGedung.length > 0) {
+          params.building_ids = this.filterGedung.map(b => b.id).join(",");
+        }
+
+        const data = await this.$store.dispatch(DISPATCH.GET_ROOMS_BY_GEDUNG, params);
+
+        this.roomOptions = data.map((item) => ({
+          id: item.id,
+          name: item.room_name || item.nama,
+          building_id: item.building_id,
+        }));
+        this.$store.commit("SET_LOADING", false);
+      } catch (error) {
+        this.$store.commit("SET_LOADING", false);
+        console.error("Gagal memuat filter ruangan:", error);
       }
     },
     handleScroll() {
@@ -422,7 +536,9 @@ export default {
     handleReset() {
       this.searchQuery = "";
       this.filterTipe = [];
+      this.filterStatus = [];
       this.filterGedung = [];
+      this.filterRuangan = [];
       this.filter.tanggal_mulai = "";
       this.filter.tanggal_selesai = "";
       this.datePicker = {
@@ -431,6 +547,44 @@ export default {
       };
       this.params.page = 0;
       this.fetchData();
+    },
+    async downloadDataTable() {
+      try {
+        // Validasi batas 6 bulan (Hitungan mundur dari hari ini)
+        if (this.filter.tanggal_mulai) {
+          const startDate = moment(this.filter.tanggal_mulai);
+          const sixMonthsAgo = moment().subtract(6, "months").startOf("day");
+          
+          if (startDate.isBefore(sixMonthsAgo)) {
+            this.showErrorModal = true;
+            return;
+          }
+        }
+
+        this.$store.commit("SET_LOADING", true);
+        const params = {};
+        if (this.searchQuery) params.search = this.searchQuery;
+        if (this.filterTipe.length) params.tipe = this.filterTipe.map(t => t.id).join(",");
+        if (this.filterStatus.length) params.status = this.filterStatus.map(s => s.id).join(",");
+        if (this.filterGedung.length) params.buildings = this.filterGedung.map(b => b.id).join(",");
+        if (this.filterRuangan.length) params.rooms = this.filterRuangan.map(r => r.id).join(",");
+        if (this.filter.tanggal_mulai) params.start_date = this.filter.tanggal_mulai;
+        if (this.filter.tanggal_selesai) params.end_date = this.filter.tanggal_selesai;
+
+        const response = await this.$store.dispatch(DISPATCH.EXPORT_PENGAJUAN, params);
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', `Laporan_Peminjaman_Ruangan_${moment().format('YYYYMMDD_HHmmss')}.xlsx`);
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        
+        this.$store.commit("SET_LOADING", false);
+      } catch (error) {
+        this.$store.commit("SET_LOADING", false);
+        console.error("Gagal mendownload data:", error);
+      }
     },
     resetDatePicker() {
       this.filter.tanggal_mulai = "";

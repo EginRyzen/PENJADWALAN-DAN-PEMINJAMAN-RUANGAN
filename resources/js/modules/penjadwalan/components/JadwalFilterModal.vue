@@ -103,6 +103,19 @@
             />
           </div>
         </div>
+
+        <!-- Filter Dosen -->
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Dosen Pengawas</label>
+          <select-auto-complete
+            v-model="localFilters.dosen"
+            :options="dosenOptions"
+            item-text="nama"
+            item-value="id"
+            placeholder="Pilih Dosen..."
+            @search="$emit('search-dosen', $event)"
+          />
+        </div>
       </div>
 
       <!-- Footer -->
@@ -138,15 +151,16 @@ export default {
   components: { Modal, SelectAutoComplete, ModalDatePicker },
   props: {
     modelValue: { type: Boolean, default: false },
-    filters:    { type: Object,  default: () => ({ prodi: '', kelas: '', hari: '', ruangan: '', tanggalStart: '', tanggalEnd: '', status: '' }) },
+    filters:    { type: Object,  default: () => ({ prodi: '', kelas: '', hari: '', ruangan: '', dosen: '', tanggalStart: '', tanggalEnd: '', status: '' }) },
     prodiList:  { type: Array,   default: () => [] },
     kelasList:  { type: Array,   default: () => [] },
     ruanganList:{ type: Array,   default: () => [] },
+    dosenList:  { type: Array,   default: () => [] },
   },
-  emits: ['update:modelValue', 'apply', 'search-ruangan'],
+  emits: ['update:modelValue', 'apply', 'search-ruangan', 'search-dosen'],
   data() {
     return {
-      localFilters: { prodi: '', kelas: '', hari: '', ruangan: '', tanggalStart: '', tanggalEnd: '', status: '' },
+      localFilters: { prodi: '', kelas: '', hari: '', ruangan: '', dosen: '', tanggalStart: '', tanggalEnd: '', status: '' },
       showDatePicker: false,
     };
   },
@@ -181,6 +195,9 @@ export default {
         id: r.id, 
         label: `${r.nama || r.room_name} (Kap. ${r.kapasitas || r.room_capacity || '-'})` 
       }));
+    },
+    dosenOptions() {
+      return this.dosenList.map(d => ({ id: d.id, nama: d.nama || d.name || '-' }));
     },
     hariOptions() {
       return [
@@ -232,6 +249,7 @@ export default {
         kelas: '',
         hari: '',
         ruangan: '',
+        dosen: '',
         tanggalStart: '',
         tanggalEnd: '',
         status: '',

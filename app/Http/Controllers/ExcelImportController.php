@@ -11,6 +11,7 @@ use App\Imports\MataKuliahImport;
 use App\Imports\MahasiswaImport;
 use App\Imports\DosenImport;
 use App\Imports\HariLiburImport;
+use App\Imports\KelasMataKuliahImport;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Support\Facades\DB;
@@ -30,15 +31,27 @@ class ExcelImportController extends Controller
 
         try {
             DB::beginTransaction();
-            
             Excel::import(new MultiSheetBuildingImport, $request->file('file'));
-            
             DB::commit();
 
             return response()->json([
                 'status' => 'success',
                 'message' => 'Data berhasil diimport'
             ]);
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            DB::rollBack();
+            $failures = $e->failures();
+            $errorDetails = [];
+            
+            foreach ($failures as $failure) {
+                $errorDetails[] = "Baris " . $failure->row() . ": " . implode(', ', $failure->errors());
+            }
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validasi gagal pada beberapa baris.',
+                'errors' => $errorDetails
+            ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([
@@ -132,6 +145,20 @@ class ExcelImportController extends Controller
         return $this->processImport(new HariLiburImport(), $request);
     }
 
+    // Master Data Kelas Mata Kuliah
+    public function downloadTemplateKelasMataKuliah()
+    {
+        return Excel::download(new GenericTemplateExport('Kelas Mata Kuliah', [
+            ['nama_kelas', 'kode_prodi', 'nama_periode', 'kode_matkul', 'semester'],
+            ['A', 'INF', 'Ganjil 2025/2026', 'INF101', 1],
+        ]), 'template_kelas_mata_kuliah.xlsx');
+    }
+
+    public function importKelasMataKuliah(Request $request)
+    {
+        return $this->processImport(new KelasMataKuliahImport(), $request);
+    }
+
     private function processImport($importClass, Request $request)
     {
         $request->validate([
@@ -147,6 +174,20 @@ class ExcelImportController extends Controller
                 'status' => 'success',
                 'message' => 'Data berhasil diimport'
             ]);
+        } catch (\Maatwebsite\Excel\Validators\ValidationException $e) {
+            DB::rollBack();
+            $failures = $e->failures();
+            $errorDetails = [];
+            
+            foreach ($failures as $failure) {
+                $errorDetails[] = "Baris " . $failure->row() . ": " . implode(', ', $failure->errors());
+            }
+
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Validasi gagal pada beberapa baris.',
+                'errors' => $errorDetails
+            ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
             return response()->json([

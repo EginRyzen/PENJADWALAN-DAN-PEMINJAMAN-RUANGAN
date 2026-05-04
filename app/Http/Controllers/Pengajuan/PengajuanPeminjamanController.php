@@ -13,6 +13,8 @@ use App\Models\PengajuanRuanganItem;
 use App\Models\WorkflowStep;
 use App\Models\User;
 use App\Notifications\NewPengajuanNotification;
+use App\Exports\PengajuanPeminjamanExport;
+use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
@@ -42,10 +44,24 @@ class PengajuanPeminjamanController extends Controller
                 $query->whereIn('tipe_pengajuan', explode(',', $request->tipe));
             }
 
+            // Filter Status Pengajuan
+            if ($request->status) {
+                $query->whereHas('status', function($q) use ($request) {
+                    $q->whereIn('nama_status', explode(',', $request->status));
+                });
+            }
+
             // Filter Gedung (melalui relasi items -> ruangan)
             if ($request->buildings) {
                 $query->whereHas('items.ruangan', function($q) use ($request) {
                     $q->whereIn('building_id', explode(',', $request->buildings));
+                });
+            }
+
+            // Filter Ruangan (melalui relasi items)
+            if ($request->rooms) {
+                $query->whereHas('items', function($q) use ($request) {
+                    $q->whereIn('ruangan_id', explode(',', $request->rooms));
                 });
             }
 
@@ -80,6 +96,18 @@ class PengajuanPeminjamanController extends Controller
             ]);
         } catch (\Exception $e) {
             return response()->json(['message' => 'Gagal mengambil data pengajuan: ' . $e->getMessage()], 500);
+        }
+    }
+    
+    /**
+     * Export data to Excel.
+     */
+    public function export(Request $request)
+    {
+        try {
+            return Excel::download(new PengajuanPeminjamanExport($request), 'laporan_peminjaman_ruangan.xlsx');
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Gagal export data: ' . $e->getMessage()], 500);
         }
     }
 

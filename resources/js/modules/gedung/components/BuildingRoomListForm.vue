@@ -138,6 +138,7 @@ export default {
         "AULA",
         "RUANG RAPAT",
         "GUDANG",
+        "LAB KOMPUTER",
       ],
       errors: [],
       tableOptions: { page: 1, itemsPerPage: 10, totalItems: 1 },

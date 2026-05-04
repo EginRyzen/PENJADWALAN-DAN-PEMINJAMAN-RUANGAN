@@ -150,6 +150,19 @@ export const Store = {
       }
     },
 
+    async [actions.EXPORT_PENGAJUAN]({ commit }, payload = {}) {
+      try {
+        const response = await Api.get(apiUrl.EXPORT_PENGAJUAN, { 
+          params: payload,
+          responseType: 'blob' 
+        });
+        return response;
+      } catch (error) {
+        console.error('Error exporting pengajuan:', error);
+        throw error;
+      }
+    },
+
     async [actions.UPLOAD_IMAGE]({ commit }, file) {
       try {
         const formData = new FormData();
