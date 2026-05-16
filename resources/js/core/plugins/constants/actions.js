@@ -42,6 +42,7 @@ export default {
     CREATE_DOSEN: "createDosen",
     UPDATE_DOSEN: "updateDosen",
     DELETE_DOSEN: "deleteDosen",
+    EXPORT_DOSEN: "exportDosen",
     // Master Data - Periode
     GET_PERIODE: "getPeriode",
     CREATE_PERIODE: "createPeriode",

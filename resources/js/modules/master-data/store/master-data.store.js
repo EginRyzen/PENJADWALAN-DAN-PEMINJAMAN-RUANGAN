@@ -287,6 +287,18 @@ export const Store = {
                 throw error;
             }
         },
+        async [actions.EXPORT_DOSEN]({ commit }, params = {}) {
+            try {
+                const response = await Api.get(apiUrl.EXPORT_DOSEN, { 
+                    params,
+                    responseType: 'blob' 
+                });
+                return response;
+            } catch (error) {
+                console.error("Error Exporting Dosen:", error);
+                throw error;
+            }
+        },
         // Periode Actions
         async [actions.GET_PERIODE]({ commit }, params) {
             try {

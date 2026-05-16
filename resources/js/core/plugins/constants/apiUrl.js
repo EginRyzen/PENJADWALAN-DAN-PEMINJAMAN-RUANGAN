@@ -19,6 +19,7 @@ const apiUrl = {
     MATA_KULIAH: "/master-data/mata-kuliah",
     MAHASISWA: "/master-data/mahasiswa",
     DOSEN: "/master-data/dosen",
+    EXPORT_DOSEN: "/master-data/dosen/export",
     PERIODE: "/master-data/periodes",
     KELAS_MATA_KULIAH: "/master-data/kelas-mata-kuliah",
     HARI_LIBUR: "/master-data/hari-libur",

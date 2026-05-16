@@ -8,10 +8,21 @@ use Illuminate\Http\Request;
 use App\Http\Requests\StoreMasterDataDosen;
 use App\Models\MasterDataDosen;
 use App\Traits\ApiResponse;
+use App\Exports\DosenExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MasterDataDosenController extends Controller
 {
     use ApiResponse;
+
+    /**
+     * Export the resource to Excel.
+     */
+    public function export(Request $request)
+    {
+        return Excel::download(new DosenExport($request->all()), 'daftar_dosen.xlsx');
+    }
+
 
     /**
      * Display a listing of the resource.
