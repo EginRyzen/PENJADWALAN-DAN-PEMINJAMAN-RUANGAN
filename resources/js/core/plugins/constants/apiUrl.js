@@ -23,6 +23,7 @@ const apiUrl = {
     EXPORT_KELAS: "/master-data/kelas/export",
     PERIODE: "/master-data/periodes",
     KELAS_MATA_KULIAH: "/master-data/kelas-mata-kuliah",
+    EXPORT_KELAS_MATA_KULIAH: "/master-data/kelas-mata-kuliah/export",
     HARI_LIBUR: "/master-data/hari-libur",
     MENU: "/master-data/menus",
     ROLE_MENU: "/master-data/role-menus",

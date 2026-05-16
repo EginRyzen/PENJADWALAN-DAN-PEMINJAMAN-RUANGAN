@@ -54,6 +54,7 @@ export default {
     CREATE_KELAS_MATA_KULIAH: "createKelasMataKuliah",
     UPDATE_KELAS_MATA_KULIAH: "updateKelasMataKuliah",
     DELETE_KELAS_MATA_KULIAH: "deleteKelasMataKuliah",
+    EXPORT_KELAS_MATA_KULIAH: "exportKelasMataKuliah",
     // Master Data - Hari Libur
     GET_HARI_LIBUR: "getHariLibur",
     CREATE_HARI_LIBUR: "createHariLibur",

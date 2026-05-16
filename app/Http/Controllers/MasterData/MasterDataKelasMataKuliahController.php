@@ -7,10 +7,20 @@ use Illuminate\Http\Request;
 use App\Models\MasterDataKelasMataKuliah;
 use App\Traits\ApiResponse;
 use Illuminate\Support\Facades\Validator;
+use App\Exports\KelasMataKuliahExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MasterDataKelasMataKuliahController extends Controller
 {
     use ApiResponse;
+
+    /**
+     * Export the resource to Excel.
+     */
+    public function export(Request $request)
+    {
+        return Excel::download(new KelasMataKuliahExport($request->all()), 'plotting_kelas_mata_kuliah.xlsx');
+    }
 
     /**
      * Display a listing of the resource.

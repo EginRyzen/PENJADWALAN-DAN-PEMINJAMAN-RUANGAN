@@ -83,6 +83,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('role-menus', RoleMenuController::class);
         Route::post('operasional-schedule/bulk-update', [MasterOperasionalScheduleController::class, 'bulkUpdate']);
         Route::apiResource('operasional-schedule', MasterOperasionalScheduleController::class);
+        Route::get('kelas-mata-kuliah/export', [MasterDataKelasMataKuliahController::class, 'export']);
         Route::apiResource('kelas-mata-kuliah', MasterDataKelasMataKuliahController::class);
 
         // Excel Import Master Data
