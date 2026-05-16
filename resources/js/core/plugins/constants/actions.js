@@ -16,6 +16,7 @@ export default {
     CREATE_PROGRAM_STUDI: "createProgramStudi",
     UPDATE_PROGRAM_STUDI: "updateProgramStudi",
     DELETE_PROGRAM_STUDI: "deleteProgramStudi",
+    EXPORT_PROGRAM_STUDI: "exportProgramStudi",
     // Master Data - Kelas
     GET_KELAS: "getKelas",
     CREATE_KELAS: "createKelas",

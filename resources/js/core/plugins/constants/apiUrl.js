@@ -13,6 +13,7 @@ const apiUrl = {
     GET_BUILDINGS_ONLY: "/building/buildings-simple",
     // Master Data - Program Studi
     PROGRAM_STUDI: "/master-data/program-studi",
+    EXPORT_PROGRAM_STUDI: "/master-data/program-studi/export",
     KELAS: "/master-data/kelas",
     SKS_SETTING: "/master-data/sks-setting",
     OPERASIONAL_SCHEDULE: "/master-data/operasional-schedule",

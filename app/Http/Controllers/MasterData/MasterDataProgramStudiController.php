@@ -7,10 +7,20 @@ use App\Http\Requests\StoreMasterDataProgramStudi;
 use App\Models\MasterDataProgramStudi;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use App\Exports\ProgramStudiExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MasterDataProgramStudiController extends Controller
 {
     use ApiResponse;
+
+    /**
+     * Export the resource to Excel.
+     */
+    public function export(Request $request)
+    {
+        return Excel::download(new ProgramStudiExport($request->all()), 'daftar_program_studi.xlsx');
+    }
 
     /**
      * Display a listing of the resource.

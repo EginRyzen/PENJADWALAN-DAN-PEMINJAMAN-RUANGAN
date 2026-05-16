@@ -170,6 +170,18 @@ export const Store = {
                 throw error;
             }
         },
+        async [actions.EXPORT_PROGRAM_STUDI]({ commit }, params = {}) {
+            try {
+                const response = await Api.get(apiUrl.EXPORT_PROGRAM_STUDI, { 
+                    params,
+                    responseType: 'blob' 
+                });
+                return response;
+            } catch (error) {
+                console.error("Error Exporting Program Studi:", error);
+                throw error;
+            }
+        },
         // Mata Kuliah Actions
         async [actions.GET_MATA_KULIAH]({ commit }, params) {
             try {

@@ -23,16 +23,31 @@
             </template>
           </app-input>
         </div>
-        <button-app type="primary" color="teal"
-          class="bg-teal-400 hover:bg-teal-500 text-white font-semibold px-6 py-2 rounded-lg shadow-md transition-all duration-200"
-          @click="handleTambah">
-          <template #icon-left>
-            <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
-            </svg>
-          </template>
-          Tambah Program Studi
-        </button-app>
+        <div class="flex gap-2">
+          <button-app type="primary" color="teal"
+            class="bg-teal-400 hover:bg-teal-500 text-white font-semibold px-6 py-2 rounded-lg shadow-md transition-all duration-200"
+            @click="handleTambah">
+            <template #icon-left>
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+              </svg>
+            </template>
+            Tambah Program Studi
+          </button-app>
+
+          <button-app 
+            type="secondary" 
+            color="teal"
+            class="bg-white border border-teal-500 text-teal-600 hover:bg-teal-50 px-6 py-2 rounded-lg shadow-sm transition-all duration-200"
+            @click="handleExport">
+            <template #icon-left>
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M16 10l-4 4m0 0l-4-4m4 4V4" />
+              </svg>
+            </template>
+            Export Excel
+          </button-app>
+        </div>
       </div>
 
       <!-- Table -->
@@ -376,6 +391,26 @@ export default {
         console.error("Gagal menyimpan:", e);
       } finally {
         this.isSaving = false;
+        this.$store.commit("SET_LOADING", false);
+      }
+    },
+    async handleExport() {
+      this.$store.commit("SET_LOADING", true);
+      try {
+        const response = await this.$store.dispatch(DISPATCH.EXPORT_PROGRAM_STUDI, {
+          search: this.search || undefined,
+        });
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'daftar_program_studi.xlsx');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (e) {
+        console.error("Gagal mengekspor data program studi:", e);
+      } finally {
         this.$store.commit("SET_LOADING", false);
       }
     },

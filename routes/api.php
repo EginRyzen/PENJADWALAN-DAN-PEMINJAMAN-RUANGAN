@@ -69,6 +69,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/excel/import', [ExcelImportController::class, 'import']);
     });
     Route::prefix('master-data')->group(function () {
+        Route::get('program-studi/export', [MasterDataProgramStudiController::class, 'export']);
         Route::apiResource('program-studi', MasterDataProgramStudiController::class);
         Route::get('kelas/export', [MasterDataKelasController::class, 'export']);
         Route::apiResource('kelas', MasterDataKelasController::class);
