@@ -17,6 +17,7 @@ const apiUrl = {
     SKS_SETTING: "/master-data/sks-setting",
     OPERASIONAL_SCHEDULE: "/master-data/operasional-schedule",
     MATA_KULIAH: "/master-data/mata-kuliah",
+    EXPORT_MATA_KULIAH: "/master-data/mata-kuliah/export",
     MAHASISWA: "/master-data/mahasiswa",
     EXPORT_MAHASISWA: "/master-data/mahasiswa/export",
     DOSEN: "/master-data/dosen",

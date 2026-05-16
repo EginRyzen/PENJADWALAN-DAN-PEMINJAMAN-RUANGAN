@@ -209,6 +209,18 @@ export const Store = {
                 throw error;
             }
         },
+        async [actions.EXPORT_MATA_KULIAH]({ commit }, params = {}) {
+            try {
+                const response = await Api.get(apiUrl.EXPORT_MATA_KULIAH, { 
+                    params,
+                    responseType: 'blob' 
+                });
+                return response;
+            } catch (error) {
+                console.error("Error Exporting Mata Kuliah:", error);
+                throw error;
+            }
+        },
         // Mahasiswa Actions
         async [actions.GET_MAHASISWA]({ commit }, params) {
             try {
