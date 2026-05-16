@@ -8,10 +8,20 @@ use Illuminate\Http\Request;
 use App\Http\Requests\StoreMasterDataKelas;
 use App\Models\MasterDataKelas;
 use App\Traits\ApiResponse;
+use App\Exports\KelasExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MasterDataKelasController extends Controller
 {
     use ApiResponse;
+
+    /**
+     * Export the resource to Excel.
+     */
+    public function export(Request $request)
+    {
+        return Excel::download(new KelasExport($request->all()), 'daftar_kelas.xlsx');
+    }
 
     /**
      * Display a listing of the resource.

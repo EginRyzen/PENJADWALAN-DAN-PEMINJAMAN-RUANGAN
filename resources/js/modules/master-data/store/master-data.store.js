@@ -248,6 +248,18 @@ export const Store = {
                 throw error;
             }
         },
+        async [actions.EXPORT_KELAS]({ commit }, params = {}) {
+            try {
+                const response = await Api.get(apiUrl.EXPORT_KELAS, { 
+                    params,
+                    responseType: 'blob' 
+                });
+                return response;
+            } catch (error) {
+                console.error("Error Exporting Kelas:", error);
+                throw error;
+            }
+        },
         // Dosen Actions
         async [actions.GET_DOSEN]({ commit }, params) {
             try {
