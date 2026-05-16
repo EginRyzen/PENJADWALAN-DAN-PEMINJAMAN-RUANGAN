@@ -73,6 +73,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('kelas/export', [MasterDataKelasController::class, 'export']);
         Route::apiResource('kelas', MasterDataKelasController::class);
         Route::apiResource('mata-kuliah', MasterDataMataKuliahController::class);
+        Route::get('mahasiswa/export', [MasterDataMahasiswaController::class, 'export']);
         Route::apiResource('mahasiswa', MasterDataMahasiswaController::class);
         Route::get('dosen/export', [MasterDataDosenController::class, 'export']);
         Route::apiResource('dosen', MasterDataDosenController::class);

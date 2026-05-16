@@ -18,6 +18,7 @@ const apiUrl = {
     OPERASIONAL_SCHEDULE: "/master-data/operasional-schedule",
     MATA_KULIAH: "/master-data/mata-kuliah",
     MAHASISWA: "/master-data/mahasiswa",
+    EXPORT_MAHASISWA: "/master-data/mahasiswa/export",
     DOSEN: "/master-data/dosen",
     EXPORT_DOSEN: "/master-data/dosen/export",
     EXPORT_KELAS: "/master-data/kelas/export",

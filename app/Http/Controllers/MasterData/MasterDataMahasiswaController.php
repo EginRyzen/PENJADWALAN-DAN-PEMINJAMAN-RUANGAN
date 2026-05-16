@@ -7,10 +7,20 @@ use App\Http\Requests\StoreMasterDataMahasiswa;
 use App\Models\MasterDataMahasiswa;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use App\Exports\MahasiswaExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MasterDataMahasiswaController extends Controller
 {
     use ApiResponse;
+
+    /**
+     * Export the resource to Excel with multiple sheets per prodi.
+     */
+    public function export(Request $request)
+    {
+        return Excel::download(new MahasiswaExport($request->all()), 'daftar_mahasiswa_per_prodi.xlsx');
+    }
 
     /**
      * Display a listing of the resource.
