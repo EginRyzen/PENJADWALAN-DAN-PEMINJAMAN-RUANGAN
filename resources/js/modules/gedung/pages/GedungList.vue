@@ -28,6 +28,7 @@
           type="secondary"
           color="teal"
           class="mt-2 border border-teal-400 text-teal-400 hover:bg-teal-50"
+          @click="handleExport"
         >
           <template #icon-left>
             <font-awesome-icon icon="download" />
@@ -241,6 +242,30 @@ export default {
 
       this.params.page = 0;
       this.fetchBuildings();
+    },
+    async handleExport() {
+      this.$store.commit("SET_LOADING", true);
+      try {
+        const finalParams = { ...this.params, search: this.searchQuery };
+
+        if (finalParams.ids && finalParams.ids.length > 0) {
+          finalParams.ids = finalParams.ids.join(",");
+        }
+
+        const response = await this.$store.dispatch(DISPATCH.EXPORT_GEDUNG, finalParams);
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'laporan_data_gedung.xlsx');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (e) {
+        console.error("Gagal mengekspor data gedung:", e);
+      } finally {
+        this.$store.commit("SET_LOADING", false);
+      }
     },
   },
   mounted() {

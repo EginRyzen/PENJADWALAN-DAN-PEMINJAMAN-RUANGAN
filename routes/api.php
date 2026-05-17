@@ -60,6 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('building')->group(function () {
         Route::get('/buildings-simple', [DataBaseBuildingController::class, 'listOnly']);
+        Route::get('/buildings/export', [DataBaseBuildingController::class, 'export']);
         Route::get('/buildings', [DataBaseBuildingController::class, 'index']);
         Route::apiResource('buildings', DataBaseBuildingController::class);
         Route::get('/rooms/{id}/facilities', [DataBaseBuildingRoomController::class, 'getFacilities']);
@@ -69,10 +70,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/excel/import', [ExcelImportController::class, 'import']);
     });
     Route::prefix('master-data')->group(function () {
+        Route::get('program-studi/export', [MasterDataProgramStudiController::class, 'export']);
         Route::apiResource('program-studi', MasterDataProgramStudiController::class);
+        Route::get('kelas/export', [MasterDataKelasController::class, 'export']);
         Route::apiResource('kelas', MasterDataKelasController::class);
+        Route::get('mata-kuliah/export', [MasterDataMataKuliahController::class, 'export']);
         Route::apiResource('mata-kuliah', MasterDataMataKuliahController::class);
+        Route::get('mahasiswa/export', [MasterDataMahasiswaController::class, 'export']);
         Route::apiResource('mahasiswa', MasterDataMahasiswaController::class);
+        Route::get('dosen/export', [MasterDataDosenController::class, 'export']);
         Route::apiResource('dosen', MasterDataDosenController::class);
         Route::apiResource('sks-setting', MasterSksSettingController::class);
         Route::apiResource('periodes', MasterPeriodeController::class);
@@ -81,6 +87,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('role-menus', RoleMenuController::class);
         Route::post('operasional-schedule/bulk-update', [MasterOperasionalScheduleController::class, 'bulkUpdate']);
         Route::apiResource('operasional-schedule', MasterOperasionalScheduleController::class);
+        Route::get('kelas-mata-kuliah/export', [MasterDataKelasMataKuliahController::class, 'export']);
         Route::apiResource('kelas-mata-kuliah', MasterDataKelasMataKuliahController::class);
 
         // Excel Import Master Data
@@ -122,6 +129,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Penjadwalan Ujian
     Route::prefix('jadwal')->group(function () {
+        Route::get('/export',       [JadwalUjianController::class, 'export']);
         Route::get('/',             [JadwalUjianController::class, 'index']);
         Route::get('/draft',        [JadwalUjianController::class, 'getDraft']);
         Route::post('/generate',    [JadwalUjianController::class, 'generate']);

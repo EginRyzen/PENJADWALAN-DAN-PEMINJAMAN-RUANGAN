@@ -10,10 +10,21 @@ use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use App\Exports\GedungExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class DataBaseBuildingController extends Controller
 {
     use ApiResponse;
+
+    /**
+     * Export buildings data to Excel.
+     */
+    public function export(Request $request)
+    {
+        return Excel::download(new GedungExport($request->all()), 'laporan_data_gedung.xlsx');
+    }
+
     /**
      * Display a listing of the resource.
      */

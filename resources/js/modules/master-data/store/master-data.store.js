@@ -170,6 +170,18 @@ export const Store = {
                 throw error;
             }
         },
+        async [actions.EXPORT_PROGRAM_STUDI]({ commit }, params = {}) {
+            try {
+                const response = await Api.get(apiUrl.EXPORT_PROGRAM_STUDI, { 
+                    params,
+                    responseType: 'blob' 
+                });
+                return response;
+            } catch (error) {
+                console.error("Error Exporting Program Studi:", error);
+                throw error;
+            }
+        },
         // Mata Kuliah Actions
         async [actions.GET_MATA_KULIAH]({ commit }, params) {
             try {
@@ -206,6 +218,18 @@ export const Store = {
                 return response.data;
             } catch (error) {
                 console.error("Error Deleting Mata Kuliah:", error);
+                throw error;
+            }
+        },
+        async [actions.EXPORT_MATA_KULIAH]({ commit }, params = {}) {
+            try {
+                const response = await Api.get(apiUrl.EXPORT_MATA_KULIAH, { 
+                    params,
+                    responseType: 'blob' 
+                });
+                return response;
+            } catch (error) {
+                console.error("Error Exporting Mata Kuliah:", error);
                 throw error;
             }
         },
@@ -248,6 +272,30 @@ export const Store = {
                 throw error;
             }
         },
+        async [actions.EXPORT_KELAS]({ commit }, params = {}) {
+            try {
+                const response = await Api.get(apiUrl.EXPORT_KELAS, { 
+                    params,
+                    responseType: 'blob' 
+                });
+                return response;
+            } catch (error) {
+                console.error("Error Exporting Kelas:", error);
+                throw error;
+            }
+        },
+        async [actions.EXPORT_MAHASISWA]({ commit }, params = {}) {
+            try {
+                const response = await Api.get(apiUrl.EXPORT_MAHASISWA, { 
+                    params,
+                    responseType: 'blob' 
+                });
+                return response;
+            } catch (error) {
+                console.error("Error Exporting Mahasiswa:", error);
+                throw error;
+            }
+        },
         // Dosen Actions
         async [actions.GET_DOSEN]({ commit }, params) {
             try {
@@ -284,6 +332,18 @@ export const Store = {
                 return response.data;
             } catch (error) {
                 console.error("Error Deleting Dosen:", error);
+                throw error;
+            }
+        },
+        async [actions.EXPORT_DOSEN]({ commit }, params = {}) {
+            try {
+                const response = await Api.get(apiUrl.EXPORT_DOSEN, { 
+                    params,
+                    responseType: 'blob' 
+                });
+                return response;
+            } catch (error) {
+                console.error("Error Exporting Dosen:", error);
                 throw error;
             }
         },
@@ -369,6 +429,18 @@ export const Store = {
                 return response.data;
             } catch (error) {
                 console.error("Error Deleting Kelas Mata Kuliah:", error);
+                throw error;
+            }
+        },
+        async [actions.EXPORT_KELAS_MATA_KULIAH]({ commit }, params = {}) {
+            try {
+                const response = await Api.get(apiUrl.EXPORT_KELAS_MATA_KULIAH, { 
+                    params,
+                    responseType: 'blob' 
+                });
+                return response;
+            } catch (error) {
+                console.error("Error Exporting Kelas Mata Kuliah:", error);
                 throw error;
             }
         },

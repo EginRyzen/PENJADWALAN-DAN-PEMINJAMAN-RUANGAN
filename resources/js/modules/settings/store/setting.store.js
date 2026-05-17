@@ -137,6 +137,18 @@ export const Store = {
                 throw error;
             }
         },
+        async [actions.EXPORT_KELAS]({ commit }, params = {}) {
+            try {
+                const response = await Api.get(apiUrl.EXPORT_KELAS, { 
+                    params,
+                    responseType: 'blob' 
+                });
+                return response;
+            } catch (error) {
+                console.error("Error Exporting Kelas:", error);
+                throw error;
+            }
+        },
         async [actions.GET_HARI_LIBUR]({ commit }, params) {
             try {
                 const response = await Api.get(apiUrl.HARI_LIBUR, { params });

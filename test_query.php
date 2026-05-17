@@ -1,58 +1,77 @@
 <?php
-// Kurangi dulu S1 Akuntansi 2024 & 2025 dari 20 ke 10
-$akuntansiKelas = \App\Models\MasterDataKelas::whereHas('programStudi', function($q) {
-    $q->where('nama', 'like', '%Akuntansi%');
-})->get();
 
-foreach ($akuntansiKelas as $kelas) {
-    $keepIds = \App\Models\MasterDataMahasiswa::where('kelas_id', $kelas->id)
-        ->orderBy('created_at')
-        ->limit(10)
-        ->pluck('id');
+use App\Models\MasterDataKelas;
+use App\Models\MasterDataMahasiswa;
+use App\Models\MasterDataKelasMataKuliah;
+use Illuminate\Support\Str;
+
+echo "============================================================\n";
+echo " EKSEKUSI DATA SETUP (KELAS 2025 & MAHASISWA)\n";
+echo "============================================================\n\n";
+
+// 1. Eksekusi Penggabungan Kelas & MK (Logika sebelumnya)
+echo "--- 1. Proses Plotting MK Semester 3 ---\n";
+$hasilInsertMK = MasterDataKelasMataKuliah::insertKelas2025DenganSemester3();
+echo "Status: Selesai\n";
+echo "Berhasil Insert Baru : {$hasilInsertMK['inserted']}\n";
+echo "Dilewati (Sudah Ada) : {$hasilInsertMK['skipped']}\n\n";
+
+// 2. Eksekusi Insert Mahasiswa (30 per kelas)
+echo "--- 2. Proses Insert Mahasiswa (30 per kelas) ---\n";
+
+$allKelas = MasterDataKelas::all();
+$totalKelas = $allKelas->count();
+$totalMahasiswaInserted = 0;
+$totalMahasiswaSkipped = 0;
+
+foreach ($allKelas as $index => $kelas) {
+    $currentCount = MasterDataMahasiswa::where('kelas_id', $kelas->id)->count();
+    $needed = 30 - $currentCount;
     
-    $deleted = \App\Models\MasterDataMahasiswa::where('kelas_id', $kelas->id)
-        ->whereNotIn('id', $keepIds)
-        ->delete();
-    echo "Trim {$kelas->nama_kelas} Akuntansi: hapus {$deleted}, sisa 10\n";
-}
-
-// Sekarang seed kelas yang masih 0 mahasiswanya dengan NIM unik berbasis timestamp + counter
-$counter = (int)(microtime(true) * 1000);
-
-$kelasList = \App\Models\MasterDataKelas::with(['programStudi'])->get();
-
-foreach ($kelasList as $kelas) {
-    $existing = \App\Models\MasterDataMahasiswa::where('kelas_id', $kelas->id)->count();
-    $toAdd = 10 - $existing;
-
-    $prodiNama = $kelas->programStudi ? $kelas->programStudi->nama : 'XX';
-
-    if ($toAdd <= 0) {
-        echo "  {$kelas->nama_kelas} ({$prodiNama}): skip (sudah {$existing})\n";
+    if ($needed <= 0) {
+        $totalMahasiswaSkipped += 30;
         continue;
     }
 
-    for ($i = 1; $i <= $toAdd; $i++) {
-        $counter++;
-        $num = str_pad($existing + $i, 3, '0', STR_PAD_LEFT);
+    for ($i = 0; $i < $needed; $i++) {
+        // Generate NIM unik: Gabungan Tahun + Kode Prodi (ambil 4 digit uuid) + Index Kelas + Counter
+        $randomPart = substr($kelas->id, 0, 4);
+        $nim = "2025" . strtoupper($randomPart) . str_pad($index, 3, '0', STR_PAD_LEFT) . str_pad($i + $currentCount, 3, '0', STR_PAD_LEFT);
+        
+        // Cek lagi NIM agar tidak bentrok
+        if (MasterDataMahasiswa::where('nim', $nim)->exists()) {
+            $nim .= rand(10, 99);
+        }
 
-        \App\Models\MasterDataMahasiswa::create([
-            'nim'              => 'MHS' . $counter,
-            'nama'             => "Mahasiswa {$kelas->nama_kelas} {$num}",
+        MasterDataMahasiswa::create([
+            'nim'              => $nim,
+            'nama'             => "Mahasiswa " . Str::random(5) . " (" . $kelas->nama_kelas . ")",
             'program_studi_id' => $kelas->program_studi_id,
             'kelas_id'         => $kelas->id,
-            'semester'         => 2,
+            'semester'         => 3, // Default ke semester 3 sesuai request sebelumnya
             'periode_id'       => $kelas->periode_id,
             'status'           => 'Aktif',
         ]);
+        $totalMahasiswaInserted++;
     }
-    echo "  {$kelas->nama_kelas} ({$prodiNama}): +{$toAdd} mahasiswa\n";
+    
+    // Progress indicator setiap 10 kelas
+    if (($index + 1) % 10 === 0 || ($index + 1) === $totalKelas) {
+        echo "Progress: " . ($index + 1) . "/{$totalKelas} kelas diproses...\n";
+    }
 }
 
-echo "\n=== VERIFIKASI AKHIR ===\n";
-$total = \App\Models\MasterDataMahasiswa::count();
-$klsList = \App\Models\MasterDataKelas::withCount('mahasiswas')->having('mahasiswas_count', '>', 0)->get();
-foreach ($klsList as $k) {
-    echo "  {$k->nama_kelas}: {$k->mahasiswas_count} mhs\n";
+echo "\nStatus: Selesai\n";
+echo "Total Mahasiswa Baru Di-insert : {$totalMahasiswaInserted}\n";
+echo "Total Mahasiswa Sudah Ada      : {$totalMahasiswaSkipped}\n\n";
+
+// 3. Verifikasi Tampilan
+echo "--- 3. Verifikasi Data Terkini ---\n";
+$summary = MasterDataKelas::withCount('mahasiswas')->take(5)->get();
+foreach ($summary as $s) {
+    echo "Kelas: {$s->nama_kelas} | Jumlah Mahasiswa: {$s->mahasiswas_count}\n";
 }
-echo "Total seluruh mahasiswa: {$total}\n";
+
+echo "\n============================================================\n";
+echo " SELESAI\n";
+echo "============================================================\n";

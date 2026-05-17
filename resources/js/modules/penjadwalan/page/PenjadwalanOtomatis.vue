@@ -539,9 +539,34 @@ export default {
     },
 
     // ── Download Data ────────────────────────────────────────────
-    handleDownload() {
-      console.log('Downloading schedule...');
-      // Placeholder: implementasi download logic
+    async handleDownload() {
+      if (!this.context.periode_id || !this.context.type) return;
+      
+      this.$store.commit('SET_LOADING', true);
+      this.$store.commit('SET_LOADING_MESSAGE', 'Menyiapkan file jadwal ujian...');
+      try {
+        const response = await this.$store.dispatch(DISPATCH.EXPORT_JADWAL, {
+          status: this.scheduleStatus || undefined
+        });
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        const tipeNama = this.context.type.toUpperCase();
+        link.setAttribute('download', `jadwal_ujian_${tipeNama}.xlsx`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (e) {
+        console.error('Gagal mendownload jadwal:', e);
+        this.$store.commit('SET_SNACKBAR', {
+          show: true,
+          text: 'Gagal mendownload jadwal',
+          color: 'error'
+        });
+      } finally {
+        this.$store.commit('SET_LOADING', false);
+      }
     },
 
     // ── Reset & bersihkan tabel ──────────────────────────────────

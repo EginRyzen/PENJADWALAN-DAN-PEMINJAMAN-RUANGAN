@@ -7,10 +7,20 @@ use App\Http\Requests\StoreMasterDataMataKuliah;
 use App\Models\MasterDataMataKuliah;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
+use App\Exports\MataKuliahExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class MasterDataMataKuliahController extends Controller
 {
     use ApiResponse;
+
+    /**
+     * Export the resource to Excel with multiple sheets per prodi.
+     */
+    public function export(Request $request)
+    {
+        return Excel::download(new MataKuliahExport($request->all()), 'daftar_mata_kuliah_per_prodi.xlsx');
+    }
 
     /**
      * Display a listing of the resource.

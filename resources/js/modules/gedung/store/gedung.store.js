@@ -149,5 +149,17 @@ export const Store = {
                 commit("SET_LOADING", false, { root: true });
             }
         },
+        async [actions.EXPORT_GEDUNG]({ commit }, params = {}) {
+            try {
+                const response = await Api.get(apiUrl.EXPORT_GEDUNG, { 
+                    params,
+                    responseType: 'blob' 
+                });
+                return response;
+            } catch (error) {
+                console.error("Error Exporting Gedung:", error);
+                throw error;
+            }
+        },
     },
 };

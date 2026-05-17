@@ -11,11 +11,13 @@ export default {
     GET_ROOMS: "getRooms",
     UPLOAD_IMAGE: "uploadImage",
     GET_BUILDINGS_ONLY: "getBuildingsOnly",
+    EXPORT_GEDUNG: "exportGedung",
     // Master Data - Program Studi
     GET_PROGRAM_STUDI: "getProgramStudi",
     CREATE_PROGRAM_STUDI: "createProgramStudi",
     UPDATE_PROGRAM_STUDI: "updateProgramStudi",
     DELETE_PROGRAM_STUDI: "deleteProgramStudi",
+    EXPORT_PROGRAM_STUDI: "exportProgramStudi",
     // Master Data - Kelas
     GET_KELAS: "getKelas",
     CREATE_KELAS: "createKelas",
@@ -32,16 +34,20 @@ export default {
     CREATE_MATA_KULIAH: "createMataKuliah",
     UPDATE_MATA_KULIAH: "updateMataKuliah",
     DELETE_MATA_KULIAH: "deleteMataKuliah",
+    EXPORT_MATA_KULIAH: "exportMataKuliah",
     // Master Data - Mahasiswa
     GET_MAHASISWA: "getMahasiswa",
     CREATE_MAHASISWA: "createMahasiswa",
     UPDATE_MAHASISWA: "updateMahasiswa",
     DELETE_MAHASISWA: "deleteMahasiswa",
+    EXPORT_MAHASISWA: "exportMahasiswa",
     // Master Data - Dosen
     GET_DOSEN: "getDosen",
     CREATE_DOSEN: "createDosen",
     UPDATE_DOSEN: "updateDosen",
     DELETE_DOSEN: "deleteDosen",
+    EXPORT_DOSEN: "exportDosen",
+    EXPORT_KELAS: "exportKelas",
     // Master Data - Periode
     GET_PERIODE: "getPeriode",
     CREATE_PERIODE: "createPeriode",
@@ -52,6 +58,7 @@ export default {
     CREATE_KELAS_MATA_KULIAH: "createKelasMataKuliah",
     UPDATE_KELAS_MATA_KULIAH: "updateKelasMataKuliah",
     DELETE_KELAS_MATA_KULIAH: "deleteKelasMataKuliah",
+    EXPORT_KELAS_MATA_KULIAH: "exportKelasMataKuliah",
     // Master Data - Hari Libur
     GET_HARI_LIBUR: "getHariLibur",
     CREATE_HARI_LIBUR: "createHariLibur",
@@ -87,4 +94,5 @@ export default {
     UPDATE_JADWAL_ROW:    "updateJadwalRow",
     SAVE_JADWAL_PERMANEN: "saveJadwalPermanen",
     DELETE_JADWAL_DRAFT:  "deleteJadwalDraft",
+    EXPORT_JADWAL:        "exportJadwal",
 }
