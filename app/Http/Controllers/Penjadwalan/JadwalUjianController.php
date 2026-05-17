@@ -12,6 +12,8 @@ use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Notification;
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\JadwalUjianExport;
 
 class JadwalUjianController extends Controller
 {
@@ -346,6 +348,21 @@ class JadwalUjianController extends Controller
         } catch (\Exception $e) {
             return $this->errorResponse($e->getMessage(), 500, 'Internal Server Error');
         }
+    }
+
+    // ─────────────────────────────────────────────────────────────────
+    // GET /jadwal/export?periode_id=&tipe=&status=
+    // Export jadwal ujian ke Excel
+    // ─────────────────────────────────────────────────────────────────
+    public function export(Request $request)
+    {
+        $request->validate([
+            'periode_id' => 'required|uuid|exists:master_data_periodes,id',
+            'tipe'       => 'required|in:uts,uas,pembelajaran',
+            'status'     => 'nullable|in:draft,permanen',
+        ]);
+
+        return Excel::download(new JadwalUjianExport($request->all()), 'jadwal_ujian.xlsx');
     }
 
     // ─────────────────────────────────────────────────────────────────

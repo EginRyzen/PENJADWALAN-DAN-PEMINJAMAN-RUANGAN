@@ -50,5 +50,6 @@ const apiUrl = {
     JADWAL_DRAFT_ROW:   "/jadwal/draft",
     JADWAL_GENERATE:    "/jadwal/generate",
     JADWAL_PERMANEN:    "/jadwal/permanen",
+    EXPORT_JADWAL:      "/jadwal/export",
 };
 export default apiUrl;

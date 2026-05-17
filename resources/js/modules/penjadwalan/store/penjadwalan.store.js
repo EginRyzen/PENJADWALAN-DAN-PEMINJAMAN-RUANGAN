@@ -280,6 +280,22 @@ const penjadwalanStore = {
                 commit('SET_SAVING', false);
             }
         },
+        async [actions.EXPORT_JADWAL]({ commit, state }, params = {}) {
+            try {
+                const response = await Api.get(apiUrl.EXPORT_JADWAL, { 
+                    params: {
+                        periode_id: state.context.periode_id,
+                        tipe:       state.context.type,
+                        status:     params.status || undefined
+                    },
+                    responseType: 'blob' 
+                });
+                return response;
+            } catch (error) {
+                console.error("Error Exporting Jadwal:", error);
+                throw error;
+            }
+        },
     },
 };
 

@@ -129,6 +129,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Penjadwalan Ujian
     Route::prefix('jadwal')->group(function () {
+        Route::get('/export',       [JadwalUjianController::class, 'export']);
         Route::get('/',             [JadwalUjianController::class, 'index']);
         Route::get('/draft',        [JadwalUjianController::class, 'getDraft']);
         Route::post('/generate',    [JadwalUjianController::class, 'generate']);

@@ -94,4 +94,5 @@ export default {
     UPDATE_JADWAL_ROW:    "updateJadwalRow",
     SAVE_JADWAL_PERMANEN: "saveJadwalPermanen",
     DELETE_JADWAL_DRAFT:  "deleteJadwalDraft",
+    EXPORT_JADWAL:        "exportJadwal",
 }
