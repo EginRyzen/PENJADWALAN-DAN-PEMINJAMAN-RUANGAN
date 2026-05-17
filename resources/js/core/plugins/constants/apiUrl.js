@@ -11,6 +11,7 @@ const apiUrl = {
     GET_ROOMS: "/building/rooms",
     UPLOAD_IMAGE: "/documents/upload",
     GET_BUILDINGS_ONLY: "/building/buildings-simple",
+    EXPORT_GEDUNG: "/building/buildings/export",
     // Master Data - Program Studi
     PROGRAM_STUDI: "/master-data/program-studi",
     EXPORT_PROGRAM_STUDI: "/master-data/program-studi/export",

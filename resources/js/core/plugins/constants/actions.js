@@ -11,6 +11,7 @@ export default {
     GET_ROOMS: "getRooms",
     UPLOAD_IMAGE: "uploadImage",
     GET_BUILDINGS_ONLY: "getBuildingsOnly",
+    EXPORT_GEDUNG: "exportGedung",
     // Master Data - Program Studi
     GET_PROGRAM_STUDI: "getProgramStudi",
     CREATE_PROGRAM_STUDI: "createProgramStudi",

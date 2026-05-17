@@ -60,6 +60,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('building')->group(function () {
         Route::get('/buildings-simple', [DataBaseBuildingController::class, 'listOnly']);
+        Route::get('/buildings/export', [DataBaseBuildingController::class, 'export']);
         Route::get('/buildings', [DataBaseBuildingController::class, 'index']);
         Route::apiResource('buildings', DataBaseBuildingController::class);
         Route::get('/rooms/{id}/facilities', [DataBaseBuildingRoomController::class, 'getFacilities']);
