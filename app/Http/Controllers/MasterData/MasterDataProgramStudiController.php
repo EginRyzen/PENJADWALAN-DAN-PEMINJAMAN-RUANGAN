@@ -47,17 +47,26 @@ class MasterDataProgramStudiController extends Controller
                 $query->where('jenjang', $request->query('jenjang'));
             }
 
+            $sortBy = $request->query('sort_by', 'nama');
+            $sortDir = $request->query('sort_dir', 'asc');
+            $allowedSorts = ['kode', 'nama', 'fakultas', 'jenjang', 'status'];
+
+            if (in_array($sortBy, $allowedSorts)) {
+                $query->orderBy($sortBy, $sortDir === 'desc' ? 'desc' : 'asc');
+            } else {
+                $query->orderBy('nama', 'asc');
+            }
+
             // Jika ada query param 'all', kembalikan semua tanpa pagination
             if ($request->boolean('all')) {
-                $data = $query->orderBy('nama', 'asc')->get();
+                $data = $query->get();
                 return $this->successResponse($data, 'Daftar program studi berhasil diambil');
             }
 
             $size = $request->query('size', 10);
             $page = $request->query('page', 0);
 
-            $paginated = $query->orderBy('nama', 'asc')
-                ->paginate($size, ['*'], 'page', $page + 1);
+            $paginated = $query->paginate($size, ['*'], 'page', $page + 1);
 
             $customResponse = [
                 'current_page'            => (int) $page,

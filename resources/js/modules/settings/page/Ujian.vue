@@ -168,6 +168,15 @@
       :button-text="successData.buttonText"
       @close-action="successData.action"
     />
+
+    <!-- ===== MODAL ERROR ===== -->
+    <modal-pop-up-error
+      v-model="showErrorModal"
+      :title="errorData.title"
+      :description="errorData.description"
+      :button-text="errorData.buttonText"
+      @close-action="errorData.action"
+    />
   </div>
 </template>
 
@@ -177,6 +186,7 @@ import ButtonApp from "@/core/components/Button.vue";
 import AppInput from "@/core/components/AppInput.vue";
 import TimeInput from "../components/TimeInput.vue";
 import ModalPopUpSuccess from "@/core/components/ModalPopUpSuccess.vue";
+import ModalPopUpError from "@/core/components/ModalPopUpError.vue";
 import DISPATCH from "@/core/plugins/constants/dispatches";
 
 export default {
@@ -187,6 +197,7 @@ export default {
     AppInput,
     TimeInput,
     ModalPopUpSuccess,
+    ModalPopUpError,
   },
   data() {
     return {
@@ -210,6 +221,14 @@ export default {
         title: "",
         description: "",
         buttonText: "Oke",
+        action: () => {},
+      },
+      // Error Modal State
+      showErrorModal: false,
+      errorData: {
+        title: "",
+        description: "",
+        buttonText: "Tutup",
         action: () => {},
       },
     };
@@ -279,6 +298,56 @@ export default {
     },
     async handleSave() {
       if (this.isSaving) return;
+
+      // Validasi Waktu
+      for (const s of this.dailySchedules) {
+        if (!s.isActive) continue;
+
+        const timeToMins = (timeStr) => {
+          if (!timeStr) return 0;
+          const [h, m] = timeStr.split(':').map(Number);
+          return h * 60 + m;
+        };
+
+        const startMins = timeToMins(s.start);
+        const endMins = timeToMins(s.end);
+        const breakStartMins = timeToMins(s.breakStart);
+        const breakEndMins = timeToMins(s.breakEnd);
+
+        if (startMins >= endMins) {
+          this.errorData = {
+            title: "Validasi Waktu Gagal",
+            description: `Pada hari ${s.name}, Jam Mulai (${s.start}) tidak boleh lebih besar atau sama dengan Jam Selesai (${s.end}).`,
+            buttonText: "Tutup",
+            action: () => { this.showErrorModal = false; }
+          };
+          this.showErrorModal = true;
+          return;
+        }
+
+        if (breakStartMins >= breakEndMins) {
+          this.errorData = {
+            title: "Validasi Waktu Gagal",
+            description: `Pada hari ${s.name}, Jam Mulai Istirahat (${s.breakStart}) tidak boleh lebih besar atau sama dengan Jam Selesai Istirahat (${s.breakEnd}).`,
+            buttonText: "Tutup",
+            action: () => { this.showErrorModal = false; }
+          };
+          this.showErrorModal = true;
+          return;
+        }
+
+        if (breakStartMins < startMins || breakEndMins > endMins) {
+          this.errorData = {
+            title: "Validasi Waktu Gagal",
+            description: `Pada hari ${s.name}, Waktu Istirahat harus berada di antara Jam Mulai dan Jam Selesai operasional.`,
+            buttonText: "Tutup",
+            action: () => { this.showErrorModal = false; }
+          };
+          this.showErrorModal = true;
+          return;
+        }
+      }
+
       this.isSaving = true;
       this.$store.commit("SET_LOADING", true);
       try {
