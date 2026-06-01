@@ -4,15 +4,31 @@
     <breadcrumb-bima :items="breadcrumbItems" class="mb-6" />
 
     <!-- Page Title -->
-    <div class="flex items-center gap-3 mb-6">
-      <div class="p-2.5 bg-teal-500 rounded-xl shadow-lg shadow-teal-200">
-        <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04M12 21.48c-3.12-1.312-5.787-3.321-7.536-5.816M12 21.48c3.12-1.312 5.787-3.321 7.536-5.816M12 21.48V10.74M12 2.944v4.544"/>
-        </svg>
+    <div class="flex items-center justify-between gap-3 mb-6">
+      <div class="flex items-center gap-3">
+        <div class="p-2.5 bg-teal-500 rounded-xl shadow-lg shadow-teal-200">
+          <svg class="w-6 h-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04M12 21.48c-3.12-1.312-5.787-3.321-7.536-5.816M12 21.48c3.12-1.312 5.787-3.321 7.536-5.816M12 21.48V10.74M12 2.944v4.544"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="text-xl font-black text-gray-800">Hak Akses Menu</h1>
+          <p class="text-xs text-gray-500 mt-0.5">Atur menu yang dapat diakses oleh setiap role user</p>
+        </div>
       </div>
       <div>
-        <h1 class="text-xl font-black text-gray-800">Hak Akses Menu</h1>
-        <p class="text-xs text-gray-500 mt-0.5">Atur menu yang dapat diakses oleh setiap role user</p>
+        <button-app 
+          type="secondary" 
+          color="teal"
+          class="bg-white border border-teal-500 text-teal-600 hover:bg-teal-50 px-5 py-2 rounded-lg shadow-sm transition-all duration-200 flex items-center"
+          @click="handleExport">
+          <template #icon-left>
+            <svg class="w-4 h-4 mr-1.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a2 2 0 002 2h12a2 2 0 002-2v-1M16 10l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+          </template>
+          Export Excel
+        </button-app>
       </div>
     </div>
 
@@ -295,6 +311,24 @@ export default {
         console.error(err);
       } finally {
         this.isSaving = false;
+      }
+    },
+    async handleExport() {
+      this.$store.commit('SET_LOADING', true);
+      try {
+        const response = await this.$store.dispatch(DISPATCHES.EXPORT_ROLE_MENU);
+
+        const url = window.URL.createObjectURL(new Blob([response.data]));
+        const link = document.createElement('a');
+        link.href = url;
+        link.setAttribute('download', 'role_menu_access.xlsx');
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      } catch (err) {
+        console.error("Gagal mengekspor data hak akses menu:", err);
+      } finally {
+        this.$store.commit('SET_LOADING', false);
       }
     }
   }

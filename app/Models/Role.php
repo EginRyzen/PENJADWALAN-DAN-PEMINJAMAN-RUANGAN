@@ -27,4 +27,9 @@ class Role extends Model
     {
         return $this->hasMany(WorkflowStep::class, 'role_id');
     }
+
+    public function menus(): BelongsToMany
+    {
+        return $this->belongsToMany(Menu::class, 'role_menus', 'role_id', 'menu_id');
+    }
 }

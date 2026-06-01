@@ -31,6 +31,14 @@ const defaultState = () => ({
         total_elements: 0,
         total_elements_per_page: 10,
     },
+    userList: [],
+    userPagination: {
+        current_page: 0,
+        total_pages: 0,
+        total_elements: 0,
+        total_elements_per_page: 10,
+    },
+    rolesList: [],
     periodeList: [],
     periodePagination: {
         current_page: 0,
@@ -102,6 +110,22 @@ export const Store = {
                     total_elements_per_page: payload.total_elements_per_page || 10,
                 };
             }
+        },
+        SET_USER(state, payload) {
+            if (Array.isArray(payload)) {
+                state.userList = payload;
+            } else {
+                state.userList = payload.content || [];
+                state.userPagination = {
+                    current_page: payload.current_page || 0,
+                    total_pages: payload.total_pages || 0,
+                    total_elements: payload.total_elements || 0,
+                    total_elements_per_page: payload.total_elements_per_page || 10,
+                };
+            }
+        },
+        SET_ROLES(state, payload) {
+            state.rolesList = payload;
         },
         SET_PERIODE(state, payload) {
             if (!payload) return;
@@ -344,6 +368,79 @@ export const Store = {
                 return response;
             } catch (error) {
                 console.error("Error Exporting Dosen:", error);
+                throw error;
+            }
+        },
+        // User Actions
+        async [actions.GET_USER]({ commit }, params) {
+            try {
+                const response = await Api.get(apiUrl.USERS, { params });
+                const data = response.data.result;
+                commit("SET_USER", data);
+                return data;
+            } catch (error) {
+                console.error("Error Fetching User:", error);
+                throw error;
+            }
+        },
+        async [actions.CREATE_USER]({ commit }, payload) {
+            try {
+                const response = await Api.post(apiUrl.USERS, payload);
+                return response.data;
+            } catch (error) {
+                console.error("Error Creating User:", error);
+                throw error;
+            }
+        },
+        async [actions.UPDATE_USER]({ commit }, payload) {
+            try {
+                const response = await Api.put(`${apiUrl.USERS}/${payload.id}`, payload);
+                return response.data;
+            } catch (error) {
+                console.error("Error Updating User:", error);
+                throw error;
+            }
+        },
+        async [actions.DELETE_USER]({ commit }, id) {
+            try {
+                const response = await Api.delete(`${apiUrl.USERS}/${id}`);
+                return response.data;
+            } catch (error) {
+                console.error("Error Deleting User:", error);
+                throw error;
+            }
+        },
+        async [actions.EXPORT_USER]({ commit }, params = {}) {
+            try {
+                const response = await Api.get(apiUrl.EXPORT_USER, { 
+                    params,
+                    responseType: 'blob' 
+                });
+                return response;
+            } catch (error) {
+                console.error("Error Exporting User:", error);
+                throw error;
+            }
+        },
+        async [actions.GET_ROLES]({ commit }) {
+            try {
+                const response = await Api.get(apiUrl.ROLE_MENU);
+                const data = response.data.result;
+                commit("SET_ROLES", data);
+                return data;
+            } catch (error) {
+                console.error("Error Fetching Roles:", error);
+                throw error;
+            }
+        },
+        async [actions.EXPORT_ROLE_MENU]({ commit }) {
+            try {
+                const response = await Api.get(apiUrl.EXPORT_ROLE_MENU, { 
+                    responseType: 'blob' 
+                });
+                return response;
+            } catch (error) {
+                console.error("Error Exporting Role Menu:", error);
                 throw error;
             }
         },

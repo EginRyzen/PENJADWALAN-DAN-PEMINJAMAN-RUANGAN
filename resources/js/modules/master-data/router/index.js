@@ -3,6 +3,7 @@ import ListMahasiswa from '@/modules/master-data/page/ListMahasiswa.vue';
 import ListProgramStudi from '@/modules/master-data/page/ListProgramStudi.vue';
 import ListDosen from '@/modules/master-data/page/ListDosen.vue';
 import ListKelasMataKuliah from '@/modules/master-data/page/ListKelasMataKuliah.vue';
+import ListUser from '@/modules/master-data/page/ListUser.vue';
 
 const masterDataRoutes = [
     {
@@ -33,6 +34,12 @@ const masterDataRoutes = [
         path: 'kelas-mata-kuliah',
         name: 'master-data.kelas-mata-kuliah',
         component: ListKelasMataKuliah,
+        meta: { requiresAuth: true }
+    },
+    {
+        path: 'user-list',
+        name: 'master-data.user-list',
+        component: ListUser,
         meta: { requiresAuth: true }
     }
 ];

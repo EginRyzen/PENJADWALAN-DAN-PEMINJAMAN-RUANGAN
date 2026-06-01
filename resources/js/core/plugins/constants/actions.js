@@ -47,6 +47,14 @@ export default {
     UPDATE_DOSEN: "updateDosen",
     DELETE_DOSEN: "deleteDosen",
     EXPORT_DOSEN: "exportDosen",
+    // Master Data - User
+    GET_USER: "getUser",
+    CREATE_USER: "createUser",
+    UPDATE_USER: "updateUser",
+    DELETE_USER: "deleteUser",
+    EXPORT_USER: "exportUser",
+    GET_ROLES: "getRoles",
+    EXPORT_ROLE_MENU: "exportRoleMenu",
     EXPORT_KELAS: "exportKelas",
     // Master Data - Periode
     GET_PERIODE: "getPeriode",

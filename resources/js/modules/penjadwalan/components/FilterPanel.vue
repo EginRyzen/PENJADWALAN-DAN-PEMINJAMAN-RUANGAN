@@ -70,19 +70,19 @@
       <!-- Chips info -->
       <div class="flex flex-wrap gap-2">
         <span v-if="localContext.start_date" class="inline-flex items-center gap-1 text-xs bg-teal-50 text-teal-700 px-2.5 py-1 rounded-full font-medium">
-          📅 Mulai: {{ formatDate(localContext.start_date) }}
+          Mulai: {{ formatDate(localContext.start_date) }}
         </span>
         <span v-if="localContext.start_date && isHoliday(localContext.start_date)" class="inline-flex items-center gap-1 text-xs bg-amber-50 text-amber-700 px-2.5 py-1 rounded-full font-medium">
-          ⚠ Tanggal ini hari libur!
+          Tanggal ini hari libur!
         </span>
         <span v-if="!localContext.start_date && !scheduleStatus" class="text-xs text-gray-400 italic">
           Pilih tanggal mulai ujian untuk mengaktifkan generate
         </span>
         <span v-if="scheduleStatus === 'permanen'" class="inline-flex items-center gap-1 text-xs bg-blue-50 text-blue-700 px-2.5 py-1 rounded-full font-medium">
-          ✅ Jadwal Permanen Terdeteksi
+          Jadwal Permanen Terdeteksi
         </span>
         <span v-if="scheduleStatus === 'draft'" class="inline-flex items-center gap-1 text-xs bg-indigo-50 text-indigo-700 px-2.5 py-1 rounded-full font-medium">
-          📝 Draft Jadwal Terdeteksi
+          Draft Jadwal Terdeteksi
         </span>
       </div>
 
@@ -101,6 +101,7 @@
         </button>
 
         <button
+          v-if="canGenerateJadwal || scheduleStatus"
           @click="$emit('generate')"
           :disabled="!canGenerateAction || isGenerating"
           class="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold transition-all duration-200 shadow-md flex-shrink-0 ml-1"
@@ -119,6 +120,17 @@
             </svg>
           </template>
           {{ isGenerating ? 'Generating...' : (scheduleStatus ? 'Tampilkan Jadwal Terdeteksi' : 'Generate Jadwal Otomatis') }}
+        </button>
+
+        <button
+          v-else
+          disabled
+          class="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200 flex-shrink-0 ml-1"
+        >
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+          </svg>
+          Akses Generate Dibatasi
         </button>
       </div>
     </div>
@@ -148,6 +160,7 @@ export default {
     kelasList:      { type: Array,   default: () => [] },
     allowedDays:    { type: Array,   default: null },
     scheduleStatus: { type: String,  default: null }, // 'draft' | 'permanen' | null
+    canGenerateJadwal: { type: Boolean, default: true },
     context:        { type: Object,  default: () => ({}) },
   },
   emits: ['generate', 'context-change', 'periode-change'],
@@ -174,6 +187,9 @@ export default {
   },
   computed: {
     canGenerateAction() {
+      if (!this.canGenerateJadwal) {
+        return !!this.scheduleStatus && !!this.localContext.periode_id;
+      }
       // Jika sudah ada jadwal, minimal periode harus terisi untuk "Tampilkan"
       if (this.scheduleStatus) return !!this.localContext.periode_id;
       // Jika belum ada, butuh start_date
