@@ -49,17 +49,32 @@ class MasterDataDosenController extends Controller
                 $query->where('status', $request->query('status'));
             }
 
+            $sortBy = $request->query('sort_by', 'nama');
+            $sortDir = $request->query('sort_dir', 'asc');
+
+            if ($sortBy === 'prodi') {
+                $query->leftJoin('master_data_program_studis as ps', 'master_data_dosens.program_studi_id', '=', 'ps.id')
+                      ->orderBy('ps.nama', $sortDir === 'desc' ? 'desc' : 'asc')
+                      ->select('master_data_dosens.*');
+            } else {
+                $allowedSorts = ['nidn', 'nip', 'nama', 'jabatan', 'status'];
+                if (in_array($sortBy, $allowedSorts)) {
+                    $query->orderBy("master_data_dosens.{$sortBy}", $sortDir === 'desc' ? 'desc' : 'asc');
+                } else {
+                    $query->orderBy('master_data_dosens.nama', 'asc');
+                }
+            }
+
             // Jika ada query param 'all', kembalikan semua tanpa pagination
             if ($request->boolean('all')) {
-                $data = $query->orderBy('nama', 'asc')->get();
+                $data = $query->get();
                 return $this->successResponse($data, 'Daftar dosen berhasil diambil');
             }
 
             $size = $request->query('size', 10);
             $page = $request->query('page', 0);
 
-            $paginated = $query->orderBy('nama', 'asc')
-                ->paginate($size, ['*'], 'page', $page + 1);
+            $paginated = $query->paginate($size, ['*'], 'page', $page + 1);
 
             $customResponse = [
                 'current_page'            => (int) $page,

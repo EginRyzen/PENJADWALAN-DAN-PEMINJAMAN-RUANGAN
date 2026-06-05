@@ -50,17 +50,36 @@ class MasterDataMahasiswaController extends Controller
                 $query->where('status', $request->query('status'));
             }
 
+            $sortBy = $request->query('sort_by', 'nama');
+            $sortDir = $request->query('sort_dir', 'asc');
+
+            if ($sortBy === 'prodi') {
+                $query->leftJoin('master_data_program_studis as ps', 'master_data_mahasiswas.program_studi_id', '=', 'ps.id')
+                      ->orderBy('ps.nama', $sortDir === 'desc' ? 'desc' : 'asc')
+                      ->select('master_data_mahasiswas.*');
+            } elseif ($sortBy === 'kelas') {
+                $query->leftJoin('master_data_kelas as k', 'master_data_mahasiswas.kelas_id', '=', 'k.id')
+                      ->orderBy('k.nama_kelas', $sortDir === 'desc' ? 'desc' : 'asc')
+                      ->select('master_data_mahasiswas.*');
+            } else {
+                $allowedSorts = ['nim', 'nama', 'semester', 'status'];
+                if (in_array($sortBy, $allowedSorts)) {
+                    $query->orderBy("master_data_mahasiswas.{$sortBy}", $sortDir === 'desc' ? 'desc' : 'asc');
+                } else {
+                    $query->orderBy('master_data_mahasiswas.nama', 'asc');
+                }
+            }
+
             // Jika ada query param 'all', kembalikan semua tanpa pagination
             if ($request->boolean('all')) {
-                $data = $query->orderBy('nama', 'asc')->get();
+                $data = $query->get();
                 return $this->successResponse($data, 'Daftar mahasiswa berhasil diambil');
             }
 
             $size = $request->query('size', 10);
             $page = $request->query('page', 0);
 
-            $paginated = $query->orderBy('nama', 'asc')
-                ->paginate($size, ['*'], 'page', $page + 1);
+            $paginated = $query->paginate($size, ['*'], 'page', $page + 1);
 
             $customResponse = [
                 'current_page'            => (int) $page,

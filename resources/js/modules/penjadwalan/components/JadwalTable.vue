@@ -116,8 +116,8 @@
 
             <!-- Waktu -->
             <td class="px-3 py-3 text-center">
-              <div class="text-sm font-bold text-gray-800">{{ item.jam_mulai }}</div>
-              <div class="text-xs text-gray-400">s/d {{ item.jam_selesai }}</div>
+              <div class="text-sm font-bold text-gray-800">{{ formatWaktu(item.jam_mulai) }}</div>
+              <div class="text-xs text-gray-400">s/d {{ formatWaktu(item.jam_selesai) }}</div>
             </td>
 
             <!-- Durasi -->
@@ -372,6 +372,10 @@ export default {
     },
     formatTanggal(d) {
       return new Date(d + 'T00:00:00').toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' });
+    },
+    formatWaktu(jam) {
+      if (!jam) return '-';
+      return jam.substring(0, 5);
     },
   },
 };

@@ -42,16 +42,35 @@ class MasterDataKelasController extends Controller
                 $query->where('program_studi_id', $request->query('program_studi_id'));
             }
 
+            $sortBy = $request->query('sort_by', 'nama_kelas');
+            $sortDir = $request->query('sort_dir', 'asc');
+
+            if ($sortBy === 'prodi') {
+                $query->leftJoin('master_data_program_studis as ps', 'master_data_kelas.program_studi_id', '=', 'ps.id')
+                      ->orderBy('ps.nama', $sortDir === 'desc' ? 'desc' : 'asc')
+                      ->select('master_data_kelas.*');
+            } elseif ($sortBy === 'periode') {
+                $query->leftJoin('master_data_periodes as p', 'master_data_kelas.periode_id', '=', 'p.id')
+                      ->orderBy('p.nama', $sortDir === 'desc' ? 'desc' : 'asc')
+                      ->select('master_data_kelas.*');
+            } else {
+                $allowedSorts = ['nama_kelas'];
+                if (in_array($sortBy, $allowedSorts)) {
+                    $query->orderBy("master_data_kelas.{$sortBy}", $sortDir === 'desc' ? 'desc' : 'asc');
+                } else {
+                    $query->orderBy('master_data_kelas.nama_kelas', 'asc');
+                }
+            }
+
             if ($request->boolean('all')) {
-                $data = $query->orderBy('nama_kelas', 'asc')->get();
+                $data = $query->get();
                 return $this->successResponse($data, 'Daftar kelas berhasil diambil');
             }
 
             $size = $request->query('size', 10);
             $page = $request->query('page', 0);
 
-            $paginated = $query->orderBy('nama_kelas', 'asc')
-                ->paginate($size, ['*'], 'page', $page + 1);
+            $paginated = $query->paginate($size, ['*'], 'page', $page + 1);
 
             $customResponse = [
                 'current_page'            => (int) $page,

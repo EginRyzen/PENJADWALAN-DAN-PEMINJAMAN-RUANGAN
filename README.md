@@ -544,13 +544,17 @@ Setiap transisi status dicatat pada tabel `pengajuan_histories` sebagai **audit 
 
 | Peran | Deskripsi | Hak Akses Utama |
 |-------|-----------|-----------------|
+| `ADMIN` | Administrator Sistem | Kontrol penuh terhadap sistem dan manajemen pengguna |
 | `DIREKTUR` | Pimpinan tertinggi kampus | Lihat semua data, laporan |
 | `WADIR 1` | Wakil Direktur Bidang Akademik | Persetujuan akhir pengajuan |
 | `WADIR 2` | Wakil Direktur Bidang Umum | Persetujuan tingkat 2 |
 | `KAPRODI` | Kepala Program Studi | Manajemen data akademik |
 | `DOSEN` | Tenaga Pengajar | Pengajuan peminjaman, lihat jadwal |
-| `TENAGA_TU` | Staff Tata Usaha / Admin Sarpras | Verifikasi awal, manajemen gedung & ruangan |
+| `TENAGA_TU` | Staff Tata Usaha | Verifikasi awal, manajemen tata usaha |
 | `MAHASISWA` | Mahasiswa aktif | Pengajuan peminjaman |
+| `UNIT_MHS` | Unit Kegiatan Mahasiswa | Pengajuan peminjaman kegiatan organisasi |
+| `SARPRAS` | Bagian Sarpras | Manajemen gedung, ruangan & persetujuan fasilitas |
+| `KABAG_UMUM` | Kepala Bagian Umum | Manajemen operasional dan persetujuan umum |
 
 > Satu pengguna dapat memiliki **lebih dari satu peran** (misalnya Wadir 1 juga berstatus Dosen).
 
@@ -560,13 +564,19 @@ Setiap transisi status dicatat pada tabel `pengajuan_histories` sebagai **audit 
 
 Setelah menjalankan `php artisan db:seed`, akun-akun berikut tersedia untuk testing:
 
-| Nama | Username | Email | Peran | Password |
-|------|----------|-------|-------|----------|
-| Prof. Ahmad Subagjo | `ahmad_dir` | ahmad@kampus.ac.id | Direktur, Dosen | `password123` |
-| Dr. Ir. Heru Prasetyo, M.T. | `heru_wadir1` | heru.wadir1@kampus.ac.id | Wadir 1, Dosen | `password123` |
-| Dra. Siti Aminah, M.Si. | `siti_wadir2` | siti.wadir2@kampus.ac.id | Wadir 2, Dosen | `password123` |
-| Admin Sarpras | `admin_tu` | tu@kampus.ac.id | Tenaga TU | `password123` |
-| Andi Wijaya | `andi_mhs` | andi@student.kampus.ac.id | Mahasiswa | `password123` |
+| Nama | Username | Email | Nomor Induk | Peran | Password |
+|------|----------|-------|-------------|-------|----------|
+| Ahmad Admin | `gen_admin` | admin@mail.com | 19800101001 | Admin | `password123` |
+| Dr. Budi Santoso | `direktur` | direktur@mail.com | 19750202002 | Direktur | `password123` |
+| Ir. Citra Lestari | `wadir1` | wadir1@mail.com | 19780303003 | Wadir 1 | `password123` |
+| Dedi Wijaya, M.T. | `wadir2` | wadir2@mail.com | 19790404004 | Wadir 2 | `password123` |
+| Eka Putri, Ph.D. | `kaprodi` | kaprodi@mail.com | 19820505005 | Kaprodi | `password123` |
+| Fajar Ramadhan | `dosen` | dosen@mail.com | 19850606006 | Dosen | `password123` |
+| Gita Permata | `tenaga_tu` | tu@mail.com | 19900707007 | Tenaga TU | `password123` |
+| Hendra Saputra | `mahasiswa` | mhs@mail.com | 20240808008 | Mahasiswa | `password123` |
+| Indra Kusuma | `unit_mhs` | unit_mhs@mail.com | 19880909009 | Unit Mahasiswa | `password123` |
+| Joko Susilo | `sarpras` | sarpras@mail.com | 19841010010 | Sarpras | `password123` |
+| Kurniawati | `kabag_umum` | umum@mail.com | 19811111011 | Kabag Umum | `password123` |
 
 > ⚠️ **Catatan Keamanan:** Segera ganti password default sebelum deploy ke lingkungan production!
 

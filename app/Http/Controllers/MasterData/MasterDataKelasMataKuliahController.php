@@ -45,11 +45,30 @@ class MasterDataKelasMataKuliahController extends Controller
                 $query->where('kelas_id', $request->query('kelas_id'));
             }
 
+            $sortBy = $request->query('sort_by', 'created_at');
+            $sortDir = $request->query('sort_dir', 'desc');
+
+            if ($sortBy === 'kelas') {
+                $query->leftJoin('master_data_kelas as k', 'master_data_kelas_mata_kuliahs.kelas_id', '=', 'k.id')
+                      ->orderBy('k.nama_kelas', $sortDir === 'desc' ? 'desc' : 'asc')
+                      ->select('master_data_kelas_mata_kuliahs.*');
+            } elseif ($sortBy === 'matkul') {
+                $query->leftJoin('master_data_mata_kuliahs as m', 'master_data_kelas_mata_kuliahs.mata_kuliah_id', '=', 'm.id')
+                      ->orderBy('m.nama', $sortDir === 'desc' ? 'desc' : 'asc')
+                      ->select('master_data_kelas_mata_kuliahs.*');
+            } else {
+                $allowedSorts = ['semester', 'created_at'];
+                if (in_array($sortBy, $allowedSorts)) {
+                    $query->orderBy("master_data_kelas_mata_kuliahs.{$sortBy}", $sortDir === 'desc' ? 'desc' : 'asc');
+                } else {
+                    $query->orderBy('master_data_kelas_mata_kuliahs.created_at', 'desc');
+                }
+            }
+
             $size = $request->query('size', 10);
             $page = $request->query('page', 0);
 
-            $paginated = $query->orderBy('created_at', 'desc')
-                ->paginate($size, ['*'], 'page', $page + 1);
+            $paginated = $query->paginate($size, ['*'], 'page', $page + 1);
 
             $customResponse = [
                 'current_page'            => (int) $page,

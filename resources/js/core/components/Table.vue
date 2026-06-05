@@ -79,7 +79,7 @@
               <button
                 class="rounded-full h-5 w-5 inline-flex justify-center items-center bg-primary-lightest ml-1 text-xs text-primary-dark absolute right-1 top-1/2 -translate-y-1/2"
                 @click.stop="removeSorting(head.value)"
-                v-if="findSort(head.value) && sortOrder.length > 1"
+                v-if="findSort(head.value) && internalSortOrder.length > 1"
               >
                 {{ findSortIndex(head.value) + 1 }}
               </button>
@@ -188,6 +188,7 @@ export default {
       totalPage: 0,
       totalRecords: 0,
       totalRowsOnPage: 0,
+      internalSortOrder: [],
     };
   },
   mounted() {
@@ -199,11 +200,11 @@ export default {
       const obj = this;
       if (this.usesLocalData) {
         obj.records = obj.items;
-        if (obj.sortOrder.length) {
+        if (obj.internalSortOrder.length) {
           obj.records = _.orderBy(
             obj.records,
-            obj.sortOrder.map((q) => q.field),
-            obj.sortOrder.map((q) => q.direction)
+            obj.internalSortOrder.map((q) => q.field),
+            obj.internalSortOrder.map((q) => q.direction)
           );
         }
       }
@@ -259,6 +260,13 @@ export default {
     },
   },
   watch: {
+    sortOrder: {
+      handler(newVal) {
+        this.internalSortOrder = newVal ? [...newVal] : [];
+      },
+      deep: true,
+      immediate: true,
+    },
     searchQuery: _.debounce(function () {
       const obj = this;
       if (!obj.searchable && obj.searchQuery !== null) {
@@ -343,21 +351,21 @@ export default {
     },
     sortBy(event, key) {
       const obj = this;
-      const index = obj.sortOrder.findIndex((e) => e.field === key);
+      const index = obj.internalSortOrder.findIndex((e) => e.field === key);
       if (index === -1) {
         if (!event.shiftKey) {
-          obj.sortOrder = [];
+          obj.internalSortOrder = [];
         }
 
-        obj.sortOrder.push({ field: key, direction: "asc" });
+        obj.internalSortOrder.push({ field: key, direction: "asc" });
       } else {
-        if (obj.sortOrder[index].direction === "desc") {
-          obj.sortOrder.splice(index, 1);
+        if (obj.internalSortOrder[index].direction === "desc") {
+          obj.internalSortOrder.splice(index, 1);
         } else {
-          obj.sortOrder[index].direction = "desc";
+          obj.internalSortOrder[index].direction = "desc";
         }
       }
-      obj.$emit("update:sort-order", obj.sortOrder);
+      obj.$emit("update:sort-order", obj.internalSortOrder);
       this.detectUpdate();
 
       if (obj.usesLocalData) {
@@ -368,9 +376,9 @@ export default {
     },
     removeSorting(value) {
       const obj = this;
-      obj.sortOrder = obj.sortOrder.filter((q) => q.field !== value);
+      obj.internalSortOrder = obj.internalSortOrder.filter((q) => q.field !== value);
 
-      obj.$emit("update:sort-order", obj.sortOrder);
+      obj.$emit("update:sort-order", obj.internalSortOrder);
       this.detectUpdate();
     },
     handleSearch: _.debounce(function () {
@@ -408,14 +416,14 @@ export default {
       this.detectUpdate();
     },
     findSort(field) {
-      if (!this.sortOrder) return null;
-      return this.sortOrder.find((sort) => sort.field === field);
+      if (!this.internalSortOrder) return null;
+      return this.internalSortOrder.find((sort) => sort.field === field);
     },
     findSortDirection(field) {
       return this.findSort(field) ? this.findSort(field).direction : false;
     },
     findSortIndex(field) {
-      return this.sortOrder.findIndex((sort) => sort.field === field);
+      return this.internalSortOrder.findIndex((sort) => sort.field === field);
     },
     getCurrentIndex(index) {
       return this.pageIndex * this.pageCount + index;

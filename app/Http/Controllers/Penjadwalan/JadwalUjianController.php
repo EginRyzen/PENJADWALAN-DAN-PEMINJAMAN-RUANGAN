@@ -39,7 +39,9 @@ class JadwalUjianController extends Controller
 
         try {
             // Cek semua jadwal untuk periode + tipe ini (bisa draft atau permanen)
-            $jadwal = JadwalUjian::with(['mataKuliah', 'kelas.programStudi', 'dosen', 'ruangan'])
+            $jadwal = JadwalUjian::with(['mataKuliah', 'kelas' => function ($query) {
+                $query->with('programStudi')->withCount('mahasiswas');
+            }, 'dosen', 'ruangan'])
                 ->where('periode_id', $request->periode_id)
                 ->where('tipe', $request->tipe)
                 ->orderBy('tanggal')
@@ -333,7 +335,9 @@ class JadwalUjianController extends Controller
         ]);
 
         try {
-            $query = JadwalUjian::with(['mataKuliah', 'kelas.programStudi', 'dosen', 'ruangan'])
+            $query = JadwalUjian::with(['mataKuliah', 'kelas' => function ($q) {
+                $q->with('programStudi')->withCount('mahasiswas');
+            }, 'dosen', 'ruangan'])
                 ->where('periode_id', $request->periode_id)
                 ->where('tipe', $request->tipe);
 
@@ -391,7 +395,7 @@ class JadwalUjianController extends Controller
             'ruangan_id'     => $j->ruangan_id,
             'ruangan_nama'   => $j->ruangan->room_name ?? '-',
             'kapasitas'      => $j->ruangan->room_capacity ?? 0,
-            'jumlah_peserta' => 0, // TODO: hitung dari mahasiswa per kelas
+            'jumlah_peserta' => $j->kelas->mahasiswas_count ?? 0,
             'status'         => $j->status_konflik,
             'status_data'    => $statusData,
             'conflict_reason'=> $j->conflict_reason,

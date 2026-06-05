@@ -9,10 +9,20 @@ use App\Models\Menu;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use App\Exports\RoleMenuExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 class RoleMenuController extends Controller
 {
     use ApiResponse;
+
+    /**
+     * Export role menu assignments to Excel.
+     */
+    public function export()
+    {
+        return Excel::download(new RoleMenuExport(), 'role_menu_access.xlsx');
+    }
 
     /**
      * Display a listing of menus with their assignment status for a specific role.

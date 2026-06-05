@@ -56,7 +56,9 @@
         :headers="headers"
         :options="tableOptions"
         :server-side="true"
+        :sort-order="sortOrder"
         @update:options="tableOptions = $event"
+        @update:sort-order="handleSortOrder"
         :searchable="false"
         :show-pagination="true"
         :use-custom-row="true"
@@ -139,7 +141,7 @@
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">Semester <span class="text-red-500">*</span></label>
-          <app-input v-model="form.semester" type="number" placeholder="Contoh: 2" label="" />
+          <app-input v-model="form.semester" type="number" min="1" max="14" placeholder="Contoh: 2" label="" />
         </div>
       </div>
 
@@ -172,6 +174,15 @@
       :button-text="successData.buttonText"
       @close-action="successData.action"
     />
+
+    <!-- ===== MODAL ERROR ===== -->
+    <modal-pop-up-error
+      v-model="showErrorModal"
+      :title="errorData.title"
+      :description="errorData.description"
+      :button-text="errorData.buttonText"
+      @close-action="errorData.action"
+    />
   </div>
 </template>
 
@@ -184,6 +195,7 @@ import ModalApp from "@/core/components/Modal.vue";
 import SelectAutoComplete from "@/core/components/SelectAutoComplete.vue";
 import ModalPopUpConfirm from "@/core/components/ModalPopUpConfirm.vue";
 import ModalPopUpSuccess from "@/core/components/ModalPopUpSuccess.vue";
+import ModalPopUpError from "@/core/components/ModalPopUpError.vue";
 import DISPATCH from "@/core/plugins/constants/dispatches";
 
 export default {
@@ -197,6 +209,7 @@ export default {
     SelectAutoComplete,
     ModalPopUpConfirm,
     ModalPopUpSuccess,
+    ModalPopUpError,
   },
   data() {
     return {
@@ -225,6 +238,14 @@ export default {
         buttonText: "Oke",
         action: () => {},
       },
+      // PopUp Error State
+      showErrorModal: false,
+      errorData: {
+        title: "",
+        description: "",
+        buttonText: "Tutup",
+        action: () => {},
+      },
       breadcrumbItems: [
         { text: "Master Data", link: "#" },
         { text: "Akademik", link: "#" },
@@ -243,6 +264,7 @@ export default {
         itemsPerPage: 10,
         totalItems: 0,
       },
+      sortOrder: [],
     };
   },
   computed: {
@@ -297,10 +319,19 @@ export default {
     async fetchData() {
       this.$store.commit("SET_LOADING", true);
       try {
+        let sortBy = undefined;
+        let sortDir = undefined;
+        if (this.sortOrder && this.sortOrder.length > 0) {
+          sortBy = this.sortOrder[0].field;
+          sortDir = this.sortOrder[0].direction;
+        }
+
         await this.$store.dispatch(DISPATCH.GET_KELAS_MATA_KULIAH, {
           search: this.search || undefined,
           page: (this.tableOptions.page ?? 1) - 1,
           size: this.tableOptions.itemsPerPage,
+          sort_by: sortBy,
+          sort_dir: sortDir,
         });
         if (this.tableOptions.totalItems !== (this.pagination?.total_elements ?? 0)) {
           this.tableOptions = {
@@ -314,12 +345,16 @@ export default {
         this.$store.commit("SET_LOADING", false);
       }
     },
+    handleSortOrder(newSortOrder) {
+      this.sortOrder = newSortOrder;
+      this.fetchData();
+    },
     async fetchKelas(query) {
       try {
         await this.$store.dispatch(DISPATCH.GET_KELAS, {
           search: query || undefined,
           page: 0,
-          size: 10,
+          size: 1000,
         });
       } catch (e) {
         console.error("Gagal memuat data kelas:", e);
@@ -330,7 +365,7 @@ export default {
         await this.$store.dispatch(DISPATCH.GET_MATA_KULIAH, {
           search: query || undefined,
           page: 0,
-          size: 10,
+          size: 1000,
         });
       } catch (e) {
         console.error("Gagal memuat data mata kuliah:", e);
@@ -390,6 +425,46 @@ export default {
     },
     async handleSimpan() {
       if (this.isSaving) return;
+
+      const selectedKelas = this.kelasOptions.find(k => k.id === this.form.kelas_id);
+      const selectedMK = this.mataKuliahOptions.find(m => m.id === this.form.mata_kuliah_id);
+
+      if (selectedKelas && selectedMK) {
+        if (selectedKelas.program_studi_id !== selectedMK.program_studi_id) {
+          this.errorData = {
+            title: "Gagal Menyimpan",
+            description: "Program Studi pada Kelas dan Mata Kuliah tidak sama!",
+            buttonText: "Tutup",
+            action: () => { this.showErrorModal = false; }
+          };
+          this.showErrorModal = true;
+          return;
+        }
+      }
+
+      const semester = parseInt(this.form.semester);
+      if (isNaN(semester) || semester < 1 || semester > 14) {
+        this.errorData = {
+          title: "Gagal Menyimpan",
+          description: "Semester maksimal 14!",
+          buttonText: "Tutup",
+          action: () => { this.showErrorModal = false; }
+        };
+        this.showErrorModal = true;
+        return;
+      }
+
+      if (selectedMK && selectedMK.semester && semester !== parseInt(selectedMK.semester)) {
+        this.errorData = {
+          title: "Gagal Menyimpan",
+          description: `Input semester (${semester}) tidak sesuai dengan semester Mata Kuliah (${selectedMK.semester})!`,
+          buttonText: "Tutup",
+          action: () => { this.showErrorModal = false; }
+        };
+        this.showErrorModal = true;
+        return;
+      }
+
       this.isSaving = true;
       this.$store.commit("SET_LOADING", true);
       try {

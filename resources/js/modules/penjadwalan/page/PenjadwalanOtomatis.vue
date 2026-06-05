@@ -26,6 +26,7 @@
       :kelas-list="kelasList"
       :allowed-days="allowedDays"
       :schedule-status="scheduleStatus"
+      :can-generate-jadwal="canGenerateJadwal"
       @generate="handleGenerate"
       @download="handleDownload"
       @context-change="onContextChange"
@@ -185,7 +186,7 @@
 
     <!-- Action Bar (sticky bottom) -->
     <action-bar
-      v-if="draftJadwal.length > 0 && !isGenerating"
+      v-if="draftJadwal.length > 0 && !isGenerating && canGenerateJadwal"
       :stats="stats"
       :is-saving="isSaving"
       :is-saving-draft="isSavingDraft"
@@ -263,8 +264,19 @@ export default {
     programStudiList()  { return this.$store.state.masterData.programStudiList; },
     kelasList()         { return this.$store.state.settings.kelasList; },
     lastDraftSavedAt()  { return this.$store.state.penjadwalan.lastDraftSavedAt; },
+    
+    canGenerateJadwal() {
+      const user = this.$store.state.auth.user;
+      if (!user || !user.roles) return false;
+      const allowedRoles = ['DIREKTUR', 'GENERAL_ADMIN', 'TENAGA_TU', 'WADIR 1', 'WADIR 2'];
+      return user.roles.some(role => {
+        const roleName = typeof role === 'string' ? role : (role.name_role || role.name || '');
+        return allowedRoles.includes(roleName.toUpperCase());
+      });
+    },
+
     isPermanen() {
-      return this.$store.state.penjadwalan.isPermanen || this.scheduleStatus === 'permanen';
+      return this.$store.state.penjadwalan.isPermanen || this.scheduleStatus === 'permanen' || !this.canGenerateJadwal;
     },
     operasionalScheduleList() { return this.$store.state.settings.operasionalScheduleList; },
     allowedDays() {
@@ -470,8 +482,17 @@ export default {
       this.$store.commit('SET_LOADING', true);
       this.$store.commit('SET_LOADING_MESSAGE', 'Memvalidasi bentrok jadwal...');
       try {
+        // Pastikan format jam_mulai dan jam_selesai hanya H:i (tanpa detik)
+        const payload = { ...row };
+        if (payload.jam_mulai && payload.jam_mulai.length > 5) {
+          payload.jam_mulai = payload.jam_mulai.substring(0, 5);
+        }
+        if (payload.jam_selesai && payload.jam_selesai.length > 5) {
+          payload.jam_selesai = payload.jam_selesai.substring(0, 5);
+        }
+
         // Simpan perubahannya dulu
-        await this.$store.dispatch(DISPATCH.UPDATE_JADWAL_ROW, row);
+        await this.$store.dispatch(DISPATCH.UPDATE_JADWAL_ROW, payload);
         
         // Lalu panggil generate (validasi) dengan membawa seluruh draft saat ini
         // Agar backend bisa mengecek apakah perubahan ini menyebabkan bentrok dengan item lain

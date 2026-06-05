@@ -56,7 +56,9 @@
         :headers="headers"
         :options="tableOptions"
         :server-side="true"
+        :sort-order="sortOrder"
         @update:options="tableOptions = $event"
+        @update:sort-order="handleSortOrder"
         :searchable="false"
         :show-pagination="true"
         :use-custom-row="true"
@@ -123,7 +125,7 @@
       <div class="px-6 py-5 grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">NIDN <span class="text-red-500">*</span></label>
-          <app-input v-model="form.nidn" placeholder="Contoh: 0012345678" label="" />
+          <app-input v-model="form.nidn" type="number" placeholder="Contoh: 0012345678" label="" />
         </div>
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-1">NIP (Opsional)</label>
@@ -283,6 +285,7 @@ export default {
         itemsPerPage: 10,
         totalItems: 0,
       },
+      sortOrder: [],
     };
   },
   computed: {
@@ -327,10 +330,19 @@ export default {
     async fetchData() {
       this.$store.commit("SET_LOADING", true);
       try {
+        let sortBy = undefined;
+        let sortDir = undefined;
+        if (this.sortOrder && this.sortOrder.length > 0) {
+          sortBy = this.sortOrder[0].field;
+          sortDir = this.sortOrder[0].direction;
+        }
+
         await this.$store.dispatch(DISPATCH.GET_DOSEN, {
           search: this.search || undefined,
           page: (this.tableOptions.page ?? 1) - 1,
           size: this.tableOptions.itemsPerPage,
+          sort_by: sortBy,
+          sort_dir: sortDir,
         });
         this.tableOptions = {
           ...this.tableOptions,
@@ -341,6 +353,10 @@ export default {
       } finally {
         this.$store.commit("SET_LOADING", false);
       }
+    },
+    handleSortOrder(newSortOrder) {
+      this.sortOrder = newSortOrder;
+      this.fetchData();
     },
     async fetchProgramStudi(query) {
       try {
