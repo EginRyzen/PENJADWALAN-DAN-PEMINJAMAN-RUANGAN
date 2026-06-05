@@ -544,6 +544,7 @@ Setiap transisi status dicatat pada tabel `pengajuan_histories` sebagai **audit 
 
 | Peran | Deskripsi | Hak Akses Utama |
 |-------|-----------|-----------------|
+| `ADMIN` | Administrator Sistem | Kontrol penuh terhadap sistem dan manajemen pengguna |
 | `DIREKTUR` | Pimpinan tertinggi kampus | Lihat semua data, laporan |
 | `WADIR 1` | Wakil Direktur Bidang Akademik | Persetujuan akhir pengajuan |
 | `WADIR 2` | Wakil Direktur Bidang Umum | Persetujuan tingkat 2 |
@@ -562,6 +563,7 @@ Setelah menjalankan `php artisan db:seed`, akun-akun berikut tersedia untuk test
 
 | Nama | Username | Email | Peran | Password |
 |------|----------|-------|-------|----------|
+| Super Admin | `admin_sistem` | admin@kampus.ac.id | Admin | `password123` |
 | Prof. Ahmad Subagjo | `ahmad_dir` | ahmad@kampus.ac.id | Direktur, Dosen | `password123` |
 | Dr. Ir. Heru Prasetyo, M.T. | `heru_wadir1` | heru.wadir1@kampus.ac.id | Wadir 1, Dosen | `password123` |
 | Dra. Siti Aminah, M.Si. | `siti_wadir2` | siti.wadir2@kampus.ac.id | Wadir 2, Dosen | `password123` |
