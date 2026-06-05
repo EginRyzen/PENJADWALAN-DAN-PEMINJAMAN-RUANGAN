@@ -15,8 +15,31 @@
 
 ---
 
+## 🔑 Akun Default (Seeder)
+
+Setelah menjalankan `php artisan db:seed`, akun-akun berikut tersedia untuk testing:
+
+| Nama | Username | Email | Nomor Induk | Peran | Password |
+|------|----------|-------|-------------|-------|----------|
+| Ahmad Admin | `gen_admin` | admin@mail.com | 19800101001 | Admin | `password123` |
+| Dr. Budi Santoso | `direktur` | direktur@mail.com | 19750202002 | Direktur | `password123` |
+| Ir. Citra Lestari | `wadir1` | wadir1@mail.com | 19780303003 | Wadir 1 | `password123` |
+| Dedi Wijaya, M.T. | `wadir2` | wadir2@mail.com | 19790404004 | Wadir 2 | `password123` |
+| Eka Putri, Ph.D. | `kaprodi` | kaprodi@mail.com | 19820505005 | Kaprodi | `password123` |
+| Fajar Ramadhan | `dosen` | dosen@mail.com | 19850606006 | Dosen | `password123` |
+| Gita Permata | `tenaga_tu` | tu@mail.com | 19900707007 | Tenaga TU | `password123` |
+| Hendra Saputra | `mahasiswa` | mhs@mail.com | 20240808008 | Mahasiswa | `password123` |
+| Indra Kusuma | `unit_mhs` | unit_mhs@mail.com | 19880909009 | Unit Mahasiswa | `password123` |
+| Joko Susilo | `sarpras` | sarpras@mail.com | 19841010010 | Sarpras | `password123` |
+| Kurniawati | `kabag_umum` | umum@mail.com | 19811111011 | Kabag Umum | `password123` |
+
+> ⚠️ **Catatan Keamanan:** Segera ganti password default sebelum deploy ke lingkungan production!
+
+---
+
 ## 📋 Daftar Isi
 
+- [Akun Default (Seeder)](#-akun-default-seeder)
 - [Tentang Proyek](#-tentang-proyek)
 - [Fitur Utama](#-fitur-utama)
 - [Tech Stack](#-tech-stack)
@@ -28,7 +51,6 @@
 - [API Endpoints](#-api-endpoints)
 - [Alur Workflow](#-alur-workflow)
 - [Peran & Hak Akses](#-peran--hak-akses)
-- [Akun Default (Seeder)](#-akun-default-seeder)
 - [Kontribusi](#-kontribusi)
 
 ---
@@ -557,28 +579,6 @@ Setiap transisi status dicatat pada tabel `pengajuan_histories` sebagai **audit 
 | `KABAG_UMUM` | Kepala Bagian Umum | Manajemen operasional dan persetujuan umum |
 
 > Satu pengguna dapat memiliki **lebih dari satu peran** (misalnya Wadir 1 juga berstatus Dosen).
-
----
-
-## 🔑 Akun Default (Seeder)
-
-Setelah menjalankan `php artisan db:seed`, akun-akun berikut tersedia untuk testing:
-
-| Nama | Username | Email | Nomor Induk | Peran | Password |
-|------|----------|-------|-------------|-------|----------|
-| Ahmad Admin | `gen_admin` | admin@mail.com | 19800101001 | Admin | `password123` |
-| Dr. Budi Santoso | `direktur` | direktur@mail.com | 19750202002 | Direktur | `password123` |
-| Ir. Citra Lestari | `wadir1` | wadir1@mail.com | 19780303003 | Wadir 1 | `password123` |
-| Dedi Wijaya, M.T. | `wadir2` | wadir2@mail.com | 19790404004 | Wadir 2 | `password123` |
-| Eka Putri, Ph.D. | `kaprodi` | kaprodi@mail.com | 19820505005 | Kaprodi | `password123` |
-| Fajar Ramadhan | `dosen` | dosen@mail.com | 19850606006 | Dosen | `password123` |
-| Gita Permata | `tenaga_tu` | tu@mail.com | 19900707007 | Tenaga TU | `password123` |
-| Hendra Saputra | `mahasiswa` | mhs@mail.com | 20240808008 | Mahasiswa | `password123` |
-| Indra Kusuma | `unit_mhs` | unit_mhs@mail.com | 19880909009 | Unit Mahasiswa | `password123` |
-| Joko Susilo | `sarpras` | sarpras@mail.com | 19841010010 | Sarpras | `password123` |
-| Kurniawati | `kabag_umum` | umum@mail.com | 19811111011 | Kabag Umum | `password123` |
-
-> ⚠️ **Catatan Keamanan:** Segera ganti password default sebelum deploy ke lingkungan production!
 
 ---
 
